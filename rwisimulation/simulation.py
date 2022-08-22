@@ -370,16 +370,15 @@ def main():
                             traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
                         logging.warning('not enough vehicles at time ' + str(traci.simulation.getCurrentTime()) )
                         traci.simulationStep()
+
+                    # chooses the cars with Rx antennas
+                    cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
                     if c.use_V2V:
-                        # chooses the cars with Rx antennas
-                        cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
                         # chooses the cars with Tx antennas
                         temp_cars = [x for x in traci_vehicle_IDList if x not in cars_with_antenna]
                         cars_with_Tx = np.random.choice(temp_cars, c.n_Tx_per_episode, replace=False)
                         antenna_Tx = txrxFile[c.insite_tx_name].location_list[0]
                     else:
-                        # chooses the cars with Rx antennas
-                        cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
                         cars_with_Tx = None
                         antenna_Tx = None
 
@@ -477,11 +476,17 @@ def main():
             #if c.use_fixed_receivers:  #AK-TODO take in account fixed receivers
             #    listToBeSaved = list('only_fixed_receivers')
             #else:
-            listToBeSaved = list(cars_with_antenna)
-            info_dict = dict(
-                    cars_with_antenna=listToBeSaved,
+            if c.use_V2V:
+                info_dict = dict(
+                    cars_with_antenna=list(cars_with_antenna),
+                    cars_with_Tx=list(cars_with_Tx),
                     scene_i=scene_i,
-            )
+                )
+            else:
+                info_dict = dict(
+                        cars_with_antenna=list(cars_with_antenna),
+                        scene_i=scene_i,
+                )
             json.dump(info_dict, infofile) #write JSON infofile
 
         #save SUMO information for this scene as text CSV file
