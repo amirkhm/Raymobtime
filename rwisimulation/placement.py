@@ -7,13 +7,12 @@ import traci
 
 from rwimodeling import errors, objects, txrx, X3dXmlFile, mimo
 
-from sumo import coord
 
 import config as c
 
 if c.use_vehicles_template:
     from Cheetah.Template import Template
-    import vehicles_template as vt
+    import rwimodeling.vehicles_template as vt
 
 
 #def place_by_sumo(antenna, car_material_id, lane_boundary_dict, cars_with_antenna=None):
@@ -69,7 +68,6 @@ def place_by_sumo(antenna, antenna_Tx, car_material_id, lane_boundary_dict, cars
             traci.vehicle.getHeight
         ]]
 
-        #x, y = coord.convert_distances(lane_id, (x,y), lane_boundary_dict=lane_boundary_dict)
         x, y = traci.simulation.convertGeo(x, y)
         #x2, y2 = traci.simulation.convertGeo(lon, lat, fromGeo=True)
 
@@ -288,12 +286,12 @@ if __name__ == '__main__':
     print(sys.path)
     import config as c
 
-    with open(os.path.join("example", "SimpleFunciona", "base.object")) as infile:
+    with open(os.path.join("base_files", "SimpleFunciona", "base.object")) as infile:
         obj = objects.ObjectFile.from_file(infile)
 
-    x3d_xml = X3dXmlFile(os.path.join("example", "SimpleFunciona", "model.Study.xml"))
+    x3d_xml = X3dXmlFile(os.path.join("base_files", "SimpleFunciona", "model.Study.xml"))
 
-    with open(os.path.join("example", 'SimpleFunciona', 'base.txrx')) as infile:
+    with open(os.path.join("base_files", 'SimpleFunciona', 'base.txrx')) as infile:
         txrxFile = txrx.TxRxFile.from_file(infile)
     obj.clear()
 
@@ -309,10 +307,10 @@ if __name__ == '__main__':
     structure_group, placed_vertice_list = place_on_line(
         city_origin, 531, 1, lambda: np.random.uniform(1, 3), car_structure, vertice_list, antenna_origin)
     obj.add_structure_groups(structure_group)
-    obj.write(os.path.join('example', "SimpleFunciona", "random-line.object"))
+    obj.write(os.path.join('base_files', "SimpleFunciona", "random-line.object"))
 
     x3d_xml.add_vertice_list(placed_vertice_list, c.dst_txrx_xpath)
-    x3d_xml.write(os.path.join("example", "SimpleFunciona", 'gen.study.xml'))
+    x3d_xml.write(os.path.join("base_files", "SimpleFunciona", 'gen.study.xml'))
 
     txrxFile['Rx'].location_list[0] = placed_vertice_list
-    txrxFile.write(os.path.join('example', 'SimpleFunciona', 'model.txrx'))
+    txrxFile.write(os.path.join('base_files', 'SimpleFunciona', 'model.txrx'))
