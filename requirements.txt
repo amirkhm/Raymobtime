@@ -1,0 +1,9 @@
+numpy>=1.14
+pyreadline
+attrdict>=2.0.1
+
+[shapely]
+Shapely>=1.6.3
+
+[tf]
+tensorflow>=1.4

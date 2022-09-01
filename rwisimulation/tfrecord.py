@@ -8,8 +8,8 @@ import numpy as np
 from rwimodeling import objects
 from rwiparsing import P2mPaths
 
-from .positionmatrix import calc_position_matrix, matrix_plot
-from .calcrxpower import calc_rx_power
+from rwisimulation.positionmatrix import calc_position_matrix, matrix_plot
+from rwisimulation.calcrxpower import calc_rx_power
 
 
 class UnexpectedCarsWithAntennaChangeError(Exception):

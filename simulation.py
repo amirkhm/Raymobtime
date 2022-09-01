@@ -16,13 +16,11 @@ except ImportError:
   import pyreadline as readline
 
 import traci
-from sumo import coord
 
 from rwimodeling import insite, objects, txrx, X3dXmlFile, verticelist, mimo
 
 import config as c
-from .placement import place_on_line, place_by_sumo #use this option to run from command line
-#from placement import place_on_line, place_by_sumo #use this option to run from within IntelliJ IDE and debug
+from rwisimulation.placement import place_on_line, place_by_sumo
 
 if c.insite_version == '3.3':
     from rwimodeling import  X3dXmlFile3_3
@@ -123,7 +121,6 @@ def writeSUMOInfoIntoFile(sumoOutputInfoFileName, episode_i, scene_i, lane_bound
             ]]
 
             #convert position from SUMO to InSite
-            #xinsite, yinsite = coord.convert_distances(lane_id, (x,y), lane_boundary_dict=lane_boundary_dict)
             xinsite, yinsite = traci.simulation.convertGeo(x, y)
 
             #check if it's a receiver (has antenna) or not. Use -1 to identify it's not a receiver

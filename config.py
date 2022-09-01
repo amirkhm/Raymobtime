@@ -5,6 +5,9 @@ import os
 import itertools
 import numpy as np
 import socket
+import json
+import attrdict
+
 try:
     import tensorflow as tf
 except ImportError:
@@ -45,53 +48,54 @@ def get_insite_version(base_insite_project_path):
 ## This file is split into two parts. In most cases Part II is not modified.
 ###############################################################
 
+#Read typical information from config.json
+with open("config.json","r") as f:
+    cfg=attrdict.AttrDict(json.load(f))
+
 ###############################################################
 ## Part I - Basic information that typically needs to be modified / checked
 ###############################################################
 # Current folder (or directory). Some paths are relative to this folder:
 working_directory = os.path.dirname(os.path.realpath(__file__)) 
 # InSite will look for input files in this folder. These files will be used to generate all simulations
-if False:
-    base_insite_project_path = 'D:/insitedata/insite_new_simuls/'
-else:
-    base_insite_project_path = os.path.join(working_directory,'Rosslyn_60GHz')
+base_insite_project_path = os.path.join(working_directory,'base_files',cfg.simulation_paths.base_insite_path)
 #Folder to store each InSite project and its results (will create subfolders for each "run", run0000, run0001, etc.)
-results_dir = os.path.join(working_directory, 'simulations/ray_tracing_output')
+results_dir = os.path.join(working_directory, 'simulations', cfg.simulation_paths.results_dir_path)
 #Folders and files for InSite and its license. For Windows you may simply inform
 #the path to the executable files, not minding about the license file location.
 #Folders for SUMO and InSite. Use executable sumo-gui if want to see the GUI or sumo otherwise
 
 insite_version = get_insite_version(base_insite_project_path) # Indentify Insite version
 locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 ' # Insite env variable
-sumo_bin = '/usr/bin/sumo' # SUMO bin path variable
+sumo_bin = cfg.sumo_files.sumo_bin # SUMO bin path variable
 
 if insite_version == '3.3':
-    calcprop_bin = ('REMCOMINC_LICENSE_FILE=2508@200.239.93.26 ' +
-                    'LD_LIBRARY_PATH=/home/takashi/software/remcom/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/:' +
-                    '/home/takashi/software/remcom/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/ ' +
-                    '/home/takashi/software/remcom/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/calcprop_3.3.0.4')
-    wibatch_bin = (locale + 'REMCOMINC_LICENSE_FILE=2508@200.239.93.26 ' +
-               'LD_LIBRARY_PATH=/home/takashi/Remcom/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ ' +
-               '/home/takashi/Remcom/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/wibatch')
+    calcprop_bin = ('{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE) +
+                    'LD_LIBRARY_PATH={}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/:'.format(cfg.insite_paths.insite_software_path) +
+                    '{}/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/ '.format(cfg.insite_paths.insite_software_path) +
+                    '{}/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/calcprop_3.3.0.4'.format(cfg.insite_paths.insite_software_path))
+    wibatch_bin = (locale + '{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE) +
+               'LD_LIBRARY_PATH={}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ '.format(cfg.insite_paths.insite_software_path) +
+               '{}/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/wibatch'.format(cfg.insite_paths.insite_software_path))
 elif insite_version == '3.2':
-    calcprop_bin = ('REMCOMINC_LICENSE_FILE=2508@200.239.93.26 ' +
-                    'LD_LIBRARY_PATH=/home/takashi/remcom/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/:' +
-                    '/home/takashi/software/remcom/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/ ' +
-                    '/home/takashi/software/remcom/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/calcprop_3.2.0.3')
-    wibatch_bin = (locale + 'REMCOMINC_LICENSE_FILE=2508@200.239.93.26 ' +
-               'LD_LIBRARY_PATH=/home/takashi/software/remcom/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ ' +
-               '/home/takashi/software/remcom/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch')
+    calcprop_bin = ('{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE) +
+                    'LD_LIBRARY_PATH={}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/:'.format(cfg.insite_paths.insite_software_path) +
+                    '{}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/ '.format(cfg.insite_paths.insite_software_path) +
+                    '{}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/calcprop_3.2.0.3'.format(cfg.insite_paths.insite_software_path))
+    wibatch_bin = (locale + '{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE) +
+               'LD_LIBRARY_PATH=/{}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ '.format(cfg.insite_paths.insite_software_path) +
+               '{}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch'.format(cfg.insite_paths.insite_software_path))
 
 ### HERE STARTS CONFIGURATION ### NOTE: ONLY CHANGE IF YOU KNOW WHAT ARE YOU DOING
 #SUMO configuration file:
-sumo_cfg = os.path.join(working_directory, 'sumo', 'seasonal.sumocfg')
+sumo_cfg = os.path.join(working_directory, 'base_files', 'sumo', '{}.sumocfg'.format(cfg.sumo_files.sumo_cfg))
 
-use_fixed_receivers = False #set to False if only vehicles are receivers
-use_pedestrians = False # only set True if your sumo is ready for pedestrians
-use_vehicles_template = False # set True to use pre-made vehicle ( not boxes ), NOTE: only set True if you have the folder objects with the models.
-drone_simulation = False # Only drones will be chosen to be receivers
-mimo_orientation = False # Only avaliable for a single Rx (not available)
-use_V2V = True # set True to use V2V (transmitters and receivers are vehicles)
+use_fixed_receivers = cfg.features.use_fixed_receivers # Set to False if only vehicles are receivers
+use_pedestrians = cfg.features.use_pedestrians # Only set True if your sumo is ready for pedestrians
+use_vehicles_template = cfg.features.use_vehicles_template # Set True to use pre-made vehicle ( not boxes ), NOTE: only set True if you have the folder objects with the models.
+drone_simulation = cfg.features.drone_simulation # Only drones will be chosen to be receivers
+mimo_orientation = cfg.features.mimo_orientation # Only avaliable for a single Rx (not available)
+use_V2V = cfg.features.use_V2V # Set True to use V2V (transmitters and receivers are vehicles)
 
 print('########## Scripts will assume the following files: ##########')
 print('SUMO executable: ', sumo_bin)
@@ -103,18 +107,22 @@ print('InSite input files folder: ', base_insite_project_path)
 #print('InSite temporary output folder: ', project_output_dir)
 print('Final output parent folder: ', results_dir)
 
-n_run = range(0,100,1) # iterator that determines maximum number of RT simulations
+n_run = range(
+    cfg.simulation_parameters.n_init_run,
+    cfg.simulation_parameters.n_end_run,
+    1
+) # iterator that determines maximum number of RT simulations
 
-sampling_interval = 0.5 #time interval between scenes (in seconds)
-time_of_episode = 10 #Number of scenes of each episode | int(0.5 / sampling_interval) # in steps (number of scenes per episodes)
-time_between_episodes = int(3 / sampling_interval) # time among episodes, in steps (if you specify x/Ts, then x is in seconds)
+sampling_interval = float(cfg.simulation_parameters.sampling_interval) #time interval between scenes (in seconds)
+time_of_episode = int(cfg.simulation_parameters.n_scenes_of_each_episode) #Number of scenes of each episode | int(0.5 / sampling_interval) # in steps (number of scenes per episodes)
+time_between_episodes = int(float(cfg.simulation_parameters.time_between_episodes) / sampling_interval) # time among episodes, in steps (if you specify x/Ts, then x is in seconds)
 if use_fixed_receivers: #set to False if only vehicles are receivers
     n_antenna_per_episode = 0 #number of receivers per episode
 else:
-    n_antenna_per_episode = 3 #number of receivers per episode
+    n_antenna_per_episode = cfg.simulation_parameters.n_antenna_per_episode #number of receivers per episode
 if use_V2V:
-    n_Tx_per_episode = 2 #number of transmitters per episode
-    n_antenna_per_episode = 5 #number of receivers per episode
+    n_Tx_per_episode = cfg.simulation_parameters.n_Tx_per_episode #number of transmitters per episode
+    n_antenna_per_episode = cfg.simulation_parameters.n_antenna_per_episode #number of receivers per episode
 # where to map the received to TFRecords (minx, miny, maxx, maxy)
 analysis_area = (729, 453, 666, 666)
 analysis_area_resolution = 0.5
@@ -126,11 +134,11 @@ frequency = 60e9 # frequency in Hz for the RT simulation
 ## unless you changed the InSite model (using the GUI, for example)
 ###############################################################
 # Fullfill this parameters with insite's information
-insite_study_area_name = 'study'
-insite_tx_name = 'Tx'
-insite_rx_name = 'Rx'
-insite_setup_name = 'model'
-insite_vehicles_name = 'random-line'
+insite_study_area_name = cfg.base_files_names.insite_study_area_name
+insite_tx_name = cfg.base_files_names.insite_tx_name
+insite_rx_name = cfg.base_files_names.insite_rx_name
+insite_setup_name = cfg.base_files_names.insite_setup_name
+insite_vehicles_name = cfg.base_files_names.insite_vehicles_name
 
 if use_vehicles_template:
     latitude, longitude = get_lat_long((base_insite_project_path))
