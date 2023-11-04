@@ -1,0 +1,5 @@
+/simulations
+*.pyc
+/base_files/Rosslyn_60GHz
+/rwisimulation.egg-info
+*.egg

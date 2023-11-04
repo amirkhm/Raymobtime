@@ -16,13 +16,11 @@ except ImportError:
   import pyreadline as readline
 
 import traci
-from sumo import coord
 
 from rwimodeling import insite, objects, txrx, X3dXmlFile, verticelist, mimo
 
 import config as c
-from .placement import place_on_line, place_by_sumo #use this option to run from command line
-#from placement import place_on_line, place_by_sumo #use this option to run from within IntelliJ IDE and debug
+from rwisimulation.placement import place_on_line, place_by_sumo
 
 if c.insite_version == '3.3':
     from rwimodeling import  X3dXmlFile3_3
@@ -123,7 +121,6 @@ def writeSUMOInfoIntoFile(sumoOutputInfoFileName, episode_i, scene_i, lane_bound
             ]]
 
             #convert position from SUMO to InSite
-            #xinsite, yinsite = coord.convert_distances(lane_id, (x,y), lane_boundary_dict=lane_boundary_dict)
             xinsite, yinsite = traci.simulation.convertGeo(x, y)
 
             #check if it's a receiver (has antenna) or not. Use -1 to identify it's not a receiver
@@ -370,16 +367,15 @@ def main():
                             traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
                         logging.warning('not enough vehicles at time ' + str(traci.simulation.getCurrentTime()) )
                         traci.simulationStep()
+
+                    # chooses the cars with Rx antennas
+                    cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
                     if c.use_V2V:
-                        # chooses the cars with Rx antennas
-                        cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
                         # chooses the cars with Tx antennas
                         temp_cars = [x for x in traci_vehicle_IDList if x not in cars_with_antenna]
                         cars_with_Tx = np.random.choice(temp_cars, c.n_Tx_per_episode, replace=False)
                         antenna_Tx = txrxFile[c.insite_tx_name].location_list[0]
                     else:
-                        # chooses the cars with Rx antennas
-                        cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
                         cars_with_Tx = None
                         antenna_Tx = None
 
@@ -477,11 +473,17 @@ def main():
             #if c.use_fixed_receivers:  #AK-TODO take in account fixed receivers
             #    listToBeSaved = list('only_fixed_receivers')
             #else:
-            listToBeSaved = list(cars_with_antenna)
-            info_dict = dict(
-                    cars_with_antenna=listToBeSaved,
+            if c.use_V2V:
+                info_dict = dict(
+                    cars_with_antenna=list(cars_with_antenna),
+                    cars_with_Tx=list(cars_with_Tx),
                     scene_i=scene_i,
-            )
+                )
+            else:
+                info_dict = dict(
+                        cars_with_antenna=list(cars_with_antenna),
+                        scene_i=scene_i,
+                )
             json.dump(info_dict, infofile) #write JSON infofile
 
         #save SUMO information for this scene as text CSV file
