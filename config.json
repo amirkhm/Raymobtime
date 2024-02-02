@@ -9,24 +9,30 @@
     },
     "simulation_parameters":{
         "n_init_run":0,
-        "n_end_run":100,
-        "sampling_interval":0.1,
-        "n_scenes_of_each_episode":10,
+        "n_end_run":3000,
+        "sampling_interval":0.020,
+        "n_scenes_of_each_episode":30,
         "time_between_episodes":30,
-        "n_antenna_per_episode":5,
+        "n_antenna_per_episode":1,
         "n_Tx_per_episode":1
     },
     "simulation_paths":{
-        "base_insite_path":"Rosslyn_60GHz",
-        "results_dir_path":"rosslyn_60GHz_simulation"
+        "base_insite_path":"rosslyn",
+        "results_dir_path":"tracking_LoS"
     },
     "sumo_files":{
         "sumo_bin":"/usr/bin/sumo",
         "sumo_cfg":"seasonal"
     },
     "insite_paths":{
-        "insite_software_path":"/home/takashi/Remcom",
-        "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@200.239.93.26"
+        "insite_software_path":"/mnt/data/software/remcom",
+        "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@200.239.93.3"
+    },
+    "area_limits":{
+        "enabled":true,
+        "max_lim":[767, 679],
+        "min_lim":[744, 429],
+        "end_ep_for_no_veh":true
     },
     "base_files_names":{
         "insite_study_area_name":"study",
