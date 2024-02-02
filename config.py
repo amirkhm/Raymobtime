@@ -129,6 +129,10 @@ analysis_area_resolution = 0.5
 antenna_number = 10
 frequency = 60e9 # frequency in Hz for the RT simulation
 
+set_area_limit = cfg.area_limits.enabled
+max_lim = cfg.area_limits.max_lim
+min_lim = cfg.area_limits.min_lim
+
 ###############################################################
 ## Part II - Extra information that typically does not need to be modified
 ## unless you changed the InSite model (using the GUI, for example)

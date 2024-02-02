@@ -10,6 +10,7 @@ import numpy as np
 import logging
 import json
 import csv
+import colored
 try: #readline does not run on Windows. Use pyreadline instead
   import readline
 except ImportError:
@@ -370,6 +371,32 @@ def main():
 
                     # chooses the cars with Rx antennas
                     cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
+                    # Chose from the specific area
+                    if c.set_area_limit:
+                        def check_if_veh_in_area(veh_pos, min_lim, max_lim):
+                            if veh_pos[0] < min_lim[0] or veh_pos[0] > max_lim[0]:
+                                return False
+                            if veh_pos[1] < min_lim[1] or veh_pos[1] > max_lim[1]:
+                                return False
+                            return True
+                        
+                        veh_in_the_area = []
+
+                        while len(veh_in_the_area) < c.n_antenna_per_episode:
+                            # Check if there is veh in the area, if not simulate an step and check again
+                            traci_vehicle_IDList = traci.vehicle.getIDList()
+                            lixo = []
+                            for veh in traci_vehicle_IDList:
+                                x, y = traci.vehicle.getPosition(veh)
+                                x, y = traci.simulation.convertGeo(x, y)
+                                if check_if_veh_in_area([x,y], c.min_lim, c.max_lim):
+                                    veh_in_the_area.append(veh)
+                                else:
+                                    lixo.append([x,y])
+                            traci.simulationStep()
+                        # Choose within the area
+                        cars_with_antenna = np.random.choice(veh_in_the_area, c.n_antenna_per_episode, replace=False)
+
                     if c.use_V2V:
                         # chooses the cars with Tx antennas
                         temp_cars = [x for x in traci_vehicle_IDList if x not in cars_with_antenna]
