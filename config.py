@@ -97,15 +97,15 @@ drone_simulation = cfg.features.drone_simulation # Only drones will be chosen to
 mimo_orientation = cfg.features.mimo_orientation # Only avaliable for a single Rx (not available)
 use_V2V = cfg.features.use_V2V # Set True to use V2V (transmitters and receivers are vehicles)
 
-print('########## Scripts will assume the following files: ##########')
-print('SUMO executable: ', sumo_bin)
-print('SUMO configuration: ', sumo_cfg)
-print('InSite calcprop executable: ', calcprop_bin)
-print('InSite wibatch executable: ', wibatch_bin)
-print('Working folder (base for several folders): ', working_directory)
-print('InSite input files folder: ', base_insite_project_path)
-#print('InSite temporary output folder: ', project_output_dir)
-print('Final output parent folder: ', results_dir)
+# print('########## Scripts will assume the following files: ##########')
+# print('SUMO executable: ', sumo_bin)
+# print('SUMO configuration: ', sumo_cfg)
+# print('InSite calcprop executable: ', calcprop_bin)
+# print('InSite wibatch executable: ', wibatch_bin)
+# print('Working folder (base for several folders): ', working_directory)
+# print('InSite input files folder: ', base_insite_project_path)
+# #print('InSite temporary output folder: ', project_output_dir)
+# print('Final output parent folder: ', results_dir)
 
 n_run = range(
     cfg.simulation_parameters.n_init_run,
@@ -132,6 +132,8 @@ frequency = 60e9 # frequency in Hz for the RT simulation
 set_area_limit = cfg.area_limits.enabled
 max_lim = cfg.area_limits.max_lim
 min_lim = cfg.area_limits.min_lim
+
+blensor_scenario_path = cfg.blensor_options.path_to_scenario
 
 ###############################################################
 ## Part II - Extra information that typically does not need to be modified
@@ -178,13 +180,13 @@ dst_txrx_file_name = insite_setup_name + '.txrx' #file with Tx and Rx's
 # XML project that will be executed by InSite command line tools (its path will be the run folder):
 dst_x3d_xml_file_name = insite_setup_name + '.' + insite_study_area_name + '.xml' #configuration file for wibatch
 
-print('Output JSON file: ', simulation_info_file_name)
-print('Reference InSite model: ', base_x3d_xml_path)
-print('Generated InSite model that will be used (in run folder): ', dst_x3d_xml_file_name)
-print('Reference .object file: ', base_object_file_name)
-print('Generated .object file that will be used: ', dst_object_file_name)
-print('Reference .txrx file: ', base_txrx_file_name)
-print('Generated .txrx file that will be used: ', dst_txrx_file_name)
+#print('Output JSON file: ', simulation_info_file_name)
+#print('Reference InSite model: ', base_x3d_xml_path)
+#print('Generated InSite model that will be used (in run folder): ', dst_x3d_xml_file_name)
+#print('Reference .object file: ', base_object_file_name)
+#print('Generated .object file that will be used: ', dst_object_file_name)
+#print('Reference .txrx file: ', base_txrx_file_name)
+#print('Generated .txrx file that will be used: ', dst_txrx_file_name)
 
 #the (misterious) information below is added in simulation.py into a XML file
 if insite_version == '3.3':

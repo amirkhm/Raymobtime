@@ -8,11 +8,11 @@
         "use_V2V":false
     },
     "simulation_parameters":{
-        "n_init_run":0,
+        "n_init_run":109,
         "n_end_run":3000,
         "sampling_interval":0.020,
         "n_scenes_of_each_episode":30,
-        "time_between_episodes":30,
+        "time_between_episodes":5,
         "n_antenna_per_episode":1,
         "n_Tx_per_episode":1
     },
@@ -22,7 +22,7 @@
     },
     "sumo_files":{
         "sumo_bin":"/usr/bin/sumo",
-        "sumo_cfg":"seasonal"
+        "sumo_cfg":"tracking"
     },
     "insite_paths":{
         "insite_software_path":"/mnt/data/software/remcom",
@@ -30,8 +30,8 @@
     },
     "area_limits":{
         "enabled":true,
-        "max_lim":[767, 679],
-        "min_lim":[744, 429],
+        "max_lim":[782, 580],
+        "min_lim":[733, 540],
         "end_ep_for_no_veh":true
     },
     "base_files_names":{
@@ -40,5 +40,8 @@
         "insite_rx_name":"Rx",
         "insite_setup_name":"model",
         "insite_vehicles_name":"random-line"
+    },
+    "blensor_options":{
+        "path_to_scenario":"/mnt/data/Scenarios/Rosslyn/rosslyn.blend"
     }
 }
