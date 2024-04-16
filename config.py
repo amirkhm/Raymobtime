@@ -134,6 +134,7 @@ max_lim = cfg.area_limits.max_lim
 min_lim = cfg.area_limits.min_lim
 
 blensor_scenario_path = cfg.blensor_options.path_to_scenario
+blensor_runfile_path = cfg.blensor_options.blensor_img_path
 
 ###############################################################
 ## Part II - Extra information that typically does not need to be modified

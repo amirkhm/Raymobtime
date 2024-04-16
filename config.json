@@ -8,7 +8,7 @@
         "use_V2V":false
     },
     "simulation_parameters":{
-        "n_init_run":109,
+        "n_init_run":0,
         "n_end_run":3000,
         "sampling_interval":0.020,
         "n_scenes_of_each_episode":30,
@@ -42,6 +42,7 @@
         "insite_vehicles_name":"random-line"
     },
     "blensor_options":{
-        "path_to_scenario":"/mnt/data/Scenarios/Rosslyn/rosslyn.blend"
+        "path_to_scenario":"/mnt/data/Scenarios/Rosslyn/rosslyn.blend",
+        "blensor_img_path":"Blensor"
     }
 }

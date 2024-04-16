@@ -26,8 +26,6 @@ def simulator():
     #for key,scene_path in scenes_path.items():
     frame_num = 0
     frame_step = 1
-    # start_run = 0
-    # end_run = 3
     run = start_run
     bpy.data.scenes['Scene'].frame_end = end_run-1
     bpy.data.scenes['Scene'].frame_start = 0
@@ -45,7 +43,7 @@ def simulator():
         #path_info_file = os.path.join(scene_path,'study/model.paths.t001_01.r002.p2m')
         vPosition = getInfoVehicles(sumo_info_file)
         Position = vPosition
-        animateVehiclesBlender(Position,run,frame_step,vehicles_blend_path) 
+        animateVehiclesBlender(Position, vehicles_blend_path) 
         doScan(Position,'scans_'+base_run_dir_fn(run))
         for obj in D.objects:
             if obj.name.startswith('flow') or obj.name.startswith('_flow'):
@@ -122,7 +120,7 @@ def endAnimation(frame_num):
 # se n existir, cria
 # se existir, movimenta
 # se existia e n existe mais retirar
-def animateVehiclesBlender(vPosition,frame_num,frame_step,vehicles_blend_path):
+def animateVehiclesBlender(vPosition, vehicles_blend_path):
 
     bpy.context.scene.frame_set(0)
     # Pre processamento dos que estao na cena
