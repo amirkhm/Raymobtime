@@ -1,4 +1,5 @@
 {   
+    "simulation_name":"Teste Marselha 1: área restrita",
     "features":{
         "use_fixed_receivers":false,
         "use_pedestrians":false,
@@ -9,20 +10,20 @@
     },
     "simulation_parameters":{
         "n_init_run":0,
-        "n_end_run":3000,
-        "sampling_interval":0.020,
-        "n_scenes_of_each_episode":30,
-        "time_between_episodes":5,
-        "n_antenna_per_episode":1,
+        "n_end_run":120,
+        "sampling_interval":0.080,
+        "n_scenes_of_each_episode":40,
+        "time_between_episodes":30,
+        "n_antenna_per_episode":5,
         "n_Tx_per_episode":1
     },
     "simulation_paths":{
-        "base_insite_path":"rosslyn",
-        "results_dir_path":"tracking_LoS"
+        "base_insite_path":"Marselha",
+        "results_dir_path":"t003_teste1"
     },
     "sumo_files":{
         "sumo_bin":"/usr/bin/sumo",
-        "sumo_cfg":"tracking"
+        "sumo_cfg":"marselha"
     },
     "insite_paths":{
         "insite_software_path":"/mnt/data/software/remcom",
@@ -30,9 +31,26 @@
     },
     "area_limits":{
         "enabled":true,
-        "max_lim":[782, 580],
-        "min_lim":[733, 540],
+        "max_lim":[25, 15],
+        "min_lim":[-20, -15],
         "end_ep_for_no_veh":true
+    },
+    "data_handler":{
+        "area_of_analyses":{
+            "enabled":false,
+            "coordinates_limits":[-60, -60, 80, 50]
+        },
+        "antenna_arr":{
+            "Tx":1,
+            "Rx":8,
+            "antenna_angle":0
+        }
+    },
+    "v2v_options":{
+        "close_vehicles":true,
+        "n_of_vehicles":7,
+        "chose_vehcile":false,
+        "chosen_vehicle":"Truck"
     },
     "base_files_names":{
         "insite_study_area_name":"study",
@@ -42,7 +60,7 @@
         "insite_vehicles_name":"random-line"
     },
     "blensor_options":{
-        "path_to_scenario":"/mnt/data/Scenarios/Rosslyn/rosslyn.blend",
+        "path_to_scenario":"/mnt/data/Scenarios/Roundabout/blensor_t002_roundabount.blend",
         "blensor_img_path":"Blensor"
     }
 }
