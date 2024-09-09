@@ -10,7 +10,7 @@ import numpy as np
 import logging
 import json
 import csv
-import colored
+from termcolor import colored
 try: #readline does not run on Windows. Use pyreadline instead
   import readline
 except ImportError:
@@ -22,6 +22,7 @@ from rwimodeling import insite, objects, txrx, X3dXmlFile, verticelist, mimo
 
 import config as c
 from rwisimulation.placement import place_on_line, place_by_sumo
+from rwisimulation.tools import *
 
 if c.insite_version == '3.3':
     from rwimodeling import  X3dXmlFile3_3
@@ -305,12 +306,12 @@ def main():
                     if c.drone_simulation: 
                         traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
                     while len(traci_vehicle_IDList) < c.n_antenna_per_episode:
+                        traci.simulationStep()
                         traci_vehicle_IDList = traci.vehicle.getIDList()
                         if c.drone_simulation: 
                             traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
 
                         logging.warning('not enough vehicles at time ' + str(traci.simulation.getCurrentTime()) )
-                        traci.simulationStep()
                     cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
                 else:
                     traci.simulationStep()
@@ -380,28 +381,46 @@ def main():
                                 return False
                             return True
                         
-                        veh_in_the_area = []
+                        n_veh = 0
 
-                        while len(veh_in_the_area) < c.n_antenna_per_episode:
+                        while n_veh < c.n_antenna_per_episode:
+                            traci.simulationStep()
                             # Check if there is veh in the area, if not simulate an step and check again
                             traci_vehicle_IDList = traci.vehicle.getIDList()
-                            lixo = []
-                            for veh in traci_vehicle_IDList:
-                                x, y = traci.vehicle.getPosition(veh)
-                                x, y = traci.simulation.convertGeo(x, y)
-                                if check_if_veh_in_area([x,y], c.min_lim, c.max_lim):
-                                    veh_in_the_area.append(veh)
-                                else:
-                                    lixo.append([x,y])
-                            traci.simulationStep()
+                            veh_in_the_area, n_veh = pick_car_from_area(traci_vehicle_IDList, [c.min_lim, c.max_lim], c.n_antenna_per_episode, return_counts=True)
                         # Choose within the area
                         cars_with_antenna = np.random.choice(veh_in_the_area, c.n_antenna_per_episode, replace=False)
 
                     if c.use_V2V:
                         # chooses the cars with Tx antennas
-                        temp_cars = [x for x in traci_vehicle_IDList if x not in cars_with_antenna]
-                        cars_with_Tx = np.random.choice(temp_cars, c.n_Tx_per_episode, replace=False)
+                        traci_vehicle_IDList = traci.vehicle.getIDList()
+                        if c.set_area_limit:
+                            cars_with_Tx = pick_car_from_area(traci_vehicle_IDList, [c.min_lim, c.max_lim], c.n_Tx_per_episode)
+                        else:
+                            cars_with_Tx = np.random.choice(traci_vehicle_IDList, c.n_Tx_per_episode, replace=False)
+                        traci_vehicle_IDList = [x for x in traci_vehicle_IDList if x not in cars_with_Tx]
+                        if c.close_vehicles:
+                            # Only works for 1 Tx
+                            x, y = traci.vehicle.getPosition(cars_with_Tx[0])
+                            pos_Tx = np.array(traci.simulation.convertGeo(x, y))
+
+                            Rx_name = {}
+                            all_distances = []
+                            for veh in traci_vehicle_IDList:
+                                x, y = traci.vehicle.getPosition(veh)
+                                pos_Rx = np.array(traci.simulation.convertGeo(x, y))
+                                dist = (np.sqrt(np.sum((pos_Tx-pos_Rx)**2)))
+                                Rx_name[dist] = veh
+                                all_distances.append(dist)
+                            all_distances = np.sort(all_distances)[:c.n_of_vehicles]
+
+                            traci_vehicle_IDList = [Rx_name[i] for i in all_distances]
+                            cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
+
                         antenna_Tx = txrxFile[c.insite_tx_name].location_list[0]
+                        # temp_cars = [x for x in traci_vehicle_IDList if x not in cars_with_antenna]
+                        # cars_with_Tx = np.random.choice(temp_cars, c.n_Tx_per_episode, replace=False)
+                        # antenna_Tx = txrxFile[c.insite_tx_name].location_list[0]
                     else:
                         cars_with_Tx = None
                         antenna_Tx = None
