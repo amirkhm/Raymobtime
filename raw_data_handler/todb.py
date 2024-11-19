@@ -147,8 +147,6 @@ def gen_database(c):
         # This fixes car angle variation for Tx in case of V2V
         if 'cars_with_Tx' in simulation_info.keys():
             angleTx = sumo_info[simulation_info['cars_with_Tx'][0]]['angle']
-            if 'flow29.0' == simulation_info['cars_with_Tx'][0]:
-                print('aachamo')
             
         rec_i = 0
         for structure_group in obj_file:
@@ -160,6 +158,8 @@ def gen_database(c):
                     dimension_min = np.min(object.vertice_array, 0)
                     object.dimension = dimension_max - dimension_min
                     object.position = dimension_max - (object.dimension / 2)
+                    object.angle = sumo_info[structure.name.rstrip()]['angle']
+                    object.height = sumo_info[structure.name.rstrip()]['position'][2]
 
                     if structure.name.rstrip() in simulation_info['cars_with_antenna']:
                         receiver = fgdb.InsiteReceiver()

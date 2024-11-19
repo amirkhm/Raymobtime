@@ -39,6 +39,9 @@ class InsiteObject(Base):
     _vertice_array = db.Column(db.LargeBinary)
     _position = db.Column(db.LargeBinary)
 
+    height = db.Column(db.Float)
+    angle = db.Column(db.Float)
+
     scene_id = db.Column(db.Integer, db.ForeignKey('scenes.id'), index=True)
     scene = relationship("Scene", backref="objects")
 

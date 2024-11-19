@@ -83,9 +83,13 @@ def gen_csv_file(c):
             validReceiversInThisScene = np.zeros(maxNumOfReceiversInThisEpisode, dtype=bool)
             approximateReceiverPositions = np.zeros((maxNumOfReceiversInThisEpisode, 3))
             numOfRaysForThisReceiver = np.zeros(maxNumOfReceiversInThisEpisode, dtype=int)
+            height_receivers = np.zeros(maxNumOfReceiversInThisEpisode, dtype=int)
+            angle_receivers = np.zeros(maxNumOfReceiversInThisEpisode, dtype=int)
             # 
-            validTransmitterInThisScene = np.zeros(maxNumOfReceiversInThisEpisode, dtype=bool)
-            approximateTransmitterPositions = np.zeros((maxNumOfReceiversInThisEpisode, 3))
+            validTransmitterInThisScene = np.zeros(maxNumOfTransmittersInThisEpisode, dtype=bool)
+            approximateTransmitterPositions = np.zeros((maxNumOfTransmittersInThisEpisode, 3))
+            height_transmitters = np.zeros(maxNumOfTransmittersInThisEpisode, dtype=int)
+            angle_transmitters = np.zeros(maxNumOfTransmittersInThisEpisode, dtype=int)
             # sc.objects has sc.number_of_mobile_objects, which can be a large number (e.g. 53)
             for obj in sc.objects:  # get object in scene
                 if len(obj.transmitter) > 0:
@@ -93,12 +97,16 @@ def gen_csv_file(c):
                     tx_array_idx = tx_name_to_array_idx_map.index(obj.name)
                     approximateTransmitterPositions[tx_array_idx] = obj.position
                     
-                    if approximateTransmitterPositions[rec_array_idx, 0] == 0.0 and approximateTransmitterPositions[rec_array_idx, 1] == 0.0:
+                    if approximateTransmitterPositions[tx_array_idx, 0] == 0.0 and approximateTransmitterPositions[tx_array_idx, 1] == 0.0:
                         numInvalidChannels += 1
                         validTransmitterInThisScene[tx_array_idx] = False
                     else:
                         validTransmitterInThisScene[tx_array_idx] = True
                         numValidChannels += 1
+
+                    angle_transmitters[tx_array_idx] = obj.angle
+                    height_transmitters[tx_array_idx] = obj.height
+                    continue
                     
                 if len(obj.receivers) == 0:
                     # print('Skipping ', obj.name, ' because it does not have a receiver!')
@@ -121,6 +129,9 @@ def gen_csv_file(c):
                     # print(obj.name, ' has ', len(obj.receivers), ' receiver(s)')
                     # use the infamouse list to get the index corresponding to the mobile object with name obj.name
                 # print(obj.name, ' is mapped to index ', rec_array_idx)
+                angle_receivers[rec_array_idx] = obj.angle
+                height_receivers[rec_array_idx] = obj.height
+
                 if approximateReceiverPositions[rec_array_idx, 0] == 0.0 and approximateReceiverPositions[rec_array_idx, 1] == 0.0:
                     numInvalidChannels += 1
                     validReceiversInThisScene[rec_array_idx] = False
@@ -144,7 +155,7 @@ def gen_csv_file(c):
                 
                 thisString = str(numEpisode) + ',' + str(sc_i) + ',' + '-1' + ',' + str(i) + ',' + rec_name_to_array_idx_map[
                     i] + ',' + str(approximateReceiverPositions[i, 0]) + ',' + str(
-                    approximateReceiverPositions[i, 1]) + ',' + str(numOfRaysForThisReceiver[i])
+                    approximateReceiverPositions[i, 1]) + ',' + str(height_receivers[i]) +',' + str(angle_receivers[i]) + ',' + str(numOfRaysForThisReceiver[i])
                 if validReceiversInThisScene[i]:  # pre-append
                     thisString = 'V,' + thisString
                     if losReceiversInThisScene[i]:  # post-append
@@ -157,8 +168,8 @@ def gen_csv_file(c):
                 file.writelines(f'{thisString}\n')
             
             for i in range(maxNumOfTransmittersInThisEpisode):
-                thisString = str(numEpisode) + ',' + str(sc_i) + ',' + str(i) + ',' + '-1' + ',' + tx_name_to_array_idx_map[i] + ',' + str(approximateReceiverPositions[i, 0]) + ',' + str(approximateReceiverPositions[i, 1]) + ',' + str(numOfRaysForThisReceiver[i])
-                if validReceiversInThisScene[i]:  # pre-append
+                thisString = str(numEpisode) + ',' + str(sc_i) + ',' + str(i) + ',' + '-1' + ',' + tx_name_to_array_idx_map[i] + ',' + str(approximateTransmitterPositions[i, 0]) + ',' + str(approximateTransmitterPositions[i, 1]) + ',' + str(height_transmitters[i]) +',' + str(angle_transmitters[i]) + ','+ str(numOfRaysForThisReceiver[i])
+                if validTransmitterInThisScene[i]:  # pre-append
                     thisString = 'V,' + thisString
                 else:
                     thisString = 'I,' + thisString
