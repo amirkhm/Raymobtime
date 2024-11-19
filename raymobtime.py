@@ -2,6 +2,7 @@ import argparse
 
 import config as c
 from raw_data_handler import todb, gen_csv_coord_file, convert5gmv1ToChannels, gen_beam_output
+from raw_data_handler import gen_car_lidar_matrix
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -14,6 +15,8 @@ if __name__ == "__main__":
                         help='Run lidar simulation from the base station perspective')
     parser.add_argument('--beams', action='store_true',
                         help='Run lidar simulation from the base station perspective')
+    parser.add_argument('--lidarmatrix', action='store_true',
+                        help='process the lidar matrix')
     args = parser.parse_args()
     
     if args.ray_processing:
@@ -22,3 +25,5 @@ if __name__ == "__main__":
         convert5gmv1ToChannels.gen_rays_dataset(c)
     if args.beams:
         gen_beam_output.gen_beam_output_file(c)
+    if args.lidarmatrix:
+        gen_car_lidar_matrix.gen_lidar_matrix(c)
