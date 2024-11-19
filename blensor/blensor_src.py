@@ -28,7 +28,6 @@ def main(pysim, lidar=False, img=False):
         print(cmd)
         print(RED + f'Simulation n° {i}' + RESET)
         os.system(cmd)
-        exit(-1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
