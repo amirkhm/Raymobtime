@@ -1,5 +1,6 @@
 {   
-    "simulation_name":"Teste Marselha 1: área restrita",
+    "simulation_name":"Marselha V2I: 3 Simulations stacked processing",
+    "seed":202403,
     "features":{
         "use_fixed_receivers":false,
         "use_pedestrians":false,
@@ -9,8 +10,8 @@
         "use_V2V":false
     },
     "simulation_parameters":{
-        "n_init_run":0,
-        "n_end_run":120,
+        "n_init_run":880,
+        "n_end_run":5800,
         "sampling_interval":0.080,
         "n_scenes_of_each_episode":40,
         "time_between_episodes":30,
@@ -19,20 +20,20 @@
     },
     "simulation_paths":{
         "base_insite_path":"Marselha",
-        "results_dir_path":"t003_teste1"
+        "results_dir_path":"Marselha_Tracking_V2I"
     },
     "sumo_files":{
         "sumo_bin":"/usr/bin/sumo",
         "sumo_cfg":"marselha"
     },
     "insite_paths":{
-        "insite_software_path":"/mnt/data/software/remcom",
+        "insite_software_path":"/media/software/remcom/",
         "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@200.239.93.3"
     },
     "area_limits":{
         "enabled":true,
-        "max_lim":[25, 15],
-        "min_lim":[-20, -15],
+        "max_lim":[80, 50],
+        "min_lim":[-60, -60],
         "end_ep_for_no_veh":true
     },
     "data_handler":{
@@ -41,9 +42,15 @@
             "coordinates_limits":[-60, -60, 80, 50]
         },
         "antenna_arr":{
-            "Tx":1,
-            "Rx":8,
+            "Tx":64,
+            "Rx":1,
             "antenna_angle":0
+        },
+        "cartesian_lidar_matrix":{
+            "QP":{"Xp":1.15,"Yp":1.25,"Zp":1,"Xmax": 80,"Ymax": 50, "Zmax": 10, "Xmin": -60,"Ymin": -60, "Zmin": 0 },
+            "Tx_position":[13.735024754781474, 12.543859564388237, 25.000000000000000],
+            "max_dist_LIDAR":100,
+            "type_data":"3D"
         }
     },
     "v2v_options":{
@@ -60,7 +67,7 @@
         "insite_vehicles_name":"random-line"
     },
     "blensor_options":{
-        "path_to_scenario":"/mnt/data/Scenarios/Roundabout/blensor_t002_roundabount.blend",
-        "blensor_img_path":"Blensor"
+        "path_to_scenario":"/home/takashi/Scenarios/Marselha/marselha.blend",
+        "blensor_img_path":"~/Blensor"
     }
 }

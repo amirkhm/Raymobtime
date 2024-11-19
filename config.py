@@ -138,6 +138,11 @@ set_area_limit = cfg.area_limits.enabled
 max_lim = cfg.area_limits.max_lim
 min_lim = cfg.area_limits.min_lim
 
+QP = cfg.data_handler.cartesian_lidar_matrix.QP
+Tx_position = cfg.data_handler.cartesian_lidar_matrix.Tx_position
+max_dist_LIDAR = cfg.data_handler.cartesian_lidar_matrix.max_dist_LIDAR
+type_data = cfg.data_handler.cartesian_lidar_matrix.type_data
+
 if use_V2V:
     close_vehicles = cfg.v2v_options.close_vehicles
     n_of_vehicles = cfg.v2v_options.n_of_vehicles
@@ -229,7 +234,7 @@ car_structure_name = 'car'
 antenna_points_name = insite_rx_name
 
 if use_sumo == True:
-    seed = 353432 #3501970 Original's ITA paper seed = 1517605264
+    seed = cfg.seed #353432 #3501970 Original's ITA paper seed = 1517605264
     np.random.seed(seed)
     sumo_cmd = [sumo_bin, '-c', sumo_cfg, '--step-length', str(sampling_interval), '--seed', '{}'.format(seed)]
     #mapping from SUMO to InSite coordinates
