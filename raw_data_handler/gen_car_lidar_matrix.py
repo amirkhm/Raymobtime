@@ -2,6 +2,7 @@ import sys
 import os
 import csv
 import shutil
+from tempfile import tempdir
 import numpy as np
 import scipy.spatial.distance as dist
 from pypcd import pypcd
@@ -13,11 +14,24 @@ def base_run_dir_fn(i):  # the folders will be run00001, run00002, etc.
     return "scans_run{:05d}".format(i)
 
 def base_vehicle_pcd(flow):  # the folders will be run00001, run00002, etc.
-    V_id = float(flow.replace('flow',''))
-    #return 'flow{:6f}'.format(V_id)
-    return 'flow{}00000'.format(V_id)
+    V_id = flow.split("flow")
+    # V_id = float(flow.replace('flow',''))
+    # return '{}flow{:.6f}'.format(V_id[0],float(V_id[-1]))
+    return '{}flow{}00000'.format(V_id[0],float(V_id[-1]))#erro de merda arrumar em algum momento o codigo que escreve
+    # return 'flow{}00000'.format(V_id)
 
-def episodes_dict(csv_path):
+def find_vehicle(flow,tmp_dir):
+    flow_list = os.listdir(tmp_dir)
+    for tmp_cars in  flow_list:
+        if tmp_cars.startswith(flow) and "noisy" not in tmp_cars:
+            vehicle = tmp_cars
+        # else:
+        #     print(tmp_cars)
+            
+    return os.path.join(tmp_dir,vehicle)
+
+
+def episodes_dict(csv_path,tmp_dir):
     with open(csv_path) as csvfile:
         reader = csv.DictReader(csvfile)
         EpisodeInMemory = -1
@@ -31,6 +45,9 @@ def episodes_dict(csv_path):
                 continue
             Valid_episode = int(row['EpisodeID'])
             Valid_Scene = int(row['SceneID'])
+            Valid_Rx = row["VehicleName"]
+
+            # Valid_Rx = find_vehicle(row["VehicleName"],tmp_dir)
             Valid_Rx = base_vehicle_pcd(str(row['VehicleName']))
             key_dict = str(Valid_episode) + ',' + str(Valid_Scene)
             #key_dict = [Valid_episode, Valid_Scene]
@@ -42,8 +59,8 @@ def episodes_dict(csv_path):
             #csv_output = Valid_Scene + ',' + Valid_Rx
             if SceneInMemory != Valid_Scene:
                 episodesDict[Valid_episode]  = []
-                usersDict[key_dict]  = []
                 SceneInMemory = Valid_Scene
+                usersDict[key_dict]  = []
                 episodesDict[Valid_episode].append(Valid_Scene)
             Rx_info = [Valid_Rx, float(row['x']), float(row['y']), float(row['z']), int(row['RxID'])]
             usersDict[key_dict].append(Rx_info)
@@ -72,6 +89,7 @@ def gen_lidar_matrix(c):
     Tx = c.Tx_position
     max_dist_LIDAR = c.max_dist_LIDAR
 
+    # analysis_area = (743, 416, 771, 626) #Rosslyn
     dx = np.arange(QP['Xmin'],QP['Xmax'],QP['Xp'])
     dy = np.arange(QP['Ymin'],QP['Ymax'],QP['Yp'])
     
@@ -88,31 +106,40 @@ def gen_lidar_matrix(c):
     should_stop = False
 
     #Dicts
-    scenes_in_ep, RX_in_ep = episodes_dict(fileToRead)
 
+    tmpdir = './tmp/scans'
+    scenes_in_ep, RX_in_ep = episodes_dict(fileToRead,tmpdir)
+    number_of_receivers = c.n_antenna_per_episode
     if type_data == '3D':
         dz = np.arange(QP['Zmin'],QP['Zmax'],QP['Zp'])
         #Assumes 10 Tx/Rx pairs per scene
         #TO-DO: Support for episodes with more than 1 scene
-        zeros_array = np.zeros((10, np.size(dx), np.size(dy), np.size(dz)), np.int8)
+        zeros_array = np.zeros((numScenesPerEpisode,number_of_receivers, np.size(dx), np.size(dy), np.size(dz)), int)
     else:
-        zeros_array = np.zeros((10, np.size(dx), np.size(dy)), np.int8)
+        zeros_array = np.zeros((numScenesPerEpisode,number_of_receivers, np.size(dx), np.size(dy)), int)
 
     while not should_stop:
-
-        obstacles_matrix_array = zeros_array
+        
+        obstacles_matrix_array = zeros_array*np.nan
 
         if episodeID > int(last_episode):
             print('\nLast desired episode ({}) reached'.format(int(last_episode)))
             break
 
         for s in range(numScenesPerEpisode):
-            tmpdir = './tmp/scans'
+            print(f'Processing Episode: {episodeID} and Scene: {s}')
             if not os.path.exists(tmpdir):
                 os.makedirs(tmpdir)
-            scans_dir = scans_path + '/' + base_run_dir_fn(total_num_scenes) + '.zip'
+            scans_dir = scans_path + base_run_dir_fn(total_num_scenes) + '.zip'
             key_dict = str(episodeID) + ',' + str(s)
-            RxFlow = RX_in_ep[key_dict]
+            try:
+                RxFlow = RX_in_ep[key_dict]
+            except:
+                print(f"no valid vehicles in key{key_dict}")
+                total_num_scenes += 1
+                shutil.rmtree(tmpdir)
+                continue
+
             
 
             if not os.path.exists(scans_dir):
@@ -123,12 +150,8 @@ def gen_lidar_matrix(c):
             with zipfile.ZipFile(scans_dir, 'r') as zip_ref:
                 zip_ref.extractall(tmpdir)
             for vehicle in RxFlow:
-                if os.path.exists(tmpdir + '/' + vehicle[0] + '.pcd'):
-                    pcd_path = tmpdir + '/' + vehicle[0] + '.pcd'
-                elif os.path.exists(tmpdir + '/' + vehicle[0] + '0.pcd'):
-                    pcd_path = tmpdir + '/' + vehicle[0] + '0.pcd'
-                elif os.path.exists(tmpdir + '/' + vehicle[0] + '00.pcd'):
-                    pcd_path = tmpdir + '/' + vehicle[0] + '00.pcd'
+                pcd_path = find_vehicle(vehicle[0],tmpdir)
+                # pcd_path = tmpdir + '/' + vehicle[0] + '.pcd'
                 pc = pypcd.PointCloud.from_path(pcd_path)
 
                 vehicle_position = [[vehicle[1],vehicle[2],vehicle[3]]]
@@ -159,16 +182,16 @@ def gen_lidar_matrix(c):
                     indz = [int(i) for i in indz]
                     Rx_q_indz = quantizeJ([vehicle[3]],dz)
                     Tx_q_indz = quantizeJ([Tx[2]],dz)
-                    MD = np.zeros((np.size(dx),np.size(dy),np.size(dz)))
+                    MD = np.zeros((np.size(dx),np.size(dy),np.size(dz)), dtype=int)
                 else:
-                    MD = np.zeros((np.size(dx),np.size(dy)))
+                    MD = np.zeros((np.size(dx),np.size(dy)), dtype=int)
 
                 # Obstacles = 1
                 for i in range(len(indx)):
                     if type_data == '3D':
-                        MD[indx[i],indy[i],indz[i]] = 1
+                        MD[indx[i],indy[i],indz[i]] += 1
                     else:
-                        MD[indx[i],indy[i]] = 1
+                        MD[indx[i],indy[i]] += 1
                 
                 # Tx -1 Rx -2
                 if type_data == '3D':         
@@ -178,7 +201,7 @@ def gen_lidar_matrix(c):
                     MD[int(Tx_q_indx[0]),int(Tx_q_indy[0])] = -1
                     MD[int(Rx_q_indx[0]),int(Rx_q_indy[0])] = -2
                 
-                obstacles_matrix_array[int(vehicle[4]), :] = MD
+                obstacles_matrix_array[s,int(vehicle[4]), :] = MD
                 time_elapsed = datetime.now() - startTime
                 #print("Time elapsed: " + str(time_elapsed))
             
@@ -212,3 +235,6 @@ def quantizeJ(signal, partitions):
     x_q = x_i * delta + xminq;  #quantized and decoded output
 
     return list(x_i)
+
+
+    
