@@ -130,7 +130,7 @@ def gen_lidar_matrix(c):
             print(f'Processing Episode: {episodeID} and Scene: {s}')
             if not os.path.exists(tmpdir):
                 os.makedirs(tmpdir)
-            scans_dir = scans_path + base_run_dir_fn(total_num_scenes) + '.zip'
+            scans_dir = os.path.join(scans_path, base_run_dir_fn(total_num_scenes) + '.zip')
             key_dict = str(episodeID) + ',' + str(s)
             try:
                 RxFlow = RX_in_ep[key_dict]
