@@ -95,13 +95,16 @@ def getInfoVehicles(sumo_info_file):
         line = 0
         vPosition = {}
         for row in reader:
-            row['isRx'] = False
+            isRx = False
+            isTx = False
             if(row['receiverIndex'] != '-1'):
-                row['isRx'] = True
+                isRx = True
+            if(row['transmitterIndex'] != '-1'):
+                isTx = True
             thisAngleInRad = np.radians(float(row['angle'])) #*np.pi/180
             deltaX = (float(row['length'])/2.0) * np.sin(thisAngleInRad)
             deltaY = (float(row['length'])/2.0) * np.cos(thisAngleInRad)
-            vPosition[row['veh']] = {'xinsite':str(float(row['xinsite']) - deltaX),'yinsite':str(float(row['yinsite']) - deltaY),'height':row[' height'],'angle':row['angle'],'isRx':row['isRx'], 'z3':row['z3']}
+            vPosition[row['veh']] = {'xinsite':str(float(row['xinsite']) - deltaX),'yinsite':str(float(row['yinsite']) - deltaY),'height':row[' height'],'angle':row['angle'],'isRx':isRx, 'isTx':isTx, 'z3':row['z3']}
         
     return vPosition
 
@@ -199,7 +202,7 @@ def doZip(pathdir):
 # Perform Scan
 def doScan(vPosition,pathdir):
     for camera in vPosition.items():
-        if camera[1]['isRx']:
+        if camera[1]['isRx'] or camera[1]['isTx']:
             os.mkdir(pathdir)
             car_to_hide = bpy.data.objects[camera[0]]
             car_to_hide.hide_render = True
@@ -208,15 +211,15 @@ def doScan(vPosition,pathdir):
             scanner = bpy.data.objects["Camera"]
             scanner.location.xyz = float(camera[1]['xinsite']),float(camera[1]['yinsite']),height # X,Y,Z
             scanner.rotation_euler = (radians(90), radians(0), radians(0))
+            pcd_file_name = os.path.join(pathdir, f'{camera[0]}.pcd')
             blensor.blendodyne.scan_advanced(scanner, rotation_speed = 10.0, 
                                 simulation_fps=24, angle_resolution = 0.1728, 
-                                max_distance = 120, evd_file= pathdir+'/'+camera[0]+'.pcd',
+                                max_distance = 120, evd_file= pcd_file_name,
                                 noise_mu=0.0, noise_sigma=0.03, start_angle = 0.0, 
                                 end_angle = 360.0, evd_last_scan=True, 
                                 add_blender_mesh = False, 
                                 add_noisy_blender_mesh = False, world_transformation=scanner.matrix_world)
             car_to_hide.hide_render = False
-            print(pathdir+'/'+camera[0]+".pcd")
             os.remove(pathdir+'/'+camera[0])
             doZip(pathdir)
             myfile = pathdir+'/'+camera[0]

@@ -159,23 +159,7 @@ def onlyDronesList(idList):
             idList.remove(veh)
     return idList
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--place-only', action='store_true',
-                        help='Run only the objects placement and save files for ray-tracing')
-    parser.add_argument('-j', '--jump', action='store_true',
-                        help='Jumping runs that already have results (works only if utilized with the option \'-r\' )')
-    parser.add_argument('-r', '--ray-tracing-only', action='store_true',
-                        help='Run only ray-tracing with previoulsy generated files')
-    parser.add_argument('-c', '--run-calcprop', action='store_true',
-                        help='Ray-tracing with InSite calcprop instead of the default wibatch')
-    parser.add_argument('-s', '--pause-each-run', action='store_true',
-                        help='Interactive run')
-    parser.add_argument('-o', '--remove-results-dir', action='store_true',
-                        help='ONLY IF YOU KNOW WHAT YOU ARE DOING: it will remove the whole results folder')
-    parser.add_argument('-m', '--mimo-only', action='store_true',
-                        help='Run only ray-tracing with native mimo from InSite previoulsy generated files')
-    args = parser.parse_args()
+def main(args):
 
     #check consistency of user input
     if c.use_fixed_receivers:

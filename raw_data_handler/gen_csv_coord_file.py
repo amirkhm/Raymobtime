@@ -56,6 +56,7 @@ def gen_csv_file(c):
     file = open(coord_file_name, 'w')
     file.writelines("Val,EpisodeID,SceneID,TxID,RxID,VehicleName,x,y,z,angles,rays,LOS\n")
     for ep in session.query(fgdb.Episode):  # go over all episodes
+        print(f"Processing ep {ep}...")
         # process each scene in this episode
         # count # of ep.scenes
         for sc_i, sc in enumerate(ep.scenes):
@@ -83,13 +84,13 @@ def gen_csv_file(c):
             validReceiversInThisScene = np.zeros(maxNumOfReceiversInThisEpisode, dtype=bool)
             approximateReceiverPositions = np.zeros((maxNumOfReceiversInThisEpisode, 3))
             numOfRaysForThisReceiver = np.zeros(maxNumOfReceiversInThisEpisode, dtype=int)
-            height_receivers = np.zeros(maxNumOfReceiversInThisEpisode, dtype=int)
-            angle_receivers = np.zeros(maxNumOfReceiversInThisEpisode, dtype=int)
+            height_receivers = np.zeros(maxNumOfReceiversInThisEpisode, dtype=float)
+            angle_receivers = np.zeros(maxNumOfReceiversInThisEpisode, dtype=float)
             # 
             validTransmitterInThisScene = np.zeros(maxNumOfTransmittersInThisEpisode, dtype=bool)
             approximateTransmitterPositions = np.zeros((maxNumOfTransmittersInThisEpisode, 3))
-            height_transmitters = np.zeros(maxNumOfTransmittersInThisEpisode, dtype=int)
-            angle_transmitters = np.zeros(maxNumOfTransmittersInThisEpisode, dtype=int)
+            height_transmitters = np.zeros(maxNumOfTransmittersInThisEpisode, dtype=float)
+            angle_transmitters = np.zeros(maxNumOfTransmittersInThisEpisode, dtype=float)
             # sc.objects has sc.number_of_mobile_objects, which can be a large number (e.g. 53)
             for obj in sc.objects:  # get object in scene
                 if len(obj.transmitter) > 0:

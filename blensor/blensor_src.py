@@ -1,8 +1,9 @@
 import config as c
 import argparse
 import os
+import shutil
 
-def main(pysim, lidar=False, img=False):
+def blensor_simulation(sim_type):
     # Will simulate blensor multiple times
     # Get paths from config file
     runs = max(c.n_run)
@@ -11,6 +12,13 @@ def main(pysim, lidar=False, img=False):
     end = blensor_scenario_path.split('/')[-1]
     vehicles_blend_path = blensor_scenario_path.replace(end, 'vehicles.blend')
     blensor_runfile = c.blensor_runfile_path
+    
+    if sim_type=='lidar':
+        main_simulator_python_file = 'blensor/lidar_sim.py'
+    elif sim_type=='image':
+        main_simulator_python_file = 'blensor/img_sim.py'
+
+    os.makedirs('scans')
 
     # Customize color in the terminal
     RED = '\033[91m'
@@ -21,24 +29,16 @@ def main(pysim, lidar=False, img=False):
         #     continue
         print('Running command...')
         cmd = (
-            f'{blensor_runfile} {blensor_scenario_path} --background -P {pysim}'
+            f'{blensor_runfile} {blensor_scenario_path} --background -P {main_simulator_python_file}'
             f' --from_run {i} --to {i+1} --simulation {simulation_path} --veh_path {vehicles_blend_path}'
         )
         
         print(cmd)
         print(RED + f'Simulation n° {i}' + RESET)
         os.system(cmd)
+        
+    new_scan_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name, 'scans')
+    shutil.move('scans', new_scan_folder)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-l', '--lidar', action='store_true',
-                        help='Run lidar simmulation')
-    parser.add_argument('-i', '--image', action='store_true',
-                        help='Run Image simulation')
-    args = parser.parse_args()
-
-    if args.lidar:
-        main_simulator_python_file = 'blensor/lidar_sim.py'
-    elif args.image:
-        main_simulator_python_file = 'blensor/img_sim.py'
-    main(main_simulator_python_file, args.lidar, args.image)
+    blensor_simulation('lidar')
