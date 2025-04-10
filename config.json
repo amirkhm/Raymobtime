@@ -1,6 +1,6 @@
 {   
-    "simulation_name":"Marselha V2I: 3 Simulations stacked processing",
-    "seed":202403,
+    "seed":2025,
+    "simulation_name":"t00",
     "features":{
         "use_fixed_receivers":false,
         "use_pedestrians":false,
@@ -10,8 +10,8 @@
         "use_V2V":false
     },
     "simulation_parameters":{
-        "n_init_run":880,
-        "n_end_run":5800,
+        "n_init_run":0,
+        "n_end_run":1,
         "sampling_interval":0.080,
         "n_scenes_of_each_episode":40,
         "time_between_episodes":30,
@@ -19,27 +19,27 @@
         "n_Tx_per_episode":1
     },
     "simulation_paths":{
-        "base_insite_path":"Marselha",
-        "results_dir_path":"Marselha_Tracking_V2I"
+        "base_insite_path":"rosslyn_tx_end_road",
+        "results_dir_path":"rosslyn_artigo_NLoS_tracking"
     },
     "sumo_files":{
         "sumo_bin":"/usr/bin/sumo",
-        "sumo_cfg":"marselha"
+        "sumo_cfg":"seasonal"
     },
     "insite_paths":{
-        "insite_software_path":"/media/software/remcom/",
+        "insite_software_path":"/mnt/data/software/remcom",
         "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@200.239.93.3"
     },
     "area_limits":{
         "enabled":true,
-        "max_lim":[80, 50],
-        "min_lim":[-60, -60],
+        "max_lim":[843, 523],
+        "min_lim":[660, 334],
         "end_ep_for_no_veh":true
     },
     "data_handler":{
         "area_of_analyses":{
             "enabled":false,
-            "coordinates_limits":[-60, -60, 80, 50]
+            "coordinates_limits":[660, 334, 843, 523]
         },
         "antenna_arr":{
             "Tx":64,
@@ -47,7 +47,9 @@
             "antenna_angle":0
         },
         "cartesian_lidar_matrix":{
-            "QP":{"Xp":1.15,"Yp":1.25,"Zp":1,"Xmax": 80,"Ymax": 50, "Zmax": 10, "Xmin": -60,"Ymin": -60, "Zmin": 0 },
+            "coordinate_system":"cartesian",
+            "QP":{"Xp":1.15,"Yp":1.25,"Zp":1,"Xmax": 767,"Ymax": 679, "Zmax": 10, "Xmin": 744,"Ymin": 429, "Zmin": 0 },
+            "QPsph":{"Xp":1.15,"Yp":1.25,"Zp":1,"Xmax": 767,"Ymax": 679, "Zmax": 10, "Xmin": 744,"Ymin": 429, "Zmin": 0},
             "Tx_position":[13.735024754781474, 12.543859564388237, 25.000000000000000],
             "max_dist_LIDAR":100,
             "type_data":"3D"
@@ -67,7 +69,8 @@
         "insite_vehicles_name":"random-line"
     },
     "blensor_options":{
-        "path_to_scenario":"/home/takashi/Scenarios/Marselha/marselha.blend",
-        "blensor_img_path":"~/Blensor"
+        "path_to_scenario":"/mnt/data/Scenarios/Rosslyn/rosslyn.blend",
+        "path_to_vehicles":"/mnt/data/Scenarios/Rosslyn/vehicles.blend",
+        "blensor_img_path":"Blensor"
     }
 }
