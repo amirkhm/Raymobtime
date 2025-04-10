@@ -18,7 +18,8 @@ def blensor_simulation(sim_type):
     elif sim_type=='image':
         main_simulator_python_file = 'blensor/img_sim.py'
 
-    os.makedirs('scans')
+    if not os.path.exists('scans'):
+        os.makedirs('scans')
 
     # Customize color in the terminal
     RED = '\033[91m'
@@ -38,7 +39,15 @@ def blensor_simulation(sim_type):
         os.system(cmd)
         
     new_scan_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name, 'scans')
-    shutil.move('scans', new_scan_folder)
+    if not os.path.exists(new_scan_folder):
+        os.makedirs(new_scan_folder)
+
+    for zip_file in os.listdir('scans'):
+        src = os.path.join('scans', zip_file)
+        dst = os.path.join(new_scan_folder, zip_file)
+        shutil.move(src, dst)
+        
+    os.rmdir('scans')
 
 if __name__ == "__main__":
     blensor_simulation('lidar')

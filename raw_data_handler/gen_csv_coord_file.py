@@ -55,8 +55,8 @@ def gen_csv_file(c):
     coord_file_name = os.path.join(main_folder, 'CoordVehicleTxRx.csv')
     file = open(coord_file_name, 'w')
     file.writelines("Val,EpisodeID,SceneID,TxID,RxID,VehicleName,x,y,z,angles,rays,LOS\n")
-    for ep in session.query(fgdb.Episode):  # go over all episodes
-        print(f"Processing ep {ep}...")
+    for ep_i, ep in enumerate(session.query(fgdb.Episode)):  # go over all episodes
+        print(f"Processing ep {ep_i}...")
         # process each scene in this episode
         # count # of ep.scenes
         for sc_i, sc in enumerate(ep.scenes):
@@ -117,7 +117,8 @@ def gen_csv_file(c):
                 # check if object is inside the analysis_area
                 rec_array_idx = rec_name_to_array_idx_map.index(obj.name)
                 approximateReceiverPositions[rec_array_idx] = obj.position
-                if (obj_polygon.within(analysis_polygon)) or (not c.analysis_area_enabled):
+                #print(obj.receivers.items())
+                if ((obj_polygon.within(analysis_polygon)) or (not c.analysis_area_enabled)) and (len(obj.receivers[0].rays)>0):
                     # print(obj.name, ' with ID ', obj.id, ' is within analysis area and has a receiver')
                     validReceiversInThisScene[rec_array_idx] = True
                     numValidChannels += 1
@@ -131,11 +132,7 @@ def gen_csv_file(c):
                     # use the infamouse list to get the index corresponding to the mobile object with name obj.name
                 # print(obj.name, ' is mapped to index ', rec_array_idx)
                 angle_receivers[rec_array_idx] = obj.angle
-                height_receivers[rec_array_idx] = obj.height
-
-                if approximateReceiverPositions[rec_array_idx, 0] == 0.0 and approximateReceiverPositions[rec_array_idx, 1] == 0.0:
-                    numInvalidChannels += 1
-                    validReceiversInThisScene[rec_array_idx] = False
+                height_receivers[rec_array_idx] = obj.height                
 
                 if len(obj.receivers) > 1:
                     print('Was expecting only 1 receiver per vehicle')
@@ -151,6 +148,10 @@ def gen_csv_file(c):
                         numLOS += 1
                     else:
                         numNLOS += 1
+
+                if not (numOfRaysForThisReceiver[rec_array_idx]>0):
+                    numInvalidChannels += 1
+                    validReceiversInThisScene[rec_array_idx] = False
             # now have the info for all receivers. Print in order
             for i in range(maxNumOfReceiversInThisEpisode):
                 
