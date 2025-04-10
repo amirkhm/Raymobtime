@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import bpy
 import csv
 import blensor
@@ -19,10 +20,19 @@ def simulator():
     startTime = datetime.now()
     # Get infos from the args
     args = sys.argv
-    folder_scanned_name = args[args.index('--simulation')+1]
-    vehicles_blend_path = args[args.index('--veh_path')+1]
-    start_run = int(args[args.index('--from_run')+1])
-    end_run = int(args[args.index('--to')+1])
+
+    with open('config.json', 'r') as file:
+        cfg = json.load(file)
+
+    cur_dir = os.curdir
+    folder_scanned_name = os.path.join(cur_dir, 'simulations', cfg['simulation_paths']['results_dir_path'])
+    folder_scans_dataset = os.path.join(cur_dir, 'sim_data', cfg['simulation_paths']['results_dir_path'], 'scans')
+    vehicles_blend_path = cfg['blensor_options']['path_to_vehicles']
+    start_run = cfg['simulation_parameters']['n_init_run']
+    end_run = cfg['simulation_parameters']['n_end_run']
+
+    if not os.path.exists(folder_scans_dataset):
+        os.makedirs(folder_scans_dataset)
     #for key,scene_path in scenes_path.items():
     frame_num = 0
     frame_step = 1
@@ -44,7 +54,7 @@ def simulator():
         vPosition = getInfoVehicles(sumo_info_file)
         Position = vPosition
         animateVehiclesBlender(Position, vehicles_blend_path) 
-        doScan(Position,'scans_'+base_run_dir_fn(run))
+        doScan(Position,'scans_'+base_run_dir_fn(run), folder_scans_dataset)
         for obj in D.objects:
             if obj.name.startswith('flow') or obj.name.startswith('_flow'):
                 obj.select = True
@@ -195,12 +205,16 @@ def convert360(x):
 
     return x % 360
 
-def doZip(pathdir):
-    os.system('zip -r -j %s%s.zip %s'%('scans/',pathdir, pathdir))
-    print('zip -r -j %s%s.zip %s'%('scans/',pathdir, pathdir))
+def doZip(pathdir, scans_output):
+    zip_output = os.path.join(scans_output, pathdir)
+    cmd = f"zip -r -j {zip_output}.zip {pathdir}"
+    # os.system('zip -r -j %s%s.zip %s'%('scans/',pathdir, pathdir))
+    # print('zip -r -j %s%s.zip %s'%('scans/',pathdir, pathdir))
+    os.system(cmd)
+    print(cmd)
     shutil.rmtree(pathdir)
 # Perform Scan
-def doScan(vPosition,pathdir):
+def doScan(vPosition,pathdir, scans_output):
     for camera in vPosition.items():
         if camera[1]['isRx'] or camera[1]['isTx']:
             os.mkdir(pathdir)
@@ -221,7 +235,7 @@ def doScan(vPosition,pathdir):
                                 add_noisy_blender_mesh = False, world_transformation=scanner.matrix_world)
             car_to_hide.hide_render = False
             os.remove(pathdir+'/'+camera[0])
-            doZip(pathdir)
+            doZip(pathdir, scans_output)
             myfile = pathdir+'/'+camera[0]
             '''doClean(myfile)'''
     #doZip(pathdir)

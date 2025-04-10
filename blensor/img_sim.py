@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import bpy
 import csv
 import sqlite3
@@ -21,14 +22,26 @@ def main():
     args = sys.argv
     frame_num = 0
 
-    folder_scanned_name = args[args.index('--simulation')+1]
-    vehicles_blend_path = args[args.index('--veh_path')+1]
-    start_run = int(args[args.index('--from_run')+1])
-    end_run = int(args[args.index('--to')+1])
+    with open('config.json', 'r') as file:
+        cfg = json.load(file)
+
+    cur_dir = os.curdir
+    folder_scanned_name = os.path.join(cur_dir, 'simulations', cfg['simulation_paths']['results_dir_path'])
+    folder_img_dataset = os.path.join(cur_dir, 'sim_data', cfg['simulation_paths']['results_dir_path'], 'images')
+    vehicles_blend_path = cfg['blensor_options']['path_to_vehicles']
+    start_run = cfg['simulation_parameters']['n_init_run']
+    end_run = cfg['simulation_parameters']['n_end_run']
+
+    if not os.path.exists(folder_img_dataset):
+        os.makedirs(folder_img_dataset)
+    # folder_scanned_name = args[args.index('--simulation')+1]
+    # vehicles_blend_path = args[args.index('--veh_path')+1]
+    # start_run = int(args[args.index('--from_run')+1])
+    # end_run = int(args[args.index('--to')+1])
 
     current_scn = 0
     current_ep = 0
-    listValidsInvalids = './CoordVehiclesRxPerScene_s009.csv'
+    listValidsInvalids = os.path.join(cur_dir, 'sim_data', cfg['simulation_paths']['results_dir_path'], 'CoordVehicleTxRx.csv')
     run = start_run
     C.scene.frame_set(frame_num)     
     if bpy.data.objects.get("Camera") is None:
@@ -51,7 +64,7 @@ def main():
         Position = vPosition
         vectorsPath= getInfoPath(path_info_file, 1)
         animateVehiclesBlender(Position, vehicles_blend_path) 
-        get4Photos(listValidsInvalids,run,current_scn,run)
+        get4Photos(listValidsInvalids,folder_img_dataset,run,current_scn,run)
         for obj in D.objects:
             if obj.name.startswith('flow') or obj.name.startswith('_flow'):
                 obj.select = True
@@ -90,7 +103,7 @@ def getPhoto360(file_path,current_ep,current_scn,run):
         bpy.ops.render.render(write_still=True)
         print('Done, continuing...')
 
-def get4Photos(file_path,current_ep,current_scn,run):
+def get4Photos(file_path,dataset_path,current_ep,current_scn,run):
     scan_vehicles = []
     cam = D.objects['Camera']
     D.cameras['Camera'].clip_end = 300
@@ -103,9 +116,10 @@ def get4Photos(file_path,current_ep,current_scn,run):
         for row in reader:
             if current_scn == int(row['SceneID']) and current_ep == int(row['EpisodeID']) and row['Val'] == 'V':
                 scan_vehicles.append(row['VehicleName'])    
-    print(scan_vehicles)
+    # print(scan_vehicles)
+    camera_name = ['front']
     for vehicle in scan_vehicles:
-        print(vehicle)
+        # print(vehicle)
         angle = 0
         veh = D.objects[vehicle]
         cam.location = (0,0,0)
@@ -114,7 +128,8 @@ def get4Photos(file_path,current_ep,current_scn,run):
         cam.location[2] = veh.dimensions[2] + 3
         cam.rotation_euler = (radians(90), 0, veh.rotation_euler[2])
         while angle < 4:
-            D.scenes['Scene'].render.filepath = '.imgs/'+str(run)+'/'+'Camera_'+vehicle+'/'+str(angle)
+            D.scenes['Scene'].render.filepath = os.path.join(dataset_path, f'run{run}', f'Camera_{vehicle}', f'{angle}')
+            # D.scenes['Scene'].render.filepath = f'{dataset_path}/imgs/'+str(run)+'/'+'Camera_'+vehicle+'/'+str(angle)
             bpy.ops.render.render(write_still=True)
             cam.rotation_euler[2] += radians(90)
             angle+=1
@@ -218,7 +233,6 @@ def animateVehiclesBlender(vPosition, vehicles_blend_path):
                 bpy.data.objects[obj_name].keyframe_insert(data_path="hide", index=-1)
                 bpy.data.objects[obj_name].name = '_'+bpy.data.objects[obj_name].name
     for vehicles in vPosition.items():
-        print(vehicles)
         if bpy.data.objects.get(vehicles[0]) is not None: # Existe, code to move
             veh = bpy.data.objects[vehicles[0]]
         else:
