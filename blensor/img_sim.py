@@ -19,7 +19,6 @@ def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
 
 def main():
     startTime = datetime.now()
-    args = sys.argv
     frame_num = 0
 
     with open('config.json', 'r') as file:
@@ -128,7 +127,7 @@ def get4Photos(file_path,dataset_path,current_ep,current_scn,run):
         cam.location[2] = veh.dimensions[2] + 3
         cam.rotation_euler = (radians(90), 0, veh.rotation_euler[2])
         while angle < 4:
-            D.scenes['Scene'].render.filepath = os.path.join(dataset_path, f'run{run}', f'Camera_{vehicle}', f'{angle}')
+            D.scenes['Scene'].render.filepath = os.path.join(dataset_path, 'UE', f'run{run}', f'Camera_{vehicle}', f'{angle}')
             # D.scenes['Scene'].render.filepath = f'{dataset_path}/imgs/'+str(run)+'/'+'Camera_'+vehicle+'/'+str(angle)
             bpy.ops.render.render(write_still=True)
             cam.rotation_euler[2] += radians(90)

@@ -138,10 +138,18 @@ set_area_limit = cfg.area_limits.enabled
 max_lim = cfg.area_limits.max_lim
 min_lim = cfg.area_limits.min_lim
 
+# Blender Options
+sim_BS_img = cfg.blensor_options.img_simulation_options.BS_camera
+sim_UE_img = cfg.blensor_options.img_simulation_options.UE_camera
+n_cameras_blensor_scenario = cfg.blensor_options.img_simulation_options.n_camera_BS
+
+CoordSystem = cfg.data_handler.cartesian_lidar_matrix.coordinate_system # Spherical or Cartesian
 QP = cfg.data_handler.cartesian_lidar_matrix.QP
+QPsph = cfg.data_handler.cartesian_lidar_matrix.QPsph
 Tx_position = cfg.data_handler.cartesian_lidar_matrix.Tx_position
 max_dist_LIDAR = cfg.data_handler.cartesian_lidar_matrix.max_dist_LIDAR
 type_data = cfg.data_handler.cartesian_lidar_matrix.type_data
+
 
 if use_V2V:
     close_vehicles = cfg.v2v_options.close_vehicles

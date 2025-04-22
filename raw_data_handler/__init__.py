@@ -4,3 +4,4 @@ from .gen_csv_coord_file import gen_csv_file
 from .gen_beam_output import gen_beam_output_file
 from .gen_car_lidar_matrix import gen_lidar_matrix
 from .sanity_test import sanity_check_up
+from .refine_images import image_refinement

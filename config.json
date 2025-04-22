@@ -1,6 +1,6 @@
 {   
     "seed":2025,
-    "simulation_name":"t00",
+    "simulation_name":"t004",
     "features":{
         "use_fixed_receivers":false,
         "use_pedestrians":false,
@@ -71,6 +71,11 @@
     "blensor_options":{
         "path_to_scenario":"/mnt/data/Scenarios/Rosslyn/rosslyn.blend",
         "path_to_vehicles":"/mnt/data/Scenarios/Rosslyn/vehicles.blend",
-        "blensor_img_path":"Blensor"
+        "blensor_img_path":"Blensor",
+        "img_simulation_options":{
+            "BS_camera":true,
+            "UE_camera":true,
+            "n_camera_BS":3
+        }
     }
 }

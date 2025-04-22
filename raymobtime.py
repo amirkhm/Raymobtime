@@ -3,7 +3,8 @@ import argparse
 import config as c
 # convert simulation raw to database
 from raw_data_handler import gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file
-from raw_data_handler import gen_lidar_matrix
+from raw_data_handler import gen_lidar_matrix, image_refinement
+from raw_data_handler import sanity_check_up
 # simulators
 from blensor import blensor_simulation
 from rwisimulation.simulation import main
@@ -11,10 +12,12 @@ from rwisimulation.simulation import main
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Blensor options    
-    parser.add_argument('-d', '--data-base', choices=["db", "coord", "rays", "beams", "lidar", "all"], const="all", nargs="?",
+    parser.add_argument('-d', '--data-base', choices=["db", "coord", "rays", "beams", "lidar", "image", "all"], const="all", nargs="?",
                         help='Convert simulation from WI to database type: db, csv, hdf5')
     parser.add_argument('-b', '--blensor', choices=["lidar", "image"],
                         help='Uses Blensor to simulate lidar and image data for Raymobtime dataset')
+    parser.add_argument('-v', '--check', action='store_true',
+                        help='Run Checkup for the whole processed database')
     # Old args for simulation from rwisimulation
     parser.add_argument('-p', '--place-only', action='store_true',
                         help='Run only the objects placement and save files for ray-tracing')
@@ -49,14 +52,25 @@ if __name__ == "__main__":
         if args.data_base == "beams":
             gen_beam_output_file(c)
 
+    if args.check:
+        sanity_check_up(c)
+
     # Simulation using blensor for image/lidar database
     if (args.blensor):
         blensor_simulation(args.blensor)
         
     # Saving the blensor simulation from pcd files to matrix type data
+    CoordSystem = c.CoordSystem
     if args.data_base == "lidar":
-        gen_lidar_matrix(c)
-    
+        if CoordSystem.lower() == 'spherical':
+            gen_lidar_matrix(c)
+        elif CoordSystem.lower() == 'cartesian':
+            gen_lidar_matrix(c)
+        else:
+            raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.json')
+    elif args.data_base == "image":
+        image_refinement(c)
+
     # Usual Raymobtime Simulation using WI
     if args.place_only or args.ray_tracing_only:
         main(args)

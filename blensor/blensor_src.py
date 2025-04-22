@@ -6,17 +6,18 @@ import shutil
 def blensor_simulation(sim_type):
     # Will simulate blensor multiple times
     # Get paths from config file
-    runs = max(c.n_run)
-    simulation_path = c.results_dir
     blensor_scenario_path = c.blensor_scenario_path
-    end = blensor_scenario_path.split('/')[-1]
-    vehicles_blend_path = blensor_scenario_path.replace(end, 'vehicles.blend')
     blensor_runfile = c.blensor_runfile_path
     
     if sim_type=='lidar':
-        main_simulator_python_file = 'blensor/lidar_sim.py'
+        main_simulator_python_file = ['blensor/lidar_sim.py']
     elif sim_type=='image':
-        main_simulator_python_file = 'blensor/img_sim.py'
+        main_simulator_python_file = []
+        if c.sim_BS_img:
+            main_simulator_python_file.append('blensor/img_bs_sim.py')
+        if c.sim_UE_img:
+            main_simulator_python_file.append('blensor/img_sim.py')
+        
 
     # Customize color in the terminal
     RED = '\033[91m'
@@ -26,14 +27,24 @@ def blensor_simulation(sim_type):
         # if os.path.exists(f'scans/scans_run{i:05d}.zip') and lidar:
         #     continue
         print('Running command...')
-        cmd = (
-            f'{blensor_runfile} {blensor_scenario_path} --background -P {main_simulator_python_file}'
-        )
-        
-        print(cmd)
-        print(RED + f'Simulation n° {i}' + RESET)
-        os.system(cmd)
-    
+        for blend_runpy in main_simulator_python_file:
+            cmd = (
+                f'{blensor_runfile} {blensor_scenario_path} --background -P {blend_runpy}'
+            )
+            
+            print(cmd)
+            print(RED + f'Simulation n° {i}' + RESET)
+            os.system(cmd)
+
+def export_cam_info():
+    """
+    Run terminal code to export camera blensor information from the Base Station
+    """
+    blensor_scenario_path = c.blensor_scenario_path
+    blensor_runfile = c.blensor_runfile_path
+
+    cmd = (f'{blensor_runfile} {blensor_scenario_path} --background -P blensor/data_extractor.py')
+    os.system(cmd)
 
 if __name__ == "__main__":
     blensor_simulation('lidar')
