@@ -2,6 +2,7 @@
 Several simulation parameters are defined here.
 '''
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import itertools
 import numpy as np
 import socket
@@ -65,6 +66,8 @@ results_dir = os.path.join(working_directory, 'simulations', cfg.simulation_path
 #the path to the executable files, not minding about the license file location.
 #Folders for SUMO and InSite. Use executable sumo-gui if want to see the GUI or sumo otherwise
 
+sim_name = cfg.simulation_paths.results_dir_path
+
 insite_version = get_insite_version(base_insite_project_path) # Indentify Insite version
 locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 ' # Insite env variable
 sumo_bin = cfg.sumo_files.sumo_bin # SUMO bin path variable
@@ -97,15 +100,15 @@ drone_simulation = cfg.features.drone_simulation # Only drones will be chosen to
 mimo_orientation = cfg.features.mimo_orientation # Only avaliable for a single Rx (not available)
 use_V2V = cfg.features.use_V2V # Set True to use V2V (transmitters and receivers are vehicles)
 
-print('########## Scripts will assume the following files: ##########')
-print('SUMO executable: ', sumo_bin)
-print('SUMO configuration: ', sumo_cfg)
-print('InSite calcprop executable: ', calcprop_bin)
-print('InSite wibatch executable: ', wibatch_bin)
-print('Working folder (base for several folders): ', working_directory)
-print('InSite input files folder: ', base_insite_project_path)
-#print('InSite temporary output folder: ', project_output_dir)
-print('Final output parent folder: ', results_dir)
+# print('########## Scripts will assume the following files: ##########')
+# print('SUMO executable: ', sumo_bin)
+# print('SUMO configuration: ', sumo_cfg)
+# print('InSite calcprop executable: ', calcprop_bin)
+# print('InSite wibatch executable: ', wibatch_bin)
+# print('Working folder (base for several folders): ', working_directory)
+# print('InSite input files folder: ', base_insite_project_path)
+# #print('InSite temporary output folder: ', project_output_dir)
+# print('Final output parent folder: ', results_dir)
 
 n_run = range(
     cfg.simulation_parameters.n_init_run,
@@ -124,10 +127,41 @@ if use_V2V:
     n_Tx_per_episode = cfg.simulation_parameters.n_Tx_per_episode #number of transmitters per episode
     n_antenna_per_episode = cfg.simulation_parameters.n_antenna_per_episode #number of receivers per episode
 # where to map the received to TFRecords (minx, miny, maxx, maxy)
-analysis_area = (729, 453, 666, 666)
+
+analysis_area_enabled = cfg.data_handler.area_of_analyses.enabled
+analysis_area = cfg.data_handler.area_of_analyses.coordinates_limits
 analysis_area_resolution = 0.5
 antenna_number = 10
 frequency = 60e9 # frequency in Hz for the RT simulation
+
+set_area_limit = cfg.area_limits.enabled
+max_lim = cfg.area_limits.max_lim
+min_lim = cfg.area_limits.min_lim
+
+# Blender Options
+sim_BS_img = cfg.blensor_options.img_simulation_options.BS_camera
+sim_UE_img = cfg.blensor_options.img_simulation_options.UE_camera
+n_cameras_blensor_scenario = cfg.blensor_options.img_simulation_options.n_camera_BS
+
+CoordSystem = cfg.data_handler.cartesian_lidar_matrix.coordinate_system # Spherical or Cartesian
+QP = cfg.data_handler.cartesian_lidar_matrix.QP
+QPsph = cfg.data_handler.cartesian_lidar_matrix.QPsph
+Tx_position = cfg.data_handler.cartesian_lidar_matrix.Tx_position
+max_dist_LIDAR = cfg.data_handler.cartesian_lidar_matrix.max_dist_LIDAR
+type_data = cfg.data_handler.cartesian_lidar_matrix.type_data
+
+
+if use_V2V:
+    close_vehicles = cfg.v2v_options.close_vehicles
+    n_of_vehicles = cfg.v2v_options.n_of_vehicles
+    chosen_vehicle = cfg.v2v_options.chosen_vehicle
+
+n_Tx_antennas = cfg.data_handler.antenna_arr.Tx
+n_Rx_antennas = cfg.data_handler.antenna_arr.Rx
+antenna_angle = cfg.data_handler.antenna_arr.antenna_angle
+
+blensor_scenario_path = cfg.blensor_options.path_to_scenario
+blensor_runfile_path = cfg.blensor_options.blensor_img_path
 
 ###############################################################
 ## Part II - Extra information that typically does not need to be modified
@@ -174,13 +208,13 @@ dst_txrx_file_name = insite_setup_name + '.txrx' #file with Tx and Rx's
 # XML project that will be executed by InSite command line tools (its path will be the run folder):
 dst_x3d_xml_file_name = insite_setup_name + '.' + insite_study_area_name + '.xml' #configuration file for wibatch
 
-print('Output JSON file: ', simulation_info_file_name)
-print('Reference InSite model: ', base_x3d_xml_path)
-print('Generated InSite model that will be used (in run folder): ', dst_x3d_xml_file_name)
-print('Reference .object file: ', base_object_file_name)
-print('Generated .object file that will be used: ', dst_object_file_name)
-print('Reference .txrx file: ', base_txrx_file_name)
-print('Generated .txrx file that will be used: ', dst_txrx_file_name)
+#print('Output JSON file: ', simulation_info_file_name)
+#print('Reference InSite model: ', base_x3d_xml_path)
+#print('Generated InSite model that will be used (in run folder): ', dst_x3d_xml_file_name)
+#print('Reference .object file: ', base_object_file_name)
+#print('Generated .object file that will be used: ', dst_object_file_name)
+#print('Reference .txrx file: ', base_txrx_file_name)
+#print('Generated .txrx file that will be used: ', dst_txrx_file_name)
 
 #the (misterious) information below is added in simulation.py into a XML file
 if insite_version == '3.3':
@@ -208,7 +242,7 @@ car_structure_name = 'car'
 antenna_points_name = insite_rx_name
 
 if use_sumo == True:
-    seed = 353432 #3501970 Original's ITA paper seed = 1517605264
+    seed = cfg.seed #353432 #3501970 Original's ITA paper seed = 1517605264
     np.random.seed(seed)
     sumo_cmd = [sumo_bin, '-c', sumo_cfg, '--step-length', str(sampling_interval), '--seed', '{}'.format(seed)]
     #mapping from SUMO to InSite coordinates
