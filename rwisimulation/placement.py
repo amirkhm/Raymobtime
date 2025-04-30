@@ -239,15 +239,15 @@ def get_model(str_vehicles,name,x,y,z,angle,height,length=1,width=1):
     # The height here is utilized as trick to choose which model will be utilized .
     # TODO: Find a new way to classify the models, instead of height.
     if (height == 4.3):
-        model_object = open(os.path.join(c.working_directory,'objects/truck.object'), 'r')
+        model_object = open(os.path.join(c.working_directory,'base_files/objects/truck.object'), 'r')
     elif (height == 3.2):               
-        model_object = open(os.path.join(c.working_directory,'./objects/bus.object'), 'r')
+        model_object = open(os.path.join(c.working_directory,'./base_files/objects/bus.object'), 'r')
     elif (height == 1.59):              
-        model_object = open(os.path.join(c.working_directory,'./objects/car.object'), 'r')
+        model_object = open(os.path.join(c.working_directory,'./base_files/objects/car.object'), 'r')
     elif (height == 1.72):              
-        model_object = open(os.path.join(c.working_directory,'./objects/pedestrian.object'), 'r')
+        model_object = open(os.path.join(c.working_directory,'./base_files/objects/pedestrian.object'), 'r')
     elif (height == 0.295): 
-        model_object = open(os.path.join(c.working_directory,'./objects/drone.object'), 'r')
+        model_object = open(os.path.join(c.working_directory,'./base_files/objects/drone.object'), 'r')
     else:
         print('There is no model object ready for this object')
         exit(1)

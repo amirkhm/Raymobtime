@@ -1,11 +1,6 @@
-import os
-import datetime
 import numpy as np
 import pandas as pd
 import math
-from rwiparsing import P2mPaths, P2mCir
-#from matlab_tofrom_python import read_matlab_array_from_mat
-from raw_data_handler.matlab_tofrom_python import read_matlab_array_from_mat
 
 def arrayFactorGivenAngleForULA(numAntennaElements, theta, normalizedAntDistance=0.5, angleWithArrayNormal=0):
 
@@ -71,28 +66,11 @@ def dft_codebook(dim):
     return w
 
 def getDFTOperatedChannel(H, number_Tx_antennas, number_Rx_antennas):
-    wt = dft_codebook(number_Tx_antennas)   #precoding
-    wr = dft_codebook(number_Rx_antennas)   #combining
+    wt = dft_codebook(number_Tx_antennas)
+    wr = dft_codebook(number_Rx_antennas)
     dictionaryOperatedChannel = wr.conj().T * H * wt
     # dictionaryOperatedChannel2 = wr.T * H * wt.conj()
     return dictionaryOperatedChannel  # return equivalent channel after precoding and combining
-
-#In development--------------------------------------------------------------
-def dft_codebook_upa(rows, cols):
-    # DFT matrices for rows and columns
-    w_row = dft_codebook(rows)
-    w_col = dft_codebook(cols)
-    
-    # Create 2D codebook by outer product
-    upa_codebook = np.kron(w_row, w_col)  # Kronecker product to create 2D beams
-    return upa_codebook
-
-#In development--------------------------------------------------------------
-def getDFTOperatedChannel_UPA(H, number_Tx_rows, number_Tx_cols, number_Rx_rows, number_Rx_cols):
-    wt = dft_codebook_upa(number_Tx_rows, number_Tx_cols)  # Precoding
-    wr = dft_codebook_upa(number_Rx_rows, number_Rx_cols)  # Combining
-    dictionaryOperatedChannel = wr.conj().T * H * wt
-    return dictionaryOperatedChannel
 
 
 '''def deep_mimo_array_response(Dod, DoA, M_TX, M_RX, fc, c=3e8):

@@ -53,7 +53,7 @@ def gen_database(c):
     results_dir = c.results_dir
 
     #if use 3d detaileds models instead of boxes models
-    use_template = False
+    use_template = c.use_vehicles_template
 
     #The infos below typically does not change
     if use_template:

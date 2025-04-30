@@ -53,9 +53,10 @@ def gen_rays_dataset(c):
         numVariablePerRay = 8 #has the ray phase now
         session = fgdbIS.open_database(database_path)
     else:
+        session = fgdb.open_database(database_path)
         totalNumEpisodes = session.query(fgdb.Episode).count()
         numScenesPerEpisode = c.time_of_episode
-        session = fgdb.open_database(database_path)
+        
     # just to report time
     start = datetime.datetime.today()
     perc_done = None
