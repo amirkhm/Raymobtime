@@ -67,10 +67,10 @@ results_dir = os.path.join(working_directory, 'simulations', cfg.simulation_path
 #Folders for SUMO and InSite. Use executable sumo-gui if want to see the GUI or sumo otherwise
 
 sim_name = cfg.simulation_paths.results_dir_path
+isolated_sim = cfg.features.isolated_simulation
 
 insite_version = get_insite_version(base_insite_project_path) # Indentify Insite version
 locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 ' # Insite env variable
-sumo_bin = cfg.sumo_files.sumo_bin # SUMO bin path variable
 
 if insite_version == '3.3':
     calcprop_bin = ('{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE) +
@@ -90,9 +90,6 @@ elif insite_version == '3.2':
                '{}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch'.format(cfg.insite_paths.insite_software_path))
 
 ### HERE STARTS CONFIGURATION ### NOTE: ONLY CHANGE IF YOU KNOW WHAT ARE YOU DOING
-#SUMO configuration file:
-sumo_cfg = os.path.join(working_directory, 'base_files', 'sumo', '{}.sumocfg'.format(cfg.sumo_files.sumo_cfg))
-
 use_fixed_receivers = cfg.features.use_fixed_receivers # Set to False if only vehicles are receivers
 use_pedestrians = cfg.features.use_pedestrians # Only set True if your sumo is ready for pedestrians
 use_vehicles_template = cfg.features.use_vehicles_template # Set True to use pre-made vehicle ( not boxes ), NOTE: only set True if you have the folder objects with the models.
@@ -100,25 +97,34 @@ drone_simulation = cfg.features.drone_simulation # Only drones will be chosen to
 mimo_orientation = cfg.features.mimo_orientation # Only avaliable for a single Rx (not available)
 use_V2V = cfg.features.use_V2V # Set True to use V2V (transmitters and receivers are vehicles)
 
-# print('########## Scripts will assume the following files: ##########')
-# print('SUMO executable: ', sumo_bin)
-# print('SUMO configuration: ', sumo_cfg)
-# print('InSite calcprop executable: ', calcprop_bin)
-# print('InSite wibatch executable: ', wibatch_bin)
-# print('Working folder (base for several folders): ', working_directory)
-# print('InSite input files folder: ', base_insite_project_path)
-# #print('InSite temporary output folder: ', project_output_dir)
-# print('Final output parent folder: ', results_dir)
+n_run = range(1)
 
-n_run = range(
-    cfg.simulation_parameters.n_init_run,
-    cfg.simulation_parameters.n_end_run,
-    1
-) # iterator that determines maximum number of RT simulations
+if not isolated_sim:
+    #SUMO configuration file:
+    sumo_bin = cfg.sumo_files.sumo_bin # SUMO bin path variable
+    sumo_cfg = os.path.join(working_directory, 'base_files', 'sumo', '{}.sumo.cfg'.format(cfg.sumo_files.sumo_cfg))
+    
+
+    # print('########## Scripts will assume the following files: ##########')
+    # print('SUMO executable: ', sumo_bin)
+    # print('SUMO configuration: ', sumo_cfg)
+    # print('InSite calcprop executable: ', calcprop_bin)
+    # print('InSite wibatch executable: ', wibatch_bin)
+    # print('Working folder (base for several folders): ', working_directory)
+    # print('InSite input files folder: ', base_insite_project_path)
+    # #print('InSite temporary output folder: ', project_output_dir)
+    # print('Final output parent folder: ', results_dir)
+
+    n_run = range(
+        cfg.simulation_parameters.n_init_run,
+        cfg.simulation_parameters.n_end_run,
+        1
+    ) # iterator that determines maximum number of RT simulations
 
 sampling_interval = float(cfg.simulation_parameters.sampling_interval) #time interval between scenes (in seconds)
 time_of_episode = int(cfg.simulation_parameters.n_scenes_of_each_episode) #Number of scenes of each episode | int(0.5 / sampling_interval) # in steps (number of scenes per episodes)
 time_between_episodes = int(float(cfg.simulation_parameters.time_between_episodes) / sampling_interval) # time among episodes, in steps (if you specify x/Ts, then x is in seconds)
+
 if use_fixed_receivers: #set to False if only vehicles are receivers
     n_antenna_per_episode = 0 #number of receivers per episode
 else:
@@ -227,8 +233,10 @@ else:
                       "/../../ControlPoints/ProjectedPointList")
     dst_x3d_txrx_xpath_to_tx = ("./Job/Scene/Scene/TxRxSetList/TxRxSetList/TxRxSet/PointSet/OutputID/Integer[@Value='1']" +
                       "/../../ControlPoints/ProjectedPointList")
-
-use_sumo = True
+if isolated_sim: 
+    use_sumo = False
+else:
+    use_sumo = True
 
 # dimensions of the Mobile Objects (MOBJS) which will be placed on `dst_object_file_name`
 #car_dimensions = (1.76, 4.54, 1.47)

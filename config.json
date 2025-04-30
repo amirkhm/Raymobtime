@@ -7,7 +7,8 @@
         "use_vehicles_template":false,
         "drone_simulation":false,
         "mimo_orientation":false,
-        "use_V2V":false
+        "use_V2V":false,
+        "isolated_simulation":true
     },
     "simulation_parameters":{
         "n_init_run":0,
@@ -42,9 +43,16 @@
             "coordinates_limits":[660, 334, 843, 523]
         },
         "antenna_arr":{
-            "Tx":64,
-            "Rx":1,
-            "antenna_angle":0
+            "import_precoding": false,
+            "import_hmatrix": true,
+            "import_combining": false,
+            "expansion": {
+                "Tx_x": 6, "Tx_y": 6, 
+                "Rx_x": 1, "Rx_y": 1},
+            "rotation": {
+                "Tx_alpha": -90, "Tx_beta": 0, "Tx_gamma": 0, 
+                "Rx_alpha": 0, "Rx_beta": 0, "Rx_gamma": 0},
+            "normalized_antenna_distance": 0.5
         },
         "cartesian_lidar_matrix":{
             "coordinate_system":"cartesian",

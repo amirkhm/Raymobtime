@@ -18,6 +18,9 @@ if __name__ == "__main__":
                         help='Uses Blensor to simulate lidar and image data for Raymobtime dataset')
     parser.add_argument('-v', '--check', action='store_true',
                         help='Run Checkup for the whole processed database')
+    # Isolated simulation options
+    parser.add_argument('-i', '--isolated-simu', action='store_true',
+                        help='Run ray-tracing for isolated base')
     # Old args for simulation from rwisimulation
     parser.add_argument('-p', '--place-only', action='store_true',
                         help='Run only the objects placement and save files for ray-tracing')
