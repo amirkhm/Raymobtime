@@ -162,9 +162,12 @@ if use_V2V:
     n_of_vehicles = cfg.v2v_options.n_of_vehicles
     chosen_vehicle = cfg.v2v_options.chosen_vehicle
 
-n_Tx_antennas = cfg.data_handler.antenna_arr.Tx
-n_Rx_antennas = cfg.data_handler.antenna_arr.Rx
-antenna_angle = cfg.data_handler.antenna_arr.antenna_angle
+import_precoding = cfg.data_handler.antenna_arr.import_precoding
+import_hmatrix = cfg.data_handler.antenna_arr.import_hmatrix
+import_combining = cfg.data_handler.antenna_arr.import_combining
+expansion = cfg.data_handler.antenna_arr.expansion
+rotation = cfg.data_handler.antenna_arr.rotation
+normalized_antenna_distance = cfg.data_handler.antenna_arr.normalized_antenna_distance
 
 blensor_scenario_path = cfg.blensor_options.path_to_scenario
 blensor_runfile_path = cfg.blensor_options.blensor_img_path

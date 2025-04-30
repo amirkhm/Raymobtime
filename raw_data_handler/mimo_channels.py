@@ -1,6 +1,7 @@
 import os
 import datetime
 import numpy as np
+import pandas as pd
 import math
 from rwiparsing import P2mPaths, P2mCir
 #from matlab_tofrom_python import read_matlab_array_from_mat
@@ -107,13 +108,20 @@ def getDFTOperatedChannel_UPA(H, number_Tx_rows, number_Tx_cols, number_Rx_rows,
                                       np.cos(np.radians(DoA_theta))])
     array_response_RX = np.exp(M_RX_ind @ gamma_RX)'''
 
-##================================================================##
-#               from 5gm-data/mimo_channels.py                     #
-##================================================================##
+def dft_codebook_upa(rows, cols):
+    # DFT matrices for rows and columns
+    w_row = dft_codebook(rows)
+    w_col = dft_codebook(cols)
+    
+    # Create 2D codebook by outer product
+    upa_codebook = np.kron(w_row, w_col)  # Kronecker product to create 2D beams
+    return upa_codebook
+
 def calc_omega(elevationAngles, azimuthAngles, normalizedAntDistance = 0.5):
     sinElevations = np.sin(elevationAngles)
-    omegax = 2 * np.pi * normalizedAntDistance * sinElevations * np.cos(azimuthAngles)
-    omegay = 2 * np.pi * normalizedAntDistance * sinElevations * np.sin(azimuthAngles)
+    omegax = 2 * np.pi * normalizedAntDistance * sinElevations * np.cos(azimuthAngles)  #x
+    omegay = 2 * np.pi * normalizedAntDistance * sinElevations * np.sin(azimuthAngles)  #y
+    #omegay = 2 * np.pi * normalizedAntDistance * np.cos(elevationAngles)  #new          #z
     return np.matrix((omegax, omegay))
 
 def calc_vec_i(i, omega, antenna_range):
@@ -166,56 +174,18 @@ def getNarrowBandUPAMIMOChannel(departureElevation,departureAzimuth,arrivalEleva
         #departure
         vecx = np.exp(1j * departure_omega[0,ray_i] * rangeTx_x)
         vecy = np.exp(1j * departure_omega[1,ray_i] * rangeTx_y)
-        departure_vec = np.matrix(np.kron(vecy, vecx))
+        departure_vec = np.matrix(np.kron(vecx, vecy)) #1xn             #y x expands first x then y
         #arrival
         vecx = np.exp(1j * arrival_omega[0,ray_i] * rangeRx_x)
         vecy = np.exp(1j * arrival_omega[1,ray_i] * rangeRx_y)
-        arrival_vec = np.matrix(np.kron(vecy, vecx))
+        arrival_vec = np.matrix(np.kron(vecx, vecy)) #1xn
 
-        H = H + path_complexGains[ray_i] * arrival_vec.conj().T * departure_vec
+        antenna_pattern_gain_Tx = 1
+        antenna_pattern_gain_Rx = 1
+        pattern_gain = antenna_pattern_gain_Tx * antenna_pattern_gain_Rx
+
+        H = H + path_complexGains[ray_i] * pattern_gain * arrival_vec.T * departure_vec.conj()
     return H
-
-# To Do
-def calc_rx_power(departure_angle, arrival_angle, p_gain, antenna_number, frequency=6e10):
-    """This .m file uses a m*m SQUARE UPA, so the antenna number at TX, RX will be antenna_number^2.
-
-    - antenna_number^2 number of element arrays in TX, same in RX
-    - assumes one beam per antenna element
-
-    the first column will be the elevation angle, and the second column is the azimuth angle correspondingly.
-    p_gain will be a matrix size of (L, 1)
-    departure angle/arrival angle will be a matrix as size of (L, 2), where L is the number of paths
-
-    t1 will be a matrix of size (nt, nr), each
-    element of index (i,j) will be the received
-    power with the i-th precoder and the j-th
-    combiner in the departing and arrival codebooks
-    respectively
-
-    :param departure_angle: ((elevation angle, azimuth angle),) (L, 2) where L is the number of paths
-    :param arrival_angle: ((elevation angle, azimuth angle),) (L, 2) where L is the number of paths
-    :param p_gain: path gain (L, 1) where L is the number of paths
-    :param antenna_number: antenna number at TX, RX is antenna_number**2
-    :param frequency: default
-    :return:
-    """
-    departure_angle = np.deg2rad(departure_angle)
-    arrival_angle = np.deg2rad(arrival_angle)
-    c = 3e8
-    mlambda = c / frequency
-    k = 2 * np.pi / mlambda
-    d = mlambda / 2
-    nt = np.power(antenna_number, 2)
-    m = np.shape(departure_angle)[0]
-    nr = nt
-    wt = dft_codebook(nt)
-    wr = dft_codebook(nr)
-    H = np.matrix(np.zeros((nt, nr)))
-
-    # TO DO: need to generate random phase and convert gains in complex-values
-    gain_dB = p_gain
-    path_gain = np.power(10, gain_dB / 10)
-    antenna_range = np.arange(antenna_number)
 
 def getCodebookOperatedChannel(H, Wt, Wr):
     if Wr is None: #only 1 antenna at Rx, and Wr was passed as None
@@ -226,101 +196,74 @@ def getCodebookOperatedChannel(H, Wt, Wr):
         result = Wr.conj().T * H * Wt
     except Exception as e:
         print(f'ERROR: {e}')
-
     return result # return equivalent channel after precoding and combining
 
-def readUPASteeringCodebooks(inputFileName):
-    '''Read data created by
-    D:/gits/lasse/software/mimo-matlab/upa_codebook_creation.m
-    Used the Kronecker to represent the matrix for a pair of wx and wy as a single array
-    %See  John Brady, Akbar Sayeed, Millimeter-Wave MIMO Transceivers - Chap 10
-    %Section 10.5
-    %http://dune.ece.wisc.edu/wp-uploads/2015/11/main_sayeed_brady.pdf
-    '''
-    #saved redundant information on Wx and Wy in case they help later
-    #Used on Matlab:
-    #save(outputFileName,'W','codebook','Wx','Wy','Nax','Nay','-v6')
-    arrayName = 'W'
-    codevectors = read_matlab_array_from_mat(inputFileName, arrayName)
-    arrayName = 'Nax'
-    Nx = read_matlab_array_from_mat(inputFileName, arrayName)
-    arrayName = 'Nay'
-    Ny = read_matlab_array_from_mat(inputFileName, arrayName)
-    arrayName = 'codebook'
-    codevectorsIndices = read_matlab_array_from_mat(inputFileName, arrayName)
-    return codevectors, int(Nx), int(Ny), codevectorsIndices
+def rotate_vectors(azimuths, zeniths, alpha, beta, gamma):
+    # Convert list to arrays numpy
+    azimuths = np.array(azimuths)
+    zeniths = np.array(zeniths)
+    
+    # Convert angles to radians
+    alpha, beta, gamma = np.radians([alpha, beta, gamma])
+    
+    # Rotation matrix arround WI Z axis
+    Rz = np.array([
+        [np.cos(alpha), -np.sin(alpha), 0],
+        [np.sin(alpha), np.cos(alpha), 0],
+        [0, 0, 1]
+    ])
+    
+    # Rotation matrix arround WI Y axis
+    Ry = np.array([
+        [np.cos(beta), 0, np.sin(beta)],
+        [0, 1, 0],
+        [-np.sin(beta), 0, np.cos(beta)]
+    ])
+    
+    # Rotation matrix arround WI X axis
+    Rx = np.array([
+        [1, 0, 0],
+        [0, np.cos(gamma), -np.sin(gamma)],
+        [0, np.sin(gamma), np.cos(gamma)]
+    ])
+    
+    # Total rotation matrix R = Rx * Ry * Rz
+    R = Rx @ Ry @ Rz
+    
+    # Convert azimuth and zenith to cartesian coordinates
+    x = np.sin(np.radians(zeniths)) * np.cos(np.radians(azimuths))
+    y = np.sin(np.radians(zeniths)) * np.sin(np.radians(azimuths))
+    z = np.cos(np.radians(zeniths))
+    
+    # Apply rotation
+    rotated_vectors = R @ np.vstack((x, y, z))
+    
+    # Convert back to spherical coordinates
+    rotated_zeniths = np.degrees(np.arccos(rotated_vectors[2]))
+    rotated_azimuths = np.degrees(np.arctan2(rotated_vectors[1], rotated_vectors[0]))
+    
+    # Ensure that azimuths are in the range [0, 360]
+    rotated_azimuths = np.mod(rotated_azimuths, 360)
+    
+    # Convert arrays to lists
+    return rotated_azimuths.tolist(), rotated_zeniths.tolist()
+    
+def import_mimo_channel(H_csv):
+    # Load CSV ignoring comment lines
+    # csvName is a string
+    df = pd.read_csv(H_csv, header=3)#comment="#", header=0 
+    num_rx = df["<Rx Element>"].nunique()  # Count unique Rx elements
+    num_tx = (df.shape[1] - 2) // 2  # Each Tx has 2 columns (real and imaginary)
 
-def test_channel():
-    # RESULTS_DIR='/Users/psb/ownCloud/Projects/DNN Wireless/rwi-3d-modeling/restuls/run00000'
-    # RESULTS_DIR = 'D:/insitedata/pc128/example_working/restuls/run00000'
-    RESULTS_DIR='D:/github/5gm-rwi-simulation/example/results_new_simuls/run00003/'
-    antenna_number = 2
-    BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-    P2MPATHS_FILE = os.path.join(RESULTS_DIR, 'study', 'model.paths.t001_01.r002.p2m')
-    print('Reading file', P2MPATHS_FILE)
-    with open(P2MPATHS_FILE, 'rb') as infile:
-        paths = P2mPaths(P2MPATHS_FILE)
-        #get info for a given receiver
-        rec_i = 0 #first receiver is 0 here and 1 in the database
-        departure_angles = paths.get_departure_angle_ndarray(rec_i+1)
-        arrival_angles = paths.get_arrival_angle_ndarray(rec_i+1)
-        p_gainsdB = paths.get_p_gain_ndarray(rec_i+1)
-        abs_cir_file_name = P2MPATHS_FILE.replace("paths", "cir")  # name for the impulse response (cir) file
-        if os.path.exists(abs_cir_file_name) == False:
-            print('ERROR: could not find file ', abs_cir_file_name)
-            print('Did you ask InSite to generate the impulse response (cir) file?')
-            exit(-1)
-        cir = P2mCir(abs_cir_file_name) #read impulse response with phases
-        pathPhasesInDegrees = cir.get_phase_ndarray(rec_i+1)
+    # Initialize matrix H (Rx x Tx) as an array of complex numbers
+    H = np.zeros((num_rx, num_tx), dtype=complex)
 
-    if True:  # enable for debugging with fixed angles
-        ad = (np.pi / 4) * 180 / np.pi  # in degrees, as InSite provides
-        aa = (3 * np.pi / 2) * 180 / np.pi
-        g = 10
-        departure_angles = ad * np.ones(departure_angles.shape, departure_angles.dtype)
-        arrival_angles = aa * np.ones(arrival_angles.shape, arrival_angles.dtype)
-        p_gainsdB = g * np.ones(p_gainsdB.shape, p_gainsdB.dtype)
-        pathPhasesInDegrees = np.zeros(len(p_gainsdB))
-
-    print(arrival_angles.shape)
-    azimuths_tx = departure_angles[:, 1]  # azimuth is 2nd column
-    azimuths_rx = arrival_angles[:, 1]
-
-    start = datetime.datetime.today()
-    t1_py = calc_rx_power(departure_angles, arrival_angles, p_gainsdB, antenna_number)
-
-    number_Rx_antennas = antenna_number * antenna_number
-    number_Tx_antennas = antenna_number * antenna_number
-    normalizedAntDistance = 0.5
-
-    t1 = getNarrowBandUPAMIMOChannel(departure_angles, arrival_angles, p_gainsdB, number_Tx_antennas,
-                                     number_Rx_antennas, normalizedAntDistance=0.5)
-    t1 = np.abs(t1)
-    t2 = getNarrowBandULAMIMOChannel(azimuths_tx, azimuths_rx, p_gainsdB, number_Tx_antennas, number_Rx_antennas,
-                                     normalizedAntDistance=0.5, angleWithArrayNormal=1, pathPhases=pathPhasesInDegrees)
-    print('MSE 1 = ', np.mean(np.power(np.abs(t1 - t1_py), 2)))
-    print('MSE 2 = ', np.mean(np.power(np.abs(t1 - t2), 2)))
-    # print(t2)
-    t2 = np.abs(t2)
-    (bestRxIndex, bestTxIndex) = np.unravel_index(np.argmax(t2, axis=None), t2.shape)
-    print('bestRxIndex: ', bestRxIndex, ' and bestTxIndex: ', bestTxIndex)
-
-    stop = datetime.datetime.today()
-    print(stop - start)
-    # print(t1_py)
-
-def test_readUPASteeringCodebooks():
-    #inputFileName = 'D:/gits/lasse/software/mimo-matlab/upa_codebook_12x12.mat'
-    inputFileName = '/home/gabrielferreiravieira/Documents/UPA/upa_codebook_4x4_N64.mat' #'D:/gits/lasse/software/mimo-matlab/upa_codebook_2x3.mat'
-    codevectors, Nx, Ny, codevectorsIndices = readUPASteeringCodebooks(inputFileName)
-    print(codevectors.shape)
-    #print('#1 = ', codevectors[:,0])
-    #print('#1 = ', codevectors[:,1])
-    #print('#4 = ', codevectors[:,3])
-    print(Nx, Ny)
-
-if __name__ == '__main__':
-    #test_channel()
-    test_readUPASteeringCodebooks()
-
-
+    # Fill the matrix H
+    for i, row in df.iterrows():
+        rx_index = int(row["<Rx Element>"]) - 1  # Adjustment for index 0
+        for tx_index in range(num_tx):
+            real_part = row.iloc[2 + 2 * tx_index]  # Real column
+            imag_part = row.iloc[3 + 2 * tx_index]  # Imaginary column
+            H[rx_index, tx_index] = complex(real_part, imag_part)
+    return H
+    

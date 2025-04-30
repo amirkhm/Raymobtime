@@ -8,7 +8,7 @@
         "drone_simulation":false,
         "mimo_orientation":false,
         "use_V2V":false,
-        "isolated_simulation":true
+        "isolated_simulation":false
     },
     "simulation_parameters":{
         "n_init_run":0,
@@ -44,13 +44,13 @@
         },
         "antenna_arr":{
             "import_precoding": false,
-            "import_hmatrix": true,
+            "import_hmatrix": false,
             "import_combining": false,
             "expansion": {
-                "Tx_x": 6, "Tx_y": 6, 
-                "Rx_x": 1, "Rx_y": 1},
+                "Tx_x": 32, "Tx_y": 1, 
+                "Rx_x": 32, "Rx_y": 1},
             "rotation": {
-                "Tx_alpha": -90, "Tx_beta": 0, "Tx_gamma": 0, 
+                "Tx_alpha": 0, "Tx_beta": 0, "Tx_gamma": 0, 
                 "Rx_alpha": 0, "Rx_beta": 0, "Rx_gamma": 0},
             "normalized_antenna_distance": 0.5
         },
