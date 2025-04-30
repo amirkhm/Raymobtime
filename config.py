@@ -67,6 +67,7 @@ results_dir = os.path.join(working_directory, 'simulations', cfg.simulation_path
 #Folders for SUMO and InSite. Use executable sumo-gui if want to see the GUI or sumo otherwise
 
 sim_name = cfg.simulation_paths.results_dir_path
+isolated_sim = cfg.features.isolated_simulation
 
 insite_version = get_insite_version(base_insite_project_path) # Indentify Insite version
 locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 ' # Insite env variable
@@ -100,21 +101,27 @@ drone_simulation = cfg.features.drone_simulation # Only drones will be chosen to
 mimo_orientation = cfg.features.mimo_orientation # Only avaliable for a single Rx (not available)
 use_V2V = cfg.features.use_V2V # Set True to use V2V (transmitters and receivers are vehicles)
 
-# print('########## Scripts will assume the following files: ##########')
-# print('SUMO executable: ', sumo_bin)
-# print('SUMO configuration: ', sumo_cfg)
-# print('InSite calcprop executable: ', calcprop_bin)
-# print('InSite wibatch executable: ', wibatch_bin)
-# print('Working folder (base for several folders): ', working_directory)
-# print('InSite input files folder: ', base_insite_project_path)
-# #print('InSite temporary output folder: ', project_output_dir)
-# print('Final output parent folder: ', results_dir)
+n_run = range(1)
 
-n_run = range(
-    cfg.simulation_parameters.n_init_run,
-    cfg.simulation_parameters.n_end_run,
-    1
-) # iterator that determines maximum number of RT simulations
+if not isolated_sim:
+    sumo_bin = cfg.sumo_files.sumo_bin # SUMO bin path variable
+    sumo_cfg = os.path.join(working_directory, 'base_files', 'sumo', '{}.sumo.cfg'.format(cfg.sumo_files.sumo_cfg))
+    
+    # print('########## Scripts will assume the following files: ##########')
+    # print('SUMO executable: ', sumo_bin)
+    # print('SUMO configuration: ', sumo_cfg)
+    # print('InSite calcprop executable: ', calcprop_bin)
+    # print('InSite wibatch executable: ', wibatch_bin)
+    # print('Working folder (base for several folders): ', working_directory)
+    # print('InSite input files folder: ', base_insite_project_path)
+    # #print('InSite temporary output folder: ', project_output_dir)
+    # print('Final output parent folder: ', results_dir)
+
+    n_run = range(
+        cfg.simulation_parameters.n_init_run,
+        cfg.simulation_parameters.n_end_run,
+        1
+    ) # iterator that determines maximum number of RT simulations
 
 sampling_interval = float(cfg.simulation_parameters.sampling_interval) #time interval between scenes (in seconds)
 time_of_episode = int(cfg.simulation_parameters.n_scenes_of_each_episode) #Number of scenes of each episode | int(0.5 / sampling_interval) # in steps (number of scenes per episodes)
@@ -156,9 +163,12 @@ if use_V2V:
     n_of_vehicles = cfg.v2v_options.n_of_vehicles
     chosen_vehicle = cfg.v2v_options.chosen_vehicle
 
-n_Tx_antennas = cfg.data_handler.antenna_arr.Tx
-n_Rx_antennas = cfg.data_handler.antenna_arr.Rx
-antenna_angle = cfg.data_handler.antenna_arr.antenna_angle
+import_precoding = cfg.data_handler.antenna_arr.import_precoding
+import_hmatrix = cfg.data_handler.antenna_arr.import_hmatrix
+import_combining = cfg.data_handler.antenna_arr.import_combining
+expansion = cfg.data_handler.antenna_arr.expansion
+rotation = cfg.data_handler.antenna_arr.rotation
+normalized_antenna_distance = cfg.data_handler.antenna_arr.normalized_antenna_distance
 
 blensor_scenario_path = cfg.blensor_options.path_to_scenario
 blensor_runfile_path = cfg.blensor_options.blensor_img_path
@@ -227,8 +237,10 @@ else:
                       "/../../ControlPoints/ProjectedPointList")
     dst_x3d_txrx_xpath_to_tx = ("./Job/Scene/Scene/TxRxSetList/TxRxSetList/TxRxSet/PointSet/OutputID/Integer[@Value='1']" +
                       "/../../ControlPoints/ProjectedPointList")
-
-use_sumo = True
+if isolated_sim: 
+    use_sumo = False
+else:
+    use_sumo = True
 
 # dimensions of the Mobile Objects (MOBJS) which will be placed on `dst_object_file_name`
 #car_dimensions = (1.76, 4.54, 1.47)
