@@ -1,4 +1,4 @@
-{   
+{ 
     "seed":2025,
     "simulation_name":"t004",
     "features":{
@@ -8,27 +8,27 @@
         "drone_simulation":false,
         "mimo_orientation":false,
         "use_V2V":false,
-        "isolated_simulation":false
+        "isolated_simulation":true
     },
     "simulation_parameters":{
         "n_init_run":0,
-        "n_end_run":1,
-        "sampling_interval":0.080,
-        "n_scenes_of_each_episode":40,
+        "n_end_run":10,
+        "sampling_interval":0.5,
+        "n_scenes_of_each_episode":10,
         "time_between_episodes":30,
-        "n_antenna_per_episode":5,
+        "n_antenna_per_episode":1,
         "n_Tx_per_episode":1
     },
     "simulation_paths":{
-        "base_insite_path":"rosslyn_tx_end_road",
-        "results_dir_path":"rosslyn_artigo_NLoS_tracking"
+        "base_insite_path":"rosslyn",
+        "results_dir_path":"rosslyn_Test"
     },
     "sumo_files":{
         "sumo_bin":"/usr/bin/sumo",
-        "sumo_cfg":"seasonal"
+        "sumo_cfg":"seasonal2"
     },
     "insite_paths":{
-        "insite_software_path":"/mnt/data/software/remcom",
+        "insite_software_path":"/home/fritz/data/LASSE/Wireless_Insite/remcom",
         "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@200.239.93.3"
     },
     "area_limits":{
@@ -47,8 +47,8 @@
             "import_hmatrix": false,
             "import_combining": false,
             "expansion": {
-                "Tx_x": 32, "Tx_y": 1, 
-                "Rx_x": 32, "Rx_y": 1},
+                "Tx_x": 2, "Tx_y": 1, 
+                "Rx_x": 1, "Rx_y": 1},
             "rotation": {
                 "Tx_alpha": 0, "Tx_beta": 0, "Tx_gamma": 0, 
                 "Rx_alpha": 0, "Rx_beta": 0, "Rx_gamma": 0},

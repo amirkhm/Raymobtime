@@ -62,6 +62,8 @@ working_directory = os.path.dirname(os.path.realpath(__file__))
 base_insite_project_path = os.path.join(working_directory,'base_files',cfg.simulation_paths.base_insite_path)
 #Folder to store each InSite project and its results (will create subfolders for each "run", run0000, run0001, etc.)
 results_dir = os.path.join(working_directory, 'simulations', cfg.simulation_paths.results_dir_path)
+isolated_results_dir = os.path.join(results_dir, cfg.simulation_paths.base_insite_path)
+
 #Folders and files for InSite and its license. For Windows you may simply inform
 #the path to the executable files, not minding about the license file location.
 #Folders for SUMO and InSite. Use executable sumo-gui if want to see the GUI or sumo otherwise
@@ -71,7 +73,6 @@ isolated_sim = cfg.features.isolated_simulation
 
 insite_version = get_insite_version(base_insite_project_path) # Indentify Insite version
 locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 ' # Insite env variable
-sumo_bin = cfg.sumo_files.sumo_bin # SUMO bin path variable
 
 if insite_version == '3.3':
     calcprop_bin = ('{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE) +
@@ -89,10 +90,11 @@ elif insite_version == '3.2':
     wibatch_bin = (locale + '{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE) +
                'LD_LIBRARY_PATH=/{}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ '.format(cfg.insite_paths.insite_software_path) +
                '{}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch'.format(cfg.insite_paths.insite_software_path))
-
-### HERE STARTS CONFIGURATION ### NOTE: ONLY CHANGE IF YOU KNOW WHAT ARE YOU DOING
-#SUMO configuration file:
-sumo_cfg = os.path.join(working_directory, 'base_files', 'sumo', '{}.sumocfg'.format(cfg.sumo_files.sumo_cfg))
+# elif insite_version == '3.4':
+#     wibatch_bin = (locale + '{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE) +
+#                'LD_LIBRARY_PATH=/{}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ '.format(cfg.insite_paths.insite_software_path) +
+#                '{}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch'.format(cfg.insite_paths.insite_software_path))
+n_run = range(1)
 
 use_fixed_receivers = cfg.features.use_fixed_receivers # Set to False if only vehicles are receivers
 use_pedestrians = cfg.features.use_pedestrians # Only set True if your sumo is ready for pedestrians
@@ -101,9 +103,13 @@ drone_simulation = cfg.features.drone_simulation # Only drones will be chosen to
 mimo_orientation = cfg.features.mimo_orientation # Only avaliable for a single Rx (not available)
 use_V2V = cfg.features.use_V2V # Set True to use V2V (transmitters and receivers are vehicles)
 
-n_run = range(1)
 
 if not isolated_sim:
+### HERE STARTS CONFIGURATION ### NOTE: ONLY CHANGE IF YOU KNOW WHAT ARE YOU DOING
+#SUMO configuration file:
+    sumo_bin = cfg.sumo_files.sumo_bin # SUMO bin path variable
+    sumo_cfg = os.path.join(working_directory, 'base_files', 'sumo', '{}.sumocfg'.format(cfg.sumo_files.sumo_cfg))
+
     #Sumo configuration file
     sumo_bin = cfg.sumo_files.sumo_bin # SUMO bin path variable
     sumo_cfg = os.path.join(working_directory, 'base_files', 'sumo', '{}.sumo.cfg'.format(cfg.sumo_files.sumo_cfg))
@@ -124,9 +130,10 @@ if not isolated_sim:
         1
     ) # iterator that determines maximum number of RT simulations
 
-sampling_interval = float(cfg.simulation_parameters.sampling_interval) #time interval between scenes (in seconds)
-time_of_episode = int(cfg.simulation_parameters.n_scenes_of_each_episode) #Number of scenes of each episode | int(0.5 / sampling_interval) # in steps (number of scenes per episodes)
-time_between_episodes = int(float(cfg.simulation_parameters.time_between_episodes) / sampling_interval) # time among episodes, in steps (if you specify x/Ts, then x is in seconds)
+    sampling_interval = float(cfg.simulation_parameters.sampling_interval) #time interval between scenes (in seconds)
+    time_of_episode = int(cfg.simulation_parameters.n_scenes_of_each_episode) #Number of scenes of each episode | int(0.5 / sampling_interval) # in steps (number of scenes per episodes)
+    time_between_episodes = int(float(cfg.simulation_parameters.time_between_episodes) / sampling_interval) # time among episodes, in steps (if you specify x/Ts, then x is in seconds)
+
 if use_fixed_receivers: #set to False if only vehicles are receivers
     n_antenna_per_episode = 0 #number of receivers per episode
 else:
@@ -192,7 +199,10 @@ if use_vehicles_template:
 ##### Folders and files for InSite ####
 # Copy of the RWI project used in the simulation
 #AK-TODO instead of "base" it should match the name InSite gives, to facilitate porting
-results_base_model_dir = os.path.join(results_dir, 'base')
+if isolated_sim:
+    results_base_model_dir = isolated_results_dir
+else:
+    results_base_model_dir = os.path.join(results_dir, 'base')
 results_base_model_dir.replace('\\', '/')
 #Input files, which are read by the Python scripts
 # File that has the base InSite project:

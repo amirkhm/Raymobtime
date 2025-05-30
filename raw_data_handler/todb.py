@@ -30,6 +30,8 @@ def set_angle_range(angle,range=[180,-180]):
 
 def count_model_paths(dir):
     c = 0
+    base_isolated_sim_dir = os.path.join(dir)
+
     for _, _, file in os.walk(dir):
         for file in file:
             if file.startswith("model.paths"):
@@ -75,22 +77,21 @@ def gen_database(c):
     episode = None
     #n_run = 100000
     run_i = 0
+
     if c.isolated_sim:
-        number_model_paths = count_model_paths(results_dir)
+        number_model_paths = count_model_paths(c.isolated_results_dir)
 
         for i in range(number_model_paths):
             
             paths_file_name = f'model.paths.t001_01.r00{2+i}.p2m' 
-            if os.path.exists(results_dir+'/base'):
-                simulation_dir = os.path.join(results_dir,'base')
-            else:
-                simulation_dir = os.path.join(results_dir)
+            simulation_dir = os.path.join(c.isolated_results_dir)
 
             abs_paths_file_name = os.path.join(simulation_dir, project_output_dirBaseName, paths_file_name)
             if os.path.exists(abs_paths_file_name) == False:
                 print('\nWarning: could not find file ', abs_paths_file_name, ' Stopping...')
 
             paths = P2mPaths(abs_paths_file_name)
+
             for rec_idx in range(paths.get_num_receivers()):
                 # Insert data
                 receiver = fgdbIS.Receiver()
