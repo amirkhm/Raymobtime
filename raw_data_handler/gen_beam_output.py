@@ -131,9 +131,11 @@ def gen_beam_output_file(c):
     if not c.import_hmatrix:
         database_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name, 'rays')
         max_runs = np.max(c.n_run)
-        episodes = int((max_runs+1)/c.time_of_episode)
-        if c.isolated_sim:
-            episodes=1
+        episodes=1
+        
+        if not c.isolated_sim:
+            episodes = int((max_runs+1)/c.time_of_episode)
+        
         for ep in range(episodes):
             print("Episode # ", ep)
             hmatrix,beamIndex, channel = process_ep(os.path.join(database_folder, f'rays_ep{ep}.hdf5'), c)

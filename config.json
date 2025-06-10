@@ -8,7 +8,7 @@
         "drone_simulation":false,
         "mimo_orientation":false,
         "use_V2V":false,
-        "isolated_simulation":false
+        "isolated_simulation":true
     },
     "simulation_parameters":{
         "n_init_run":0,

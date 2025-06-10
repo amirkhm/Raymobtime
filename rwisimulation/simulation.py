@@ -166,6 +166,9 @@ def main(args):
         if c.n_antenna_per_episode != 0:
             print('ERROR: if use_fixed_receivers=True, n_antenna_per_episode must be 0 but it is', c.n_antenna_per_episode)
             raise Exception()
+    if c.isolated_sim and c.use_vehicles_template:
+        print('ERROR: isolated_sim=True and use_vehicles_template=True are not compatible')
+        raise Exception()
 
     #setup_path=c.setup_path, xml_path=c.dst_x3d_xml_path.replace(' ', '\ ')
     #AK: now the constructor has fewer parameters
@@ -178,8 +181,9 @@ def main(args):
             print('Option -r is not compatible with -c')
             exit(-1)
         print('Will run only ray-tracing. I am assuming all files have been placed.')
-        for i in c.n_run:
-            run_dir = os.path.join(c.results_dir, c.base_run_dir_fn(i))
+
+        if c.isolated_sim:
+            run_dir = os.path.join(c.isolated_results_dir)
             #Ray-tracing output folder (where InSite will store the results (Study Area name)).
             #They will be later copied to the corresponding output folder specified by results_dir
             project_output_dir = os.path.join(run_dir, c.insite_study_area_name) #output InSite folder
@@ -189,11 +193,26 @@ def main(args):
                 xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
                 xml_full_path=xml_full_path.replace(' ', '\ ')
                 insite_project.run_x3d(xml_full_path, project_output_dir)
-            elif os.path.exists(p2mpaths_file) and args.jump:
-                continue
             else: 
                 print("ERROR: " + p2mpaths_file + " already exists, aborting simulation!") 
                 raise Exception()
+        else:    
+            for i in c.n_run:
+                run_dir = os.path.join(c.results_dir, c.base_run_dir_fn(i))
+                #Ray-tracing output folder (where InSite will store the results (Study Area name)).
+                #They will be later copied to the corresponding output folder specified by results_dir
+                project_output_dir = os.path.join(run_dir, c.insite_study_area_name) #output InSite folder
+
+                p2mpaths_file = os.path.join(project_output_dir, c.insite_setup_name + '.paths.t001_01.r002.p2m')
+                if not os.path.exists(p2mpaths_file) or args.remove_results_dir:
+                    xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
+                    xml_full_path=xml_full_path.replace(' ', '\ ')
+                    insite_project.run_x3d(xml_full_path, project_output_dir)
+                elif os.path.exists(p2mpaths_file) and args.jump:
+                    continue
+                else: 
+                    print("ERROR: " + p2mpaths_file + " already exists, aborting simulation!") 
+                    raise Exception()
 
         print('Finished running ray-tracing')
         exit(1)
@@ -240,6 +259,9 @@ def main(args):
             raise FileExistsError
     print('Copied folder ',c.base_insite_project_path,'into',c.results_base_model_dir)
 
+    if c.isolated_sim:
+        exit(-1) 
+        
     #open InSite files that are used as the base to create each new scene / simulation
     with open(c.base_object_file_name) as infile:
         objFile = objects.ObjectFile.from_file(infile)

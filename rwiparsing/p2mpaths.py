@@ -64,6 +64,10 @@ class P2mPaths(P2mFileParser):
                 #self.data[receiver][ray_n]['interactions'][interactions_list.split('-')[i]] = coordinates
                 self.data[receiver][ray_n]['interactions'][str(interaction)] = coordinates
 
+    def get_num_receivers(self):
+        """Return the number of receivers in the p2m file"""
+        return len(self.data)
+
     def get_total_received_power(self, antenna_number):
         if self.data[antenna_number] is None:
             return None
