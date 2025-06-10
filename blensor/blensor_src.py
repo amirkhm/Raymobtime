@@ -23,7 +23,7 @@ def blensor_simulation(sim_type):
     RED = '\033[91m'
     RESET = '\033[0m'
 
-    for i in range(min(c.n_run),max(c.n_run)+1):
+    for i in range(1):#min(c.n_run),max(c.n_run)+1):
         # if os.path.exists(f'scans/scans_run{i:05d}.zip') and lidar:
         #     continue
         print('Running command...')

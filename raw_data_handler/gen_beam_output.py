@@ -21,7 +21,6 @@ def process_ep(path, c):
 
     normalizedAntDistance = c.normalized_antenna_distance #0.5
     numOfInvalidChannels = 0
-    beam_index = expansion['Rx_x']*expansion['Rx_y'] * expansion['Tx_x']*expansion['Tx_y']  #number_Rx_antennas * number_Tx_antennas
     
     if c.isolated_sim:
         numScenes = 1

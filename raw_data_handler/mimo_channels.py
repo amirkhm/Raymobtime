@@ -148,20 +148,26 @@ def getNarrowBandUPAMIMOChannel(departureElevation,departureAzimuth,arrivalEleva
     rangeTx_y = np.arange(number_Tx_antennasY)
     rangeRx_x = np.arange(number_Rx_antennasX)
     rangeRx_y = np.arange(number_Rx_antennasY)
+    
+    # Normalization factors eq (7.25) Tse's book
+    norm_Tx = 1/np.sqrt(number_Tx_antennasX * number_Tx_antennasY)  # Tx array normalization
+    norm_Rx = 1/np.sqrt(number_Rx_antennasX * number_Rx_antennasY)  # Rx array normalization
+    
     for ray_i in range(numRays):
         #departure
-        vecx = np.exp(1j * departure_omega[0,ray_i] * rangeTx_x)
-        vecy = np.exp(1j * departure_omega[1,ray_i] * rangeTx_y)
-        departure_vec = np.matrix(np.kron(vecx, vecy)) #1xn             #y x expands first x then y
+        vecx = np.exp(-1j * departure_omega[0,ray_i] * rangeTx_x)
+        vecy = np.exp(-1j * departure_omega[1,ray_i] * rangeTx_y)
+        departure_vec = norm_Tx * np.matrix(np.kron(vecx, vecy)) #1xn             #y x expands first x then y
         #arrival
-        vecx = np.exp(1j * arrival_omega[0,ray_i] * rangeRx_x)
-        vecy = np.exp(1j * arrival_omega[1,ray_i] * rangeRx_y)
-        arrival_vec = np.matrix(np.kron(vecx, vecy)) #1xn
+        vecx = np.exp(-1j * arrival_omega[0,ray_i] * rangeRx_x)
+        vecy = np.exp(-1j * arrival_omega[1,ray_i] * rangeRx_y)
+        arrival_vec = norm_Rx * np.matrix(np.kron(vecx, vecy)) #1xn
 
         antenna_pattern_gain_Tx = 1
         antenna_pattern_gain_Rx = 1
         pattern_gain = antenna_pattern_gain_Tx * antenna_pattern_gain_Rx
 
+        # eq (7.29) Tse's book 
         H = H + path_complexGains[ray_i] * pattern_gain * arrival_vec.T * departure_vec.conj()
     return H
 

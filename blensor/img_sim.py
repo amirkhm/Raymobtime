@@ -30,6 +30,7 @@ def main():
     vehicles_blend_path = cfg['blensor_options']['path_to_vehicles']
     start_run = cfg['simulation_parameters']['n_init_run']
     end_run = cfg['simulation_parameters']['n_end_run']
+    n_scenes_of_each_episode = cfg['simulation_parameters']['n_scenes_of_each_episode']
 
     if not os.path.exists(folder_img_dataset):
         os.makedirs(folder_img_dataset)
@@ -63,12 +64,16 @@ def main():
         Position = vPosition
         vectorsPath= getInfoPath(path_info_file, 1)
         animateVehiclesBlender(Position, vehicles_blend_path) 
-        get4Photos(listValidsInvalids,folder_img_dataset,run,current_scn,run)
+        get4Photos(listValidsInvalids,folder_img_dataset,current_ep,current_scn,run)
         for obj in D.objects:
             if obj.name.startswith('flow') or obj.name.startswith('_flow'):
                 obj.select = True
                 bpy.ops.object.delete()
         run += 1
+        current_scn += 1
+        if current_scn % n_scenes_of_each_episode:
+            current_ep +=1
+            current_scn = 0
     endAnimation(frame_num)
     time_elapsed = datetime.now() - startTime
     print("Total time elapsed: " + str(time_elapsed))
