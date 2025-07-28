@@ -8,7 +8,7 @@
         "drone_simulation":false,
         "mimo_orientation":false,
         "use_V2V":false,
-        "isolated_simulation":true
+        "isolated_simulation":false
     },
     "simulation_parameters":{
         "n_init_run":0,
@@ -29,7 +29,7 @@
     },
     "insite_paths":{
         "insite_software_path":"/home/gabrielferreiravieira/Remcom/remcom",
-        "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@200.239.93.3"
+        "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@10.10.80.2"
     },
     "area_limits":{
         "enabled":false,

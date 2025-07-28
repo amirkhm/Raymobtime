@@ -7,6 +7,7 @@
 /base_files/B-pnm-SP
 /base_files/pnm-SP-noBuildings
 /base_files/B-pnm-SP.zip
+/base_files/AvCF
 /augmented
 augmentation.ipynb
 base_files/sumo/B-pnm-SP.net.xml
