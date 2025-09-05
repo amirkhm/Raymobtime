@@ -1,13 +1,7 @@
 /simulations
 /sim_data
 *.pyc
-/base_files/Rosslyn_60GHz
-/base_files/rosslyn_2.14GHz
-/base_files/rosslynbase
-/base_files/B-pnm-SP
-/base_files/pnm-SP-noBuildings
-/base_files/B-pnm-SP.zip
-/base_files/AvCF
+/base_files
 /augmented
 augmentation.ipynb
 /base_files
