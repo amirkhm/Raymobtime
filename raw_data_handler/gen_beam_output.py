@@ -34,12 +34,6 @@ def process_ep(path, c):
         numScenes = ray_data.shape[0]
         numReceivers = ray_data.shape[1]
     
-    hmatrix = np.nan * np.ones((numScenes, numReceivers), np.matrix)
-    channelOutputs = np.nan * np.ones((numScenes, numReceivers, 
-                                       expansion['Rx_x']*expansion['Rx_y'], 
-                                       expansion['Tx_x']*expansion['Tx_y']), float)
-    beamIndexOutputs = np.nan * np.ones((numScenes, numReceivers), np.int8)
-        
     # if false use dft codebook else use path given to .npy
     # eg import_precoding = '~/phi_50.npy'
     if import_precoding == False:
@@ -52,6 +46,12 @@ def process_ep(path, c):
         combining = dft_codebook_upa(expansion['Rx_x'],expansion['Rx_y'])
     else:
         combining = np.load(import_combining)
+        
+    hmatrix = np.nan * np.ones((numScenes, numReceivers), np.matrix)
+    channelOutputs = np.nan * np.ones((numScenes, numReceivers, 
+                                       combining.shape[1], 
+                                       precoding.shape[1]), float)
+    beamIndexOutputs = np.nan * np.ones((numScenes, numReceivers), np.int8)
         
     # if import channel, hmatrix.csv from WI. Mean that's a channel from 1 Tx to 1 Rx
     # eg import_hmatrix = 'hmatrix.txSet001.txPt001.rxSet002.inst001.csv'
@@ -79,7 +79,9 @@ def process_ep(path, c):
                     equivalentChannelMagnitude = np.abs(equivalentChannel)
                     beamIndexOutputs[s,r] = int(np.argmax(equivalentChannelMagnitude, axis=None))
                     channelOutputs[s,r]=np.abs(equivalentChannel)
+
                 except Exception as e:
+                    print(f"An error occurred while processing receiver {r}: {e}")
                     continue
     else: # Calculate from rays data of HDF5
         for s in range(numScenes):  # 10
@@ -118,7 +120,8 @@ def process_ep(path, c):
                 hmatrix[s,r] = mimoChannel
                 beamIndexOutputs[s,r] = int(np.argmax(equivalentChannelMagnitude, axis=None))
                 channelOutputs[s,r]=np.abs(equivalentChannel)
-    return hmatrix, beamIndexOutputs, channelOutputs
+
+    return hmatrix[0][0], beamIndexOutputs[0][0], channelOutputs[0][0]
 
 def gen_beam_output_file(c):
     output_beam_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name, 'beams')

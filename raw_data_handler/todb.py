@@ -226,9 +226,13 @@ def gen_database(c):
                         dimension_min = np.min(object.vertice_array, 0)
                         object.dimension = dimension_max - dimension_min
                         object.position = dimension_max - (object.dimension / 2)
-                        object.angle = sumo_info[structure.name.rstrip()]['angle']
-                        object.height = sumo_info[structure.name.rstrip()]['position'][2]
-
+                        object_name = structure.name.rstrip()
+                        if object_name in sumo_info:
+                            object.angle = sumo_info[object_name]['angle']
+                            object.height = sumo_info[object_name]['position'][2]
+                        else:
+                            object.angle = 0
+                            object.height = 0
                         if structure.name.rstrip() in simulation_info['cars_with_antenna']:
                             receiver = fgdb.InsiteReceiver()
                             if paths.get_total_received_power(rec_i+1) is not None:

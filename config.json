@@ -1,10 +1,10 @@
 {   
     "seed":12,
-    "simulation_name":"B-pnm-SP",
+    "simulation_name":"Joao_Revista",
     "features":{
         "use_fixed_receivers":false,
         "use_pedestrians":false,
-        "use_vehicles_template":true,
+        "use_vehicles_template":false,
         "drone_simulation":false,
         "mimo_orientation":false,
         "use_V2V":false,
@@ -12,24 +12,24 @@
     },
     "simulation_parameters":{
         "n_init_run":0,
-        "n_end_run":413,
-        "sampling_interval":0.2,
-        "n_scenes_of_each_episode":413,
+        "n_end_run":2,
+        "sampling_interval":0.5,
+        "n_scenes_of_each_episode":5,
         "time_between_episodes":35,
         "n_antenna_per_episode":1,
         "n_Tx_per_episode":1
     },
     "simulation_paths":{
-        "base_insite_path":"B-pnm-SP/wireless",
-        "results_dir_path":"B-pnm-SP"
+        "base_insite_path":"Joao_Position6",
+        "results_dir_path":"Joao_Position6"
     },
     "sumo_files":{
         "sumo_bin":"/usr/bin/sumo",
-        "sumo_cfg":"B-pnm-SP"
+        "sumo_cfg":"NewYork"
     },
     "insite_paths":{
-        "insite_software_path":"/home/gabrielferreiravieira/Remcom/remcom",
-        "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@200.239.93.3"
+        "insite_software_path":"/home/fritz/data/LASSE/Wireless_Insite/remcom",
+        "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@10.10.20.121"
     },
     "area_limits":{
         "enabled":false,
@@ -43,12 +43,12 @@
             "coordinates_limits":[660, 334, 843, 523]
         },
         "antenna_arr":{
-            "import_precoding": false,
-            "import_hmatrix": false,
+            "import_precoding": "/home/fritz/data/Raymobtime_2.0/raymobtime/Codebook/default_mikrotik_cb.npy",
+            "import_hmatrix": true,
             "import_combining": false,
             "expansion": {
-                "Tx_x": 16, "Tx_y": 1, 
-                "Rx_x": 16, "Rx_y": 1},
+                "Tx_x": 6, "Tx_y": 6, 
+                "Rx_x": 1, "Rx_y": 1},
             "rotation": {
                 "Tx_alpha": 0, "Tx_beta": 0, "Tx_gamma": 0, 
                 "Rx_alpha": 0, "Rx_beta": 0, "Rx_gamma": 0},

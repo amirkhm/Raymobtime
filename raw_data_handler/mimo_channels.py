@@ -250,4 +250,3 @@ def import_mimo_channel(H_csv):
             imag_part = row.iloc[3 + 2 * tx_index]  # Imaginary column
             H[rx_index, tx_index] = complex(real_part, imag_part)
     return H
-    
