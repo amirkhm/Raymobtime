@@ -5,52 +5,68 @@ import numpy as np
 import pandas as pd
 
 from blensor.blensor_src import export_cam_info
+from raw_data_handler import save5gmdata as fgdb
 
-def global2pixels(Pob,Pcam,azimuth,elevation,K):
+def global2pixels(Pob,Pcam,yaw,roll,pitch,K):
     """
     Convert a global coordinate to camera POV coordinate
+    Using XYZ Euler rotation, that blender uses
     Inputs
     Pob: (x,y,z) global from object (X=front, Y=left, Z=up)
     Pcam: (x.y.z) global from camera
-    azimuth: θ (radians, rotação em Z)
+    yaw: Z rotation
+    roll: X rotation
+    pitch: Y rotation
     K: camera parameters
     Output
     p_img: (pixels) x,y from image pixel
     p_c: (x,y,z) coordinate from camera POV
     """
-    # Azimuth rotation matrix
-    cos_phi = np.cos(azimuth)
-    sin_phi = np.sin(azimuth)
+
+    rel_pos = Pob - Pcam
+
+    # Z rotation
+    cos_phi = np.cos(yaw)
+    sin_phi = np.sin(yaw)
     Rz = np.array([
-        [cos_phi, -sin_phi, 0],
-        [sin_phi,  cos_phi, 0],
-        [0,          0,        1]
+    [cos_phi, -sin_phi, 0],
+    [sin_phi, cos_phi, 0],
+    [0, 0, 1]
     ])
 
-    # Elevation rotation matrix
-    cos_theta = np.cos(elevation)
-    sin_theta = np.sin(elevation)
+    # Y rotation
+    cos_theta = np.cos(pitch)
+    sin_theta = np.sin(pitch)
     Ry = np.array([
-        [cos_theta,  0, sin_theta],
-        [0,        1,       0],
-        [-sin_theta, 0, cos_theta]
+    [cos_theta, 0, sin_theta],
+    [0, 1, 0],
+    [-sin_theta, 0, cos_theta]
+    ])
+
+    # X Rotation
+    cos_phi = np.cos(roll)
+    sin_phi = np.sin(roll)
+    Rx = np.array([
+    [1, 0, 0],
+    [0, cos_phi, -sin_phi],
+    [0, sin_phi, cos_phi]
     ])
 
     # Rotation Matrix
-    R = np.dot(Ry, Rz.T)
-    P_obj_cam = np.dot(R, Pob - Pcam)
+    R = Rz @ Ry @ Rx
+    P_obj_cam = np.dot(R.T, rel_pos)
 
-    x_c = -P_obj_cam[1]   # -Y global turns to X from câmera (right+)
-    y_c = -P_obj_cam[2]  # -Z global turns to Y from câmera (down+)
-    z_c = P_obj_cam[0]   # X global turns to Z from câmera (depth+)
+    #Blender camera inittialy points to z-
+    x_c = P_obj_cam[0]  # X global turns to X from câmera (right+)
+    y_c = -P_obj_cam[1] #-Z global turns to Y from câmera (down+)
+    z_c = -P_obj_cam[2]  # Y global turns to Z from câmera (depth+)
     
     if z_c <= 0:
         # raise ValueError("The object is behind the câmera!")
-        return None, None #Object behind camera
+        return None, np.array([x_c, y_c, z_c]) #Object behind camera
     
     # Turns x,y,z from camera to pixels
     p_img = K @ np.array([x_c/z_c, y_c/z_c, 1])
-    # u, v, _ = p_img
     return p_img[:2], np.array([x_c, y_c, z_c])
 
 def gen_K(cam_info):
@@ -105,6 +121,10 @@ def image_refinement(c):
     if not os.path.exists(refined_img_path):
         os.makedirs(refined_img_path)
 
+    database_path = os.path.join(main_folder, f'{c.sim_name}.db')
+    session = fgdb.open_database(database_path)
+    objcs = session.query(fgdb.InsiteObject)
+
     # Check for camera info
     cam_info_path = os.path.join(main_folder, 'blend_info', 'cam_info.json')
     if not os.path.exists(cam_info_path):
@@ -139,17 +159,55 @@ def image_refinement(c):
                                          cam_info[cam_name]["position"]["z"]])
                 pixels, p_cam = global2pixels(position_Rx, 
                                               cam_position,
-                                              cam_info[cam_name]["angles"]["azimuth"], 
-                                              cam_info[cam_name]["angles"]["elevation"],
+                                              cam_info[cam_name]["rotation_radians"]["z"],
+                                              cam_info[cam_name]["rotation_radians"]["x"],
+                                              cam_info[cam_name]["rotation_radians"]["y"],
                                               cam_info[cam_name]["K"])
                 img_window_size = np.array([cam_info[cam_name]["pixel_resolution"]["width"],
                                             cam_info[cam_name]["pixel_resolution"]["height"]])
+
+                rf_img_marked_path = os.path.join(bs_rf_path, 'marker', f'run{run}', f'rx_{row["RxID"]}')
+                if not os.path.exists(rf_img_marked_path):
+                    os.makedirs(rf_img_marked_path)
+                rf_img_bb_path = os.path.join(bs_rf_path, 'bb', f'run{run}', f'rx_{row["RxID"]}')
+                if not os.path.exists(rf_img_bb_path):
+                    os.makedirs(rf_img_bb_path)
+                
                 if not obj_in_cam_view(pixels, img_window_size):
-                    continue
-                rf_img_marked = cv2.circle(img_raw, pixels.astype(int), 3, (0,0,255), -1)
-                rf_img_marked_path = os.path.join(bs_rf_path, 'marker', f'run{run}', f"Camera{cam}.png")
-                cv2.imwrite(rf_img_marked_path, rf_img_marked)
+                    cv2.imwrite(os.path.join(rf_img_marked_path, f"Camera{cam}.png"), img_raw)
+                    cv2.imwrite(os.path.join(rf_img_bb_path, f"Camera{cam}.png"), img_raw)
+                else:
+                    rf_img_marked = cv2.circle(img_raw.copy(), pixels.astype(int), 3, (0,255,0), -1)
+                    cv2.imwrite(os.path.join(rf_img_marked_path, f"Camera{cam}.png"), rf_img_marked)
+
+                    obj = objcs.filter_by(name=row['VehicleName']).all()
+                    if len(obj) > 1:
+                        for veh in objcs.filter_by(name=row['VehicleName']):
+                            if np.prod(np.isclose(veh.position[:2], position_Rx[:2], rtol=1e-15, atol=1e-15)):
+                                obj = veh
+                    else:
+                        obj = obj[0]
+                    vertices = []
+                    for vertc in obj.vertice_array:
+                        pixels, _ = global2pixels(vertc, 
+                                                cam_position,
+                                                cam_info[cam_name]["rotation_radians"]["z"],
+                                                cam_info[cam_name]["rotation_radians"]["x"],
+                                                cam_info[cam_name]["rotation_radians"]["y"],
+                                                cam_info[cam_name]["K"])
+                        if obj_in_cam_view(pixels, img_window_size):
+                            vertices.append(pixels)
+                    
+                    vertices = np.array(vertices)
+                    del obj
+                    vertices_max = np.max(vertices,axis=0)
+                    vertices_min = np.min(vertices,axis=0)
+
+                    rf_img_bb = cv2.rectangle(img_raw.copy(), tuple(vertices_min.astype(int)), tuple(vertices_max.astype(int)), (0,255,0),2)
+                    cv2.imwrite(os.path.join(rf_img_bb_path, f"Camera{cam}.png"), rf_img_bb)
+
                 bs_veh_positions[row["EpisodeID"], row["SceneID"], row["RxID"], cam, :] = p_cam
+            print(f"Refined images from run {run:5d} and Rx {row['RxID']:2d}")
     
     if c.sim_BS_img:
         np.savez(os.path.join(bs_rf_path, 'RxPosCamraPOV.npz'), position=bs_veh_positions)

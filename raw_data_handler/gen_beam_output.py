@@ -121,7 +121,7 @@ def process_ep(path, c):
                 beamIndexOutputs[s,r] = int(np.argmax(equivalentChannelMagnitude, axis=None))
                 channelOutputs[s,r]=np.abs(equivalentChannel)
 
-    return hmatrix[0][0], beamIndexOutputs[0][0], channelOutputs[0][0]
+    return hmatrix, beamIndexOutputs, channelOutputs
 
 def gen_beam_output_file(c):
     output_beam_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name, 'beams')

@@ -1,6 +1,6 @@
 {   
     "seed":12,
-    "simulation_name":"Joao_Revista",
+    "simulation_name":"Brasil_6G",
     "features":{
         "use_fixed_receivers":false,
         "use_pedestrians":false,
@@ -8,28 +8,28 @@
         "drone_simulation":false,
         "mimo_orientation":false,
         "use_V2V":false,
-        "isolated_simulation":false
+        "isolated_simulation":true
     },
     "simulation_parameters":{
         "n_init_run":0,
         "n_end_run":2,
         "sampling_interval":0.5,
-        "n_scenes_of_each_episode":5,
+        "n_scenes_of_each_episode":2,
         "time_between_episodes":35,
         "n_antenna_per_episode":1,
         "n_Tx_per_episode":1
     },
     "simulation_paths":{
-        "base_insite_path":"Joao_Position6",
-        "results_dir_path":"Joao_Position6"
+        "base_insite_path":"rosslyn_60GHz_4rx",
+        "results_dir_path":"rosslyn_60GHz_4rx"
     },
     "sumo_files":{
         "sumo_bin":"/usr/bin/sumo",
-        "sumo_cfg":"NewYork"
+        "sumo_cfg":"seasonal"
     },
     "insite_paths":{
-        "insite_software_path":"/home/gabrielferreiravieira/Remcom/remcom",
-        "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@10.10.80.2"
+        "insite_software_path":"/home/fritz/data/Softwares/Wireless_Insite/remcom",
+        "REMCOMINC_LICENSE_FILE":"REMCOMINC_LICENSE_FILE=2508@10.10.20.206"
     },
     "area_limits":{
         "enabled":false,
@@ -43,7 +43,7 @@
             "coordinates_limits":[660, 334, 843, 523]
         },
         "antenna_arr":{
-            "import_precoding": "/home/fritz/data/Raymobtime_2.0/raymobtime/Codebook/default_mikrotik_cb.npy",
+            "import_precoding": "Codebook/default_mikrotik_cb.npy",
             "import_hmatrix": true,
             "import_combining": false,
             "expansion": {

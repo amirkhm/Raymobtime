@@ -1,6 +1,5 @@
 import sys
 import os
-import json
 import bpy
 import csv
 import blensor
@@ -20,19 +19,10 @@ def simulator():
     startTime = datetime.now()
     # Get infos from the args
     args = sys.argv
-
-    with open('config.json', 'r') as file:
-        cfg = json.load(file)
-
-    cur_dir = os.curdir
-    folder_scanned_name = os.path.join(cur_dir, 'simulations', cfg['simulation_paths']['results_dir_path'])
-    folder_scans_dataset = os.path.join(cur_dir, 'sim_data', cfg['simulation_paths']['results_dir_path'], 'scans')
-    vehicles_blend_path = cfg['blensor_options']['path_to_vehicles']
-    start_run = cfg['simulation_parameters']['n_init_run']
-    end_run = cfg['simulation_parameters']['n_end_run']
-
-    if not os.path.exists(folder_scans_dataset):
-        os.makedirs(folder_scans_dataset)
+    folder_scanned_name = args[args.index('--simulation')+1]
+    vehicles_blend_path = args[args.index('--veh_path')+1]
+    start_run = int(args[args.index('--from_run')+1])
+    end_run = int(args[args.index('--to')+1])
     #for key,scene_path in scenes_path.items():
     frame_num = 0
     frame_step = 1
@@ -54,36 +44,19 @@ def simulator():
         vPosition = getInfoVehicles(sumo_info_file)
         Position = vPosition
         animateVehiclesBlender(Position, vehicles_blend_path) 
-        doScan(Position,'scans_'+base_run_dir_fn(run), folder_scans_dataset)
+        doScan(Position,'scans_'+base_run_dir_fn(run))
         for obj in D.objects:
             if obj.name.startswith('flow') or obj.name.startswith('_flow'):
                 obj.select = True
                 bpy.ops.object.delete()
-                bpy.data.objects.remove(obj, do_unlink=True)
         bpy.ops.blensor.delete_scans()
         run += 1
         frame_num += frame_step
 
     endAnimation(frame_num)
-    cleanup_scene()
     time_elapsed = datetime.now() - startTime
     print("Total time elapsed: " + str(time_elapsed))
     bpy.ops.wm.quit_blender()
-
-def cleanup_scene():
-    """Remove all objects, materials, textures, etc."""
-    # Unlink all objects
-    for obj in bpy.data.objects:
-        bpy.data.objects.remove(obj, do_unlink=True)
-    
-    # Purge orphaned data blocks
-    for block in [bpy.data.meshes, bpy.data.materials, bpy.data.textures]:
-        for item in block:
-            block.remove(item)
-    
-    # Force garbage collection
-    gc.collect()
-    bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
 
 def getInfoPath(path_info_file):
     with open(path_info_file) as pathfile:
@@ -222,16 +195,12 @@ def convert360(x):
 
     return x % 360
 
-def doZip(pathdir, scans_output):
-    zip_output = os.path.join(scans_output, pathdir)
-    cmd = f"zip -r -j {zip_output}.zip {pathdir}"
-    # os.system('zip -r -j %s%s.zip %s'%('scans/',pathdir, pathdir))
-    # print('zip -r -j %s%s.zip %s'%('scans/',pathdir, pathdir))
-    os.system(cmd)
-    print(cmd)
+def doZip(pathdir):
+    os.system('zip -r -j %s%s.zip %s'%('scans/',pathdir, pathdir))
+    print('zip -r -j %s%s.zip %s'%('scans/',pathdir, pathdir))
     shutil.rmtree(pathdir)
 # Perform Scan
-def doScan(vPosition,pathdir, scans_output):
+def doScan(vPosition,pathdir):
     for camera in vPosition.items():
         if camera[1]['isRx'] or camera[1]['isTx']:
             os.mkdir(pathdir)
@@ -252,7 +221,7 @@ def doScan(vPosition,pathdir, scans_output):
                                 add_noisy_blender_mesh = False, world_transformation=scanner.matrix_world)
             car_to_hide.hide_render = False
             os.remove(pathdir+'/'+camera[0])
-            doZip(pathdir, scans_output)
+            doZip(pathdir)
             myfile = pathdir+'/'+camera[0]
             '''doClean(myfile)'''
     #doZip(pathdir)
