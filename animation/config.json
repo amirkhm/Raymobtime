@@ -1,0 +1,27 @@
+{
+    "simulation": {
+        "use_rays": true,
+        "use_pedestrians": true,
+        "start_run": 0,
+        "end_run": 100,
+        "frame_step": 1,
+        "zip_scan_results": false
+    },
+    "paths": {
+        "output_dir": "saida",
+        "scenario_blend_file": "/home/fritz/data/Raymobtime_2.0/animation/bases_files/lasse/lasse_indoor.blend",        
+        "temp_frames_dir": "blensor_frames",
+        "video_output_name": "blensor_animation.mp4",
+        "pedestrian_file_name": "sumoOutputInfoFileName_PedPed.txt",
+        "vehicle_file_name": "sumoOutputInfoFileName.txt",
+        "wireless_path_file": "study/model.paths.t001_01.r002.p2m"
+    },
+    "video": {
+        "framerate": 10,
+        "codec": "libx264",
+        "pixel_format": "yuv420p"
+    },
+    "debug": {
+        "animation_logs": false
+    }
+}
