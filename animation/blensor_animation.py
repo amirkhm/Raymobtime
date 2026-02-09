@@ -13,6 +13,7 @@ from mathutils import *
 from math import *
 from datetime import datetime
 from zipfile import ZipFile
+
 def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
     """returns the `run_dir` for run `i`"""
     return "run{:05d}".format(i)
@@ -20,7 +21,7 @@ def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
 
 def main():
     startTime = datetime.now()
-    blend_city = 'rosslyn.blend'
+    blend_city = 'teste2rosslyn.blend'
     blend_vehicles = 'vehicles.blend'
     useRays = True	
     usePed = False
@@ -44,7 +45,9 @@ def main():
     run = start_run
     bpy.data.scenes['Scene'].frame_end = end_run-1
     bpy.data.scenes['Scene'].frame_start = 0
-    while run<end_run:
+
+    while run < end_run:
+        
         print('Processing run' + str(run) + ' ...') 
         time_elapsed = datetime.now() - startTime
         scene_path = os.path.join(folder_scanned_name,base_run_dir_fn(run)) 
@@ -74,7 +77,7 @@ def main():
             
 
         animateVehiclesBlender(Position,run,frame_step,step)
-        doScan(vPosition, '/home/fritz/data/raymobtime/Animation/animation/saida/resultado'+str(run))
+        doScan(vPosition, '/home/jessica/Documentos/Raymobtime/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/saida'+str(run))
         for obj in D.objects:
             if obj.name.startswith('flow') or obj.name.startswith('_flow'):
                 obj.select = True

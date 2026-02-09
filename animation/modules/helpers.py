@@ -3,6 +3,7 @@ import shutil
 import zipfile
 import time
 from math import ceil
+import subprocess
 
 def base_run_dir_fn(i):
     """Retorna o nome do diretório para a run 'i' (ex: 'run00001')"""
@@ -55,3 +56,31 @@ def do_zip(pathdir):
         shutil.rmtree(pathdir)
     except Exception as e:
         print(f"Erro ao compactar ou remover {pathdir}: {e}")
+
+
+def add_overlay_to_frame(frame_path, ds_name, episode, scene):
+    if not os.path.exists(frame_path):
+        return
+
+    # Monta o texto que aparecerá na imagem
+    texto = "Dataset: {} | Ep: {} | Scene: {}".format(ds_name, episode, scene)
+    
+    # Comando para o ImageMagick criar a tarja preta com texto no topo
+    comando = [
+        "convert",
+        frame_path,
+        "-background", "black",
+        "-fill", "white",
+        "-font", "DejaVu-Sans",
+        "-pointsize", "20",
+        "-gravity", "center",
+        "label:{}".format(texto),
+        "+swap",
+        "-append",
+        frame_path
+    ]
+    
+    try:
+        subprocess.run(comando, check=True)
+    except Exception as e:
+        print("Erro ao aplicar legenda: {}".format(e))

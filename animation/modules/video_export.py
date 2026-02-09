@@ -9,6 +9,7 @@ def create_video(frame_dir, video_path, video_config):
         "-y", # Sobrescrever arquivo de saída
         "-framerate", str(video_config.get("framerate", 10)),
         "-i", os.path.join(frame_dir, "frame_%05d.png"),
+        "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2",     # Se o tamanho for ímpar vai add 1 pixel para tornar par
         "-c:v", video_config.get("codec", "libx264"),
         "-pix_fmt", video_config.get("pixel_format", "yuv420p"),
         video_path

@@ -29,6 +29,9 @@ Para executar este projeto, você precisará de:
 
       * **Instalação (Linux):** `sudo apt install ffmpeg`
 
+3.  **ImageMagick:** Necessário para a geração das legendas (overlay) nos frames.
+      * **Instalação (Linux):** `sudo apt install imagemagick`
+
 ### Passos de Instalação
 
 1.  Clone este repositório:
@@ -81,6 +84,12 @@ O arquivo `config.json` controla todos os aspectos da simulação.
         "end_run": 3,             // 'run' final (não inclusivo). Processa de start_run até end_run-1.
         "frame_step": 1,          // Quantos frames avançar por 'run'.
         "zip_scan_results": false // (true/false) Compacta os .pcd gerados em .zip.
+        "show_overlay": true      // (true/false) Ativa ou desativa a legenda
+    },
+    "dataset_config": {
+        "name": "s006 Rosslyn 10FixedRx 28GHz",         // Nome do dataset na legenda
+        "scenes_per_episode": 10                        // Define o número de cenas por episódio
+
     },
     "paths": {
         "output_dir": "saida",                      // Pasta para salvar .pcd e .zip.
