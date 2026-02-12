@@ -84,7 +84,6 @@ O arquivo `config.json` controla todos os aspectos da simulação.
         "end_run": 3,             // 'run' final (não inclusivo). Processa de start_run até end_run-1.
         "frame_step": 1,          // Quantos frames avançar por 'run'.
         "zip_scan_results": false // (true/false) Compacta os .pcd gerados em .zip.
-        "show_overlay": true      // (true/false) Ativa ou desativa a legenda
     },
     "dataset_config": {
         "name": "s006 Rosslyn 10FixedRx 28GHz",         // Nome do dataset na legenda
@@ -103,6 +102,12 @@ O arquivo `config.json` controla todos os aspectos da simulação.
         "framerate": 10,          // Taxa de quadros do vídeo final.
         "codec": "libx264",       // Codec de vídeo.
         "pixel_format": "yuv420p" // Formato de pixel (para compatibilidade).
+    },
+    "visualization_settings": {
+        "show_overlay": true,            // (true/false) Ativa ou desativa a legenda - Episódio e cena
+        "show_rx_coordinates": true,     // (true/false) Habilita a legenda do Rx
+        "show_tx_coordinates": false,    // (true/false) Habilita a legenda do Tx
+        "active_camera": "Camera"        // Implementação futura
     },
     "debug": {
         "animation_logs": true    // (true/false) Imprime logs detalhados da animação.

@@ -5,8 +5,7 @@
         "start_run": 0,
         "end_run": 150,
         "frame_step": 1,
-        "zip_scan_results": false,
-        "show_overlay": true
+        "zip_scan_results": false
     },
     "dataset_config": {
         "name": "s006 Rosslyn 10FixedRx 28GHz",
@@ -26,6 +25,12 @@
         "framerate": 10,
         "codec": "libx264",
         "pixel_format": "yuv420p"
+    },
+    "visualization_settings": {
+        "show_overlay": true,
+        "show_rx_coordinates": true,
+        "show_tx_coordinates": false,
+        "active_camera": "Camera"
     },
     "debug": {
         "animation_logs": false

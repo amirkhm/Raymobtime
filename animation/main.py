@@ -41,6 +41,7 @@ def main():
     cfg_video = config['video']
     cfg_debug = config['debug']
     # Config da Legenda
+    cfg_visualization = config.get('visualization_settings', {})
     cfg_ds = config.get('dataset_config', {"name": "ds", "scenes_per_episode": 50})
     scenes_per_ep = cfg_ds['scenes_per_episode']
     ds_name = cfg_ds['name']
@@ -166,7 +167,7 @@ def main():
         bpy.ops.render.render(write_still=True)
 
         # Adiciona a legenda depois do render
-        if cfg_sim.get('show_overlay', False):
+        if cfg_visualization.get('show_overlay', False):
             current_episode = run // scenes_per_ep
             current_scene = run % scenes_per_ep
 
