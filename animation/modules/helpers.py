@@ -58,12 +58,12 @@ def do_zip(pathdir):
         print(f"Erro ao compactar ou remover {pathdir}: {e}")
 
 
-def add_overlay_to_frame(frame_path, ds_name, episode, scene):
+def add_overlay_to_frame(frame_path, texto):
     if not os.path.exists(frame_path):
         return
 
     # Monta o texto que aparecerá na imagem
-    texto = "Dataset: {} | Ep: {} | Scene: {}".format(ds_name, episode, scene)
+    #texto = "Dataset: {} | Ep: {} | Scene: {}".format(ds_name, episode, scene)
     
     # Comando para o ImageMagick criar a tarja preta com texto no topo
     comando = [
@@ -84,3 +84,19 @@ def add_overlay_to_frame(frame_path, ds_name, episode, scene):
         subprocess.run(comando, check=True)
     except Exception as e:
         print("Erro ao aplicar legenda: {}".format(e))
+
+
+def add_rx_label(image_path, text, x, y):
+    # Desenha o rótulo do RX no pixel via ImageMagick
+    
+    command = [
+        'convert', image_path,
+        '-fill', '#FFFF00',           # Amarelo
+        '-font', 'DejaVu-Sans-Bold',   # Fonte em negrito
+        '-pointsize', '16',
+        '-stroke', 'black',            # Contorno preto
+        '-strokewidth', '1',
+        '-draw', "text {},{} '{}'".format(x, y, text),
+        image_path
+    ]
+    subprocess.run(command)

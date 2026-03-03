@@ -3,7 +3,7 @@
         "use_rays": true,
         "use_pedestrians": false,
         "start_run": 0,
-        "end_run": 150,
+        "end_run": 2000,
         "frame_step": 1,
         "zip_scan_results": false
     },

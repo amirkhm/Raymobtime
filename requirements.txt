@@ -6,7 +6,7 @@ lzf
 matplotlib
 numpy
 opencv_python
-pandas
+pandasP
 pyreadline
 scipy
 setuptools
