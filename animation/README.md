@@ -64,6 +64,7 @@ project_root/
 │   ├── blensor_scan.py   # Lógica de varredura Blensor (gera .pcd)
 │   ├── helpers.py        # Funções utilitárias (zip, ângulos, pastas)
 │   └── video_export.py   # Exportação de vídeo (chamada FFmpeg)
+|   └── subtitle_utils.py   # Lógica de legendas (Cena, Ep, Tx, Rx)
 │
 ├── vehicles.blend      # Arquivo .blend com os modelos 3D (Carro, Pedestre, etc.)
 └── Blensor-x64.AppImage # (Recomendado) Executável do Blensor
@@ -105,8 +106,8 @@ O arquivo `config.json` controla todos os aspectos da simulação.
     },
     "visualization_settings": {
         "show_overlay": true,            // (true/false) Ativa ou desativa a legenda - Episódio e cena
-        "show_rx_coordinates": true,     // (true/false) Habilita a legenda do Rx
-        "show_tx_coordinates": false,    // (true/false) Habilita a legenda do Tx
+        "show_rx_coordinates": true,     // (true/false) Habilita a legenda do Rx com coordenadas
+        "show_tx_coordinates": false,    // (true/false) Habilita a legenda do Tx com coordenadas
         "active_camera": "Camera"        // Implementação futura
     },
     "debug": {

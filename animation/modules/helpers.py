@@ -57,7 +57,7 @@ def do_zip(pathdir):
     except Exception as e:
         print(f"Erro ao compactar ou remover {pathdir}: {e}")
 
-
+#add JK
 def add_overlay_to_frame(frame_path, texto):
     if not os.path.exists(frame_path):
         return
@@ -85,7 +85,7 @@ def add_overlay_to_frame(frame_path, texto):
     except Exception as e:
         print("Erro ao aplicar legenda: {}".format(e))
 
-
+#add JK
 def add_rx_label(image_path, text, x, y):
     # Desenha o rótulo do RX no pixel via ImageMagick
     
