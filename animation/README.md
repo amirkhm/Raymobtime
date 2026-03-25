@@ -29,7 +29,7 @@ Para executar este projeto, você precisará de:
 
       * **Instalação (Linux):** `sudo apt install ffmpeg`
 
-3.  **ImageMagick:** Necessário para a geração das legendas (overlay) nos frames.
+3.  **ImageMagick:** Necessário para a geração das legendas nos frames.
       * **Instalação (Linux):** `sudo apt install imagemagick`
 
 ### Passos de Instalação
@@ -64,9 +64,12 @@ project_root/
 │   ├── blensor_scan.py   # Lógica de varredura Blensor (gera .pcd)
 │   ├── helpers.py        # Funções utilitárias (zip, ângulos, pastas)
 │   └── video_export.py   # Exportação de vídeo (chamada FFmpeg)
-|   └── subtitle_utils.py   # Lógica de legendas (Cena, Ep, Tx, Rx)
+|   └── subtitle_utils.py # Lógica de legendas (Cena, Ep, Tx, Rx)
+|   └── camera_utils.py   # Módulo para gerenciamento das Câmeras
 │
 ├── vehicles.blend      # Arquivo .blend com os modelos 3D (Carro, Pedestre, etc.)
+└── Rx.blend             # Arquivo .blend com objeto para posicionar nos receptores
+└── Tx.blend             # Arquivo .blend com objeto para posicionar nos transmissores
 └── Blensor-x64.AppImage # (Recomendado) Executável do Blensor
 ```
 
@@ -97,7 +100,10 @@ O arquivo `config.json` controla todos os aspectos da simulação.
         "video_output_name": "blensor_animation.mp4", // Nome do vídeo final.
         "pedestrian_file_name": "sumoOutputInfoFileName_PedPed.txt",
         "vehicle_file_name": "sumoOutputInfoFileName.txt",
-        "wireless_path_file": "study/model.paths.t001_01.r002.p2m"
+        "wireless_path_file": "study/model.paths.t001_01.r002.p2m",
+        "vehicles_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/vehicles.blend",  // Indicar onde está o vehicles
+        "rx_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/Rx.blend",      // Indicar onde está o Rx.blend
+        "tx_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/Tx.blend"       // Indicar onde está o Tx.blend
     },
     "video": {
         "framerate": 10,          // Taxa de quadros do vídeo final.
@@ -107,8 +113,21 @@ O arquivo `config.json` controla todos os aspectos da simulação.
     "visualization_settings": {
         "show_overlay": true,            // (true/false) Ativa ou desativa a legenda - Episódio e cena
         "show_rx_coordinates": true,     // (true/false) Habilita a legenda do Rx com coordenadas
+        "show_only_rx_label": false,     // Habilita apenas a identificação do Rx sem a coordenadas
         "show_tx_coordinates": false,    // (true/false) Habilita a legenda do Tx com coordenadas
-        "active_camera": "Camera"        // Implementação futura
+        "show_only_tx_label": false,     // Habilita apenas a identificação do Tx sem a coordenadas
+        "use_occlusion_check": true      // true habilita o uso de Ray cast para retirar legendas de objetos que não está na visão da cãmera
+    },
+    "camera_settings": {
+        "active_camera_name": "CamPerspRx43910",    // Escolher a câmera do cenário no qual quer gerar o vídeo
+        "use_blender_default": false,               // true para usar as configurações originais definidas na câmera do cenário 
+        "type": "PERSP",                            // Tipo da câmera a qual quer ajustar as configurações. Há o tipo perspectiva e ortogonal
+        "ortho_scale": 260,                         // Configuração para câmera tipo ORTHO - quando o blender default é false
+        "focal_length": 10,                         // Configuração para câmera tipo PERSP - quando o blender default é false
+        "rx_id_to_focus": 4,                        // Focar em um receptor, indicar qual é o número/identificação do ID do Rx - quando look rx é true
+        "mode": "static",                           // 'static' (câmera no lugar do Blender) ou 'follow' (câmera segue o RX).
+        "look_at_rx": true,                         // Se True, a câmera gira para centralizar o RX.
+        "relative_position": [-60, 0, 20]           // Configuração da posição da câmera
     },
     "debug": {
         "animation_logs": true    // (true/false) Imprime logs detalhados da animação.

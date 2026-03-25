@@ -21,7 +21,7 @@ def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
 
 def main():
     startTime = datetime.now()
-    blend_city = 'teste2rosslyn.blend'
+    blend_city = 'teste4rosslyn.blend'
     blend_vehicles = 'vehicles.blend'
     useRays = True	
     usePed = False

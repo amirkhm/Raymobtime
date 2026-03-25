@@ -3,6 +3,14 @@ import os
 from math import radians, degrees
 from .helpers import chooseAngleToRotate # Import relativo
 
+
+"""
+Módulo de Animação e Manipulação de Objetos 3D.
+Responsável por importar marcadores (RX), animar veículos do SUMO 
+e gerenciar a visualização de raios de propagação.
+"""
+
+
 # Cache de templates de veículos para evitar reabrir o .blend
 TEMPLATE_CACHE = {}
 
@@ -15,17 +23,15 @@ def create_line_blender(objname, cList, frame_num, frame_step):
     objectdata.location = (0,0,0)
     bpy.context.scene.objects.link(objectdata)
     
-    # --- 💥 ADIÇÃO 1: FORÇAR CAMADA (Layer) 💥 ---
     # Força o raio a estar na Camada 1 (principal).
     layers = [False] * 20
     layers[0] = True
     objectdata.layers = layers
-    # -------------------------------------------
 
     polyline = curvedata.splines.new('POLY')
     polyline.points.add(len(cList)-1)
     
-    # --- Lógica de Material "Shadeless" (correta) ---
+    # Lógica de Material "Shadeless" (correta)
     def create_simple_material(name, color_tuple):
         """Cria um material "shadeless" para o Blender Internal."""
         mat = bpy.data.materials.new(name)
@@ -64,16 +70,15 @@ def create_line_blender(objname, cList, frame_num, frame_step):
         x, y, z, _ = cList[num]
         polyline.points[num].co = (x, y, z, 100) # w=100
     
-    # --- 💥 ADIÇÃO 2: TAMANHO EXAGERADO 💥 ---
+    
     # Valores de teste para torná-los GIGANTES.
     curvedata.extrude = 0.5         # Aumentado de 0.005
     curvedata.bevel_depth = 0.5     # Aumentado de 0.01
-    # ---------------------------------------
     
     curvedata.fill_mode = 'FULL'        # Garante que seja um tubo sólido
     curvedata.bevel_resolution = 2  # Define a "redondeza"
 
-    # --- Lógica de Keyframe (Sem Mudanças) ---
+    # Lógica de Keyframe
     
     # Oculta o raio em todos os frames anteriores
     for i in range(0, frame_num, frame_step):
@@ -108,7 +113,7 @@ def end_ray_animation(frame_num, frame_step):
             obj.keyframe_insert(data_path="hide_render")
             obj.keyframe_insert(data_path="hide")
 
-def _get_template_object(template_name):
+def _get_template_object(template_name, config):    # Modificação JK - add do parametro config
     """Função helper para carregar e cachear objetos do vehicles.blend."""
     global TEMPLATE_CACHE
     
@@ -116,7 +121,7 @@ def _get_template_object(template_name):
         return TEMPLATE_CACHE[template_name]
     
     try:
-        blend_file_path = os.path.join(os.getcwd(), "vehicles.blend")
+        blend_file_path = config['paths']['vehicles_blend_file']    # Modificação JK - Retirado o caminho fixo no código, agora o caminho está no JSON
         if not os.path.exists(blend_file_path):
             print(f"Erro fatal: 'vehicles.blend' não encontrado em {os.getcwd()}")
             return None
@@ -146,7 +151,7 @@ def _get_template_object(template_name):
         return None
 
 
-def animate_vehicles(vPosition, frame_num, frame_step, step, DEBUG_ANIM=False):
+def animate_vehicles(vPosition, frame_num, frame_step, step, config, DEBUG_ANIM=False):     # Modificação JK - add o parametro config
     """
     Anima veículos e pedestres no frame atual.
     Usa um cache de templates para otimização.
@@ -195,7 +200,7 @@ def animate_vehicles(vPosition, frame_num, frame_step, step, DEBUG_ANIM=False):
                 step_obj_name = f"{base_name}_step{s}"
                 if not bpy.data.objects.get(step_obj_name):
                     template_name = f"pedestrian_step{s}"
-                    src_obj = _get_template_object(template_name)
+                    src_obj = _get_template_object(template_name, config)   # Modificação JK - Foi add o parametro config
                     if not src_obj:
                         continue # Pula se o template falhou ao carregar
 
@@ -252,7 +257,7 @@ def animate_vehicles(vPosition, frame_num, frame_step, step, DEBUG_ANIM=False):
                 elif abs(height - 0.295) < 1e-3: model_name = "Drone"
                 else: model_name = "Car" # Suposição padrão
                 
-                src_obj = _get_template_object(model_name)
+                src_obj = _get_template_object(model_name, config)
                 if not src_obj:
                     print(f"Pulando '{vid}' (altura {height}), template '{model_name}' não encontrado.")
                     continue
@@ -278,3 +283,129 @@ def animate_vehicles(vPosition, frame_num, frame_step, step, DEBUG_ANIM=False):
 
             if DEBUG_ANIM:
                 print(f"[DEBUG] Veículo '{vid}' animado no frame {frame_num}")
+
+
+#Add JK  - Obter coordenadas do Rx e posicionar o objeto Rx.blend com ou sem o veículo
+def carregar_coordenadas_txrx(arquivo_caminho):
+    """
+    Lê o arquivo .txrx e separa as coordenadas de TX e RX.
+    Retorna: dict {'tx': [(x,y,z)], 'rx': [(x,y,z), ...]}
+    """
+    resultado = {'tx': [], 'rx': []}
+    if not os.path.exists(arquivo_caminho):
+        return resultado
+
+    with open(arquivo_caminho, 'r', encoding='utf-8') as f:
+        linhas = f.readlines()
+
+    i = 0
+    while i < len(linhas):
+        linha = linhas[i].strip()
+        
+        # Detecta bloco de TX ou RX
+        tipo = None
+        if "begin_<points> Tx" in linha: tipo = 'tx'
+        elif "begin_<points> Rx" in linha: tipo = 'rx'
+
+        if tipo:
+            # Procura o nVertices dentro deste bloco
+            while i < len(linhas) and "nVertices" not in linhas[i]:
+                i += 1
+            
+            if i < len(linhas) and "nVertices" in linhas[i]:
+                num_pontos = int(linhas[i].split()[1])
+                for k in range(1, num_pontos + 1):
+                    coords = linhas[i + k].split()
+                    if len(coords) >= 3:
+                        resultado[tipo].append((float(coords[0]), float(coords[1]), float(coords[2])))
+        i += 1
+    return resultado
+
+#Add JK
+def posicionar_rx(coords_insite, is_fixed, vPosition, config):
+    """
+        Importa e posiciona os Rx.blend de recepção (RX) no cenário.
+        
+        Args:
+            projeto_root (str): Caminho base do projeto.
+            coords_insite (list): Lista de tuplas (x, y, z) vindas do arquivo .txrx.
+            is_fixed (bool): Define se o RX é estático ou segue um veículo.
+            vPosition (dict): Dados de posição dos veículos para sincronização.
+    """
+
+    # 1. Limpa os RXs da rodada anterior
+    for obj in bpy.data.objects:
+        if obj.get("tipo_comunicacao") == "RX":
+            bpy.data.objects.remove(obj, do_unlink=True)
+
+    caminho_rx_blend = config['paths']['rx_blend_file']
+    
+    # Verifica se o arquivo Rx.blend existe antes de tentar abrir
+    if not os.path.exists(caminho_rx_blend):
+        print("Erro: Arquivo Rx.blend nao encontrado em: " + caminho_rx_blend)
+        return
+
+    for idx, ponto in enumerate(coords_insite):
+        id_num = idx + 1
+        
+        # 2. Importa o objeto
+        # Nota: O 'filename' deve ser o nome exato do objeto DENTRO do Rx.blend
+        bpy.ops.wm.append(
+            directory=os.path.join(caminho_rx_blend, "Object/"),
+            filepath=caminho_rx_blend,
+            filename="Rx" 
+        )
+        
+        # 3. Procura o objeto que acabou de ser importado
+        # O Blender costuma manter o nome 'Rx' ou adiciona .001, .002...
+        marcador = None
+        for obj in bpy.data.objects:
+            if obj.name.startswith("Rx") and obj.get("tipo_comunicacao") is None:
+                marcador = obj
+                break
+
+        if marcador is None:
+            print("⚠️ Aviso: Nao consegui encontrar o objeto importado para o RX_{}".format(id_num))
+            continue
+
+        # 4. Configura o marcador
+        marcador.name = "RX_{}".format(id_num)
+        marcador["tipo_comunicacao"] = "RX"
+        marcador["rx_id"] = id_num 
+        
+        if is_fixed:
+            marcador.location = ponto
+        else:
+            # Lógica móvel (opcional)
+            for veh_id, info in vPosition.items():
+                if info.get('isRx', False):
+                    carro_obj = bpy.data.objects.get(veh_id)
+                    if carro_obj:
+                        marcador.parent = carro_obj
+                        marcador.location = (0, 0, 2.0)
+                        break
+
+#add JK
+def posicionar_tx(ponto_tx, config):
+    caminho_tx_blend = config['paths']['tx_blend_file']
+    print(f"DEBUG: Tentando importar TX de: {caminho_tx_blend}")
+
+    try:
+        bpy.ops.wm.append(
+            directory=os.path.join(caminho_tx_blend, "Object/"),
+            filepath=caminho_tx_blend,
+            filename="Tx" # O NOME AQUI TEM QUE SER IGUAL AO DO BLENDER
+        )
+    except Exception as e:
+        print(f"ERRO no Append do TX: {e}")
+
+    # Verifica se ele realmente entrou na cena
+    marcador = next((o for o in bpy.data.objects if o.name.startswith("Tx") and o.get("tipo_comunicacao") is None), None)
+
+    if marcador:
+        marcador.name = "TX_1"
+        marcador["tipo_comunicacao"] = "TX"
+        marcador.location = ponto_tx
+        print(f"✅ TX_1 posicionado com sucesso em {ponto_tx}")
+    else:
+        print("❌ ERRO: O objeto 'Tx' não foi encontrado na cena após o append!")

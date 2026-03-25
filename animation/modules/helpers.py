@@ -61,11 +61,8 @@ def do_zip(pathdir):
 def add_overlay_to_frame(frame_path, texto):
     if not os.path.exists(frame_path):
         return
-
-    # Monta o texto que aparecerá na imagem
-    #texto = "Dataset: {} | Ep: {} | Scene: {}".format(ds_name, episode, scene)
     
-    # Comando para o ImageMagick criar a tarja preta com texto no topo
+    # Comando - criar a tarja preta com texto no topo
     comando = [
         "convert",
         frame_path,
@@ -87,16 +84,33 @@ def add_overlay_to_frame(frame_path, texto):
 
 #add JK
 def add_rx_label(image_path, text, x, y):
-    # Desenha o rótulo do RX no pixel via ImageMagick
-    
+    # Desenha uma bolinha amarela (raio 4) e o texto
+    r = 4
     command = [
         'convert', image_path,
         '-fill', '#FFFF00',           # Amarelo
-        '-font', 'DejaVu-Sans-Bold',   # Fonte em negrito
-        '-pointsize', '16',
-        '-stroke', 'black',            # Contorno preto
+        '-stroke', 'black', 
         '-strokewidth', '1',
-        '-draw', "text {},{} '{}'".format(x, y, text),
+        '-draw', "circle {},{} {},{}".format(x, y, x + r, y), # BOLINHA
+        '-font', 'DejaVu-Sans-Bold',
+        '-pointsize', '16',
+        '-draw', "text {},{} '  {}'".format(x + 5, y + 5, text), # TEXTO com recuo
+        image_path
+    ]
+    subprocess.run(command)
+
+def add_tx_label(image_path, text, x, y):
+    """Desenha uma bolinha verde (raio 5) e o texto do TX."""
+    r = 5
+    command = [
+        'convert', image_path,
+        '-fill', '#00FF00',           # Verde brilhante
+        '-stroke', 'black',
+        '-strokewidth', '0.6',
+        '-draw', "circle {},{} {},{}".format(x, y, x + r, y), # BOLINHA
+        '-font', 'DejaVu-Sans-Bold',
+        '-pointsize', '14',
+        '-draw', "text {},{} '  {}'".format(x + 6, y + 5, text), # TEXTO com recuo
         image_path
     ]
     subprocess.run(command)
