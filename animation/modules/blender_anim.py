@@ -73,7 +73,7 @@ def create_line_blender(objname, cList, frame_num, frame_step):
     
     # Valores de teste para torná-los GIGANTES.
     curvedata.extrude = 0.5         # Aumentado de 0.005
-    curvedata.bevel_depth = 0.5     # Aumentado de 0.01
+    curvedata.bevel_depth = 0.02     # Espessura add JK - alteração do valor de 0.5 para 0.2
     
     curvedata.fill_mode = 'FULL'        # Garante que seja um tubo sólido
     curvedata.bevel_resolution = 2  # Define a "redondeza"

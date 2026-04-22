@@ -87,12 +87,15 @@ def process_subtitles(frame_path, scene, cam, position_data, run, config):
     
     use_occlusion = cfg_visualization.get('use_occlusion_check', True)
 
+    
+    if not cfg_visualization.get('show_overlay', False):
+        return
+        
     # 1. Overlay de informações do dataset (Cabeçalho externo)
-    if cfg_visualization.get('show_overlay', False):
-        ds_name = cfg_ds.get('name', 'Dataset')
-        scenes_per_ep = cfg_ds.get('scenes_per_episode', 10)
-        info_text = f"Dataset: {ds_name} | Ep: {run // scenes_per_ep} | Scene: {run % scenes_per_ep}"
-        add_overlay_to_frame(frame_path, info_text)
+    ds_name = cfg_ds.get('name', 'Dataset')
+    scenes_per_ep = cfg_ds.get('scenes_per_episode', 10)
+    info_text = f"Dataset: {ds_name} | Ep: {run // scenes_per_ep} | Scene: {run % scenes_per_ep}"
+    add_overlay_to_frame(frame_path, info_text)
 
     # 2. Configurações de exibição para TX e RX
     show_rx_coords = cfg_visualization.get('show_rx_coordinates', False)

@@ -190,7 +190,7 @@ def main():
 
         if cfg_sim['use_rays']:
             animate_rays(path_vectors, frame_num, frame_step)
-            end_ray_animation(frame_num, frame_step) # <-- Isto muda o frame!
+            end_ray_animation(frame_num, frame_step)
 
         # Renderiza frame
         
