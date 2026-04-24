@@ -23,7 +23,7 @@ def get_info_vehicles(sumo_info_file):
         reader = csv.DictReader(csvfile, delimiter=',', quotechar='`')
         vPosition = {}
         for row in reader:
-            row['isRx'] = (row['receiverIndex'] == '-1')
+            row['isRx'] = (row['receiverIndex'] != '-1')        # add JK modificado de == '-1' para != '-1'
             thisAngleInRad = np.radians(float(row['angle']))
             deltaX = (float(row['length'])/2.0) * np.sin(thisAngleInRad)
             deltaY = (float(row['length'])/2.0) * np.cos(thisAngleInRad)
@@ -33,6 +33,7 @@ def get_info_vehicles(sumo_info_file):
                 'height': row[' height'],
                 'angle': row['angle'],
                 'isRx': row['isRx'], 
+                'rx_index': row['receiverIndex'],    # add JK
                 'z3': row['z3']
             }
     return vPosition

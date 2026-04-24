@@ -183,7 +183,14 @@ def animate_vehicles(vPosition, frame_num, frame_step, step, config, DEBUG_ANIM=
                 obj.name = '_' + obj.name 
 
     # --- Anima objetos atuais ---
+    use_fixed = config.get('dataset_config', {}).get('use_fixed_receivers', False)
+    
     for vid, vinfo in vPosition.items():
+        # Se for receptor (isRx corrigido) e a configuração for fixa - add JK
+        # Não desenhamos o modelo de carro, apenas pulamos (continue) - add JK
+        if vinfo.get('isRx', False) and use_fixed:  # add JK
+            continue
+
         height = float(vinfo['height'])
         is_ped = abs(height - 1.72) < 1e-3
 
@@ -376,13 +383,14 @@ def posicionar_rx(coords_insite, is_fixed, vPosition, config):
         if is_fixed:
             marcador.location = ponto
         else:
-            # Lógica móvel (opcional)
+            # Lógica Móvel Corrigida:
             for veh_id, info in vPosition.items():
-                if info.get('isRx', False):
+                # Verificamos se o índice do veículo no SUMO bate com o ID do receptor atual
+                if info.get('isRx', False) and info.get('rx_index') == str(id_num):
                     carro_obj = bpy.data.objects.get(veh_id)
                     if carro_obj:
                         marcador.parent = carro_obj
-                        marcador.location = (0, 0, 2.0)
+                        marcador.location = (0, 0, 2.2) # Ajuste a altura sobre o carro aqui
                         break
 
 #add JK
