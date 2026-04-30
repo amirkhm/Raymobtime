@@ -179,11 +179,23 @@ def main():
     cfg_ds = config.get('dataset_config', {})       #add JK
     is_fixed = cfg_ds.get('use_fixed_receivers', True)      #add JK
 
-    for run in range(cfg_sim['start_run'], cfg_sim['end_run'], frame_step):     # apagar JK se der errado
+    for run in range(cfg_sim['start_run'], cfg_sim['end_run'], frame_step):     # add e Modificado JK
         print(f"\n🌀 Processando run {run} ...")
-        for o in bpy.data.objects:      #add JK
-            if o.name.startswith(("RX", "TX", "DEBUG_LBL")):
+        # --- Limpeza Completa da Run Anterior ---
+        for o in bpy.data.objects:
+            # Adicione aqui os prefixos que o SUMO usa para os veículos
+            # Geralmente são: car, ped, bus, truck, bike, moto
+            if o.name.startswith(("RX", "TX", "DEBUG_LBL", "car", "ped", "bus", "truck", "bike", "moto")):
                 bpy.data.objects.remove(o, do_unlink=True)
+
+        # Limpeza de dados  (importante para não travar o PC em lotes grandes)
+        for mesh in bpy.data.meshes:
+            if mesh.users == 0:
+                bpy.data.meshes.remove(mesh)
+        
+        for curve in bpy.data.curves:
+            if curve.users == 0:
+                bpy.data.curves.remove(curve)
 
         scene_path = os.path.join(folder_scanned_name, base_run_dir_fn(run))
         if not os.path.exists(scene_path):

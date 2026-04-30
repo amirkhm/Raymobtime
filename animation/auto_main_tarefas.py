@@ -74,7 +74,8 @@ def rodar_automacao():
                 },
                 "dataset_config": {
                     "name": t['nome_projeto'],
-                    "scenes_per_episode": t['config_especifica'].get('scenes_per_episode', 10)
+                    "scenes_per_episode": t['config_especifica'].get('scenes_per_episode', 10),
+                    "use_fixed_receivers": t['config_especifica'].get('use_fixed_receivers', True)
                 },
                 "paths": {
                     "scenario_blend_file": t['config_especifica'].get('scenario_blend_file', ""),

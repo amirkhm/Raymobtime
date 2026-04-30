@@ -390,7 +390,7 @@ def posicionar_rx(coords_insite, is_fixed, vPosition, config):
                     carro_obj = bpy.data.objects.get(veh_id)
                     if carro_obj:
                         marcador.parent = carro_obj
-                        marcador.location = (0, 0, 2.2) # Ajuste a altura sobre o carro aqui
+                        marcador.location = (0, 0, 1.6) # Ajuste a altura sobre o carro aqui
                         break
 
 #add JK
