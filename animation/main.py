@@ -12,6 +12,7 @@ if project_root not in sys.path:
 import bpy
 import shutil
 import json
+import argparse     # add JK
 from datetime import datetime
 from modules.subtitle_utils import process_subtitles    # add JK
 from modules.camera_utils import setup_camera_view      # add JK
@@ -31,18 +32,61 @@ from modules.blender_anim import (
 from modules.blensor_scan import run_scan
 from modules.video_export import create_video
 
+def get_config_prio(project_root):
+    """
+    Carrega o config.json e sobrescreve com as configurações de lote (batch)
+    enviadas pelo auto_main_tarefas.py.
+    
+    """
+    # 1. Carrega o config.json padrão
+    config_path = os.path.join(project_root, "config.json")
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+
+    # 2. Configura o leitor de argumentos
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--batch_config", type=str, help="Caminho do JSON temporário")
+    
+    # O Blender exige o uso de "--" para separar os argumentos do script
+    if "--" in sys.argv:
+        # Pega tudo o que vem depois do "--"
+        args_list = sys.argv[sys.argv.index("--") + 1:]
+        args, _ = parser.parse_known_args(args_list)
+
+        if args.batch_config and os.path.exists(args.batch_config):
+            with open(args.batch_config, 'r') as f:
+                batch_data = json.load(f)
+            
+            # 3. Mesclagem
+            # Usamos .update() para que todas as novas opções de câmera 
+            # (ortho_scale, relative_position, etc) sejam aplicadas de uma vez.
+            if 'simulation' in batch_data:
+                config['simulation'].update(batch_data['simulation'])
+            
+            if 'dataset_config' in batch_data:
+                config['dataset_config'].update(batch_data['dataset_config'])
+            
+            if 'paths' in batch_data:
+                config['paths'].update(batch_data['paths'])
+
+            if 'visualization_settings' in batch_data:
+                config['visualization_settings'].update(batch_data['visualization_settings'])
+            
+            if 'camera_settings' in batch_data:
+                config['camera_settings'].update(batch_data['camera_settings'])
+
+            if 'video' in batch_data:
+                config['video'].update(batch_data['video'])
+
+    return config
+
 def main():
     startTime = datetime.now()
 
-    # --- 1. Carregar Configuração ---
-    config_path = os.path.join(project_root, "config.json")
-    try:
-        with open(config_path, 'r') as f:
-            config = json.load(f)
-    except FileNotFoundError:
-        print(f"❌ Erro: 'config.json' não encontrado em {project_root}")
-        sys.exit(1)
-
+    # --- 1. Carregar Configuração --- Modificação JK
+    # decide se usa o config.json ou o tarefas.json
+    config = get_config_prio(project_root)
+    
     cfg_sim = config['simulation']
     cfg_paths = config['paths']
     cfg_video = config['video']
@@ -123,6 +167,7 @@ def main():
 
     # --- 4. Loop de Processamento Principal ---
     frame_num = 0
+    video_frame_index = 0       # add JK - para funcionar o framet_step diferente de 1
     step = 0
     step_direction = 1
     frame_step = cfg_sim['frame_step']
@@ -134,7 +179,7 @@ def main():
     cfg_ds = config.get('dataset_config', {})       #add JK
     is_fixed = cfg_ds.get('use_fixed_receivers', True)      #add JK
 
-    for run in range(cfg_sim['start_run'], cfg_sim['end_run']):
+    for run in range(cfg_sim['start_run'], cfg_sim['end_run'], frame_step):     # apagar JK se der errado
         print(f"\n🌀 Processando run {run} ...")
         for o in bpy.data.objects:      #add JK
             if o.name.startswith(("RX", "TX", "DEBUG_LBL")):
@@ -196,7 +241,7 @@ def main():
         
         scene.frame_set(frame_num)
         
-        frame_path = os.path.join(tmp_frame_dir, f"frame_{frame_num:05d}.png")
+        frame_path = os.path.join(tmp_frame_dir, f"frame_{video_frame_index:05d}.png")  # add JK
         bpy.context.scene.render.filepath = frame_path
         bpy.ops.render.render(write_still=True)
         
@@ -208,13 +253,15 @@ def main():
             run_scan(position_data, scan_output_dir, zip_results)
 
         frame_num += frame_step
+        video_frame_index += 1  # add JK
 
     # --- 5. Exportação de Vídeo ---
     print("\n🎬 Todas as runs processadas. Gerando vídeo final...")
-    video_path = os.path.join(project_root, cfg_paths['video_output_name'])
+    
+    # O orquestrador espera que o vídeo se chame exatamente 'video_final.mp4' na pasta 'saida'
+    video_path = os.path.join(saida_dir, "video_final.mp4")
+    
     create_video(tmp_frame_dir, video_path, cfg_video)
-
-    print(f"⏱ Tempo total: {datetime.now() - startTime}")
 
 
 if __name__ == '__main__':
