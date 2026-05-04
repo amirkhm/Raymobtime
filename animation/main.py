@@ -179,23 +179,27 @@ def main():
     cfg_ds = config.get('dataset_config', {})       #add JK
     is_fixed = cfg_ds.get('use_fixed_receivers', True)      #add JK
 
+    # --- 4. Loop de Processamento ---
     for run in range(cfg_sim['start_run'], cfg_sim['end_run'], frame_step):     # add e Modificado JK
         print(f"\n🌀 Processando run {run} ...")
-        # --- Limpeza Completa da Run Anterior ---
+        # 1. LIMPEZA DE OBJETOS PELO NOME E PREFIXO
         for o in bpy.data.objects:
-            # Adicione aqui os prefixos que o SUMO usa para os veículos
-            # Geralmente são: car, ped, bus, truck, bike, moto
-            if o.name.startswith(("RX", "TX", "DEBUG_LBL", "car", "ped", "bus", "truck", "bike", "moto")):
+        
+            if o.name.startswith(("RX", "TX", "DEBUG_LBL", "flow", "dflow", "ped", "_flow", "_ped", "veh")):
+                bpy.data.objects.remove(o, do_unlink=True)
+            
+            # 2. LIMPEZA PELO TIPO (Raios/Curvas)
+            elif o.type == 'CURVE':
                 bpy.data.objects.remove(o, do_unlink=True)
 
-        # Limpeza de dados  (importante para não travar o PC em lotes grandes)
+        # 3. limpa a timeline (Resolver o problema de veículos parados)
+        if bpy.context.scene.animation_data:
+            bpy.context.scene.animation_data_clear()
+
+        # 4. limpa as meshes
         for mesh in bpy.data.meshes:
             if mesh.users == 0:
                 bpy.data.meshes.remove(mesh)
-        
-        for curve in bpy.data.curves:
-            if curve.users == 0:
-                bpy.data.curves.remove(curve)
 
         scene_path = os.path.join(folder_scanned_name, base_run_dir_fn(run))
         if not os.path.exists(scene_path):
