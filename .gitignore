@@ -8,3 +8,4 @@ augmentation.ipynb
 /rwisimulation.egg-info
 *.egg
 *.db
+.venv
