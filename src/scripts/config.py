@@ -1,20 +1,8 @@
-'''
-Several simulation parameters are defined here.
-'''
-
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
 import numpy as np
 import yaml
 from pathlib import Path
 from types import SimpleNamespace
-
-try:
-    from raymobtime.src.modules.rt.wi.simulation.positionmatrix import position_matrix_per_object_shape
-except ImportError:
-    position_matrix_per_object_shape = None
-
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -148,19 +136,6 @@ insite_version = get_insite_version(base_insite_project_path)
 locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 '
 
 if insite_version == '3.3':
-    calcprop_bin = (
-        '{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE)
-        + 'LD_LIBRARY_PATH={}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/:'.format(
-            cfg.insite_paths.insite_software_path
-        )
-        + '{}/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/ '.format(
-            cfg.insite_paths.insite_software_path
-        )
-        + '{}/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/calcprop_3.3.0.4'.format(
-            cfg.insite_paths.insite_software_path
-        )
-    )
-
     wibatch_bin = (
         locale
         + '{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE)
@@ -173,19 +148,6 @@ if insite_version == '3.3':
     )
 
 elif insite_version == '3.2':
-    calcprop_bin = (
-        '{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE)
-        + 'LD_LIBRARY_PATH={}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/:'.format(
-            cfg.insite_paths.insite_software_path
-        )
-        + '{}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/ '.format(
-            cfg.insite_paths.insite_software_path
-        )
-        + '{}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/calcprop_3.2.0.3'.format(
-            cfg.insite_paths.insite_software_path
-        )
-    )
-
     wibatch_bin = (
         locale
         + '{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE)

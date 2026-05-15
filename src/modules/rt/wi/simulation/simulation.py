@@ -2,7 +2,6 @@
 This code executes Sumo and InSite repeatedly.
 '''
 
-import sys
 import os
 import platform
 import shutil
@@ -10,23 +9,14 @@ import numpy as np
 import logging
 import json
 import csv
-try: #readline does not run on Windows. Use pyreadline instead
-  import readline
-except ImportError:
-  import pyreadline as readline
-
-from raymobtime.src.modules.rt.wi.modeling import X3dXmlFile, mimo, objects, txrx
-from raymobtime.src.modules.rt.wi.modeling import verticelist
 import traci
-
-from raymobtime.src.modules.rt.wi.modeling import insite
-
-import config as c
-from raymobtime.src.modules.rt.wi.simulation.placement import place_on_line, place_by_sumo
-from raymobtime.src.modules.rt.wi.simulation.tools import *
+import src.scripts.config as c
+from src.modules.rt.wi.modeling import insite, X3dXmlFile, objects, txrx
+from src.modules.rt.wi.simulation.placement import place_on_line, place_by_sumo
+from src.modules.rt.wi.simulation.tools import *
 
 if c.insite_version == '3.3':
-    from raymobtime.src.modules.rt.wi.modeling import  X3dXmlFile3_3
+    from src.modules.rt.wi.modeling import  X3dXmlFile3_3
 
 def writeSUMOInfoIntoFile(sumoOutputInfoFileName, episode_i, scene_i, lane_boundary_dict, cars_with_antenna, cars_with_Tx, fixedReceivers, use_pedestrians):
     '''Save as CSV text file some information obtained from SUMO for this specific scene.
@@ -221,31 +211,6 @@ def main(args):
     #set seed for numpy
     if c.use_sumo:
         np.random.seed(c.seed)
-
-    if args.mimo_only:
-        if args.run_calcprop:
-            print('Option -r is not compatible with -c')
-            exit(-1)
-        print('Will run MIMO ray-tracing. I am assuming all files have been placed.')
-        for i in c.n_run:
-            run_dir = os.path.join(c.results_dir, c.base_run_dir_fn(i))
-            #Ray-tracing output folder (where InSite will store the results (Study Area name)).
-            #They will be later copied to the corresponding output folder specified by results_dir
-            project_output_dir = os.path.join(run_dir, c.insite_study_area_name) #output InSite folder
-
-            db_file = os.path.join(project_output_dir, c.insite_setup_name + '.study.sqlite')
-            if not os.path.exists(db_file) or args.remove_results_dir:
-                xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
-                xml_full_path=xml_full_path.replace(' ', '\ ')
-                insite_project.run_x3d(xml_full_path, project_output_dir)
-            elif os.path.exists(p2mpaths_file) and args.jump:
-                continue
-            else: 
-                print("ERROR: " + db_file + " already exists, aborting simulation!") 
-                raise Exception()
-
-        print('Finished running MIMO ray-tracing')
-        exit(1)
 
     #copy files from initial (source folder) to results base folder
     try:
@@ -546,11 +511,6 @@ def main(args):
         writeSUMOInfoIntoFile(sumoOutputInfoFileName, episode_i, scene_i, c.lane_boundary_dict, cars_with_antenna, cars_with_Tx, c.use_fixed_receivers, c.use_pedestrians)
 
         scene_i += 1 #update scene counter
-
-        if args.pause_each_run:
-            input('Enter to step')
-            sys.stdin.readline()
-
     traci.close()
 
 if __name__ == '__main__':

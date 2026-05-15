@@ -12,15 +12,15 @@ checks, or process auxiliary sensor data.
 """
 
 import argparse
-import raymobtime.src.scripts.config as c
+import src.scripts.config as c
 
 # convert simulation raw to database
-from raymobtime.src.modules.postprocessing import gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file
-from raymobtime.src.modules.postprocessing import gen_lidar_matrix, image_refinement
-from raymobtime.src.modules.postprocessing import sanity_check_up
+from src.modules.postprocessing import gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file
+from src.modules.postprocessing import gen_lidar_matrix, image_refinement
+from src.modules.postprocessing import sanity_check_up
 # simulators
-from raymobtime.src.modules.blensor import blensor_simulation
-from raymobtime.src.modules.rt.wi.simulation.simulation import main
+from src.modules.blensor.blensor_src import blensor_simulation
+from src.modules.rt.wi.simulation.simulation import main
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()  
@@ -36,14 +36,8 @@ if __name__ == "__main__":
                         help='Jumping runs that already have results (works only if utilized with the option \'-r\' )')
     parser.add_argument('-r', '--ray-tracing-only', action='store_true',
                         help='Run only ray-tracing with previoulsy generated files')
-    parser.add_argument('-c', '--run-calcprop', action='store_true',
-                        help='Ray-tracing with InSite calcprop instead of the default wibatch')
-    parser.add_argument('-s', '--pause-each-run', action='store_true',
-                        help='Interactive run')
     parser.add_argument('-o', '--remove-results-dir', action='store_true',
                         help='ONLY IF YOU KNOW WHAT YOU ARE DOING: it will remove the whole results folder')
-    parser.add_argument('-m', '--mimo-only', action='store_true',
-                        help='Run only ray-tracing with native mimo from InSite previoulsy generated files')
     args = parser.parse_args()
     
     # Saving the simulation files into database type db, csv, hdf5

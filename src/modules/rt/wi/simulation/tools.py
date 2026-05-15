@@ -1,7 +1,5 @@
 import numpy as np
-
 import traci
-
 
 def pick_car_from_area(veh_list, area_lim, n_veh, return_counts=False):
     """
