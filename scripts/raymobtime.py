@@ -2,16 +2,15 @@ import argparse
 
 import config as c
 # convert simulation raw to database
-from raw_data_handler import gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file
-from raw_data_handler import gen_lidar_matrix, image_refinement
-from raw_data_handler import sanity_check_up
+from modules.postprocessing import gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file
+from modules.postprocessing import gen_lidar_matrix, image_refinement
+from modules.postprocessing import sanity_check_up
 # simulators
-from blensor import blensor_simulation
-from rwisimulation.simulation import main
+from modules.blensor import blensor_simulation
+from modules.rt.wi.rwisimulation.simulation import main
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    # Blensor options    
+    parser = argparse.ArgumentParser()  
     parser.add_argument('-d', '--data-base', choices=["db", "coord", "rays", "beams", "lidar", "image", "all"], const="all", nargs="?",
                         help='Convert simulation from WI to database type: db, csv, hdf5')
     parser.add_argument('-b', '--blensor', choices=["lidar", "image"],
