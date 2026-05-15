@@ -1,7 +1,9 @@
 import argparse
 
 import config as c
+
 # convert simulation raw to database
+
 from raw_data_handler import gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file
 from raw_data_handler import gen_lidar_matrix, image_refinement
 from raw_data_handler import sanity_check_up
