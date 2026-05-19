@@ -1,10 +1,7 @@
-import sys
 import os
 import json
 import bpy
 import csv
-import sqlite3
-#import blensor
 import shutil
 import copy
 import numpy as np

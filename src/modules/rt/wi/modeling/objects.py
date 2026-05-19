@@ -1,6 +1,5 @@
 import copy
 import os
-
 import numpy as np
 
 from src.modules.rt.wi.modeling.basecontainerobject import BaseContainerObject

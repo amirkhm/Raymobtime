@@ -7,15 +7,12 @@ import os
 import json
 import numpy as np
 import csv
-
-from rwisimulation.tfrecord import UnexpectedCarsWithAntennaChangeError, SceneNotInEpisodeSequenceError, \
-    EpisodeNotStartingFromZeroError
-from rwimodeling import objects
-from rwiparsing import P2mPaths
-
-from raw_data_handler import save5gmdata as fgdb
-from raw_data_handler import save5gmdata_IsolatedSim as fgdbIS
-from raw_data_handler.sumoOutputFile import read_csv_sumo
+from src.modules.rt.wi.modeling import objects
+from src.modules.rt.wi.parsing import P2mPaths
+from src.modules.postprocessing import (
+    save5gmdata as fgdb,
+    save5gmdata_IsolatedSim as fgdbIS,
+    sumoOutputFile)
 
 def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
     """returns the `run_dir` for run `i`"""
@@ -153,7 +150,7 @@ def gen_database(c):
                 simulation_info = json.load(infile)
 
             abs_sumo_info_file_name = os.path.join(run_dir, sumo_file_name)
-            sumo_info = read_csv_sumo(abs_sumo_info_file_name)
+            sumo_info = sumoOutputFile.read_csv_sumo(abs_sumo_info_file_name)
             
             # start of episode
             if simulation_info['scene_i'] == 0:
@@ -194,13 +191,11 @@ def gen_database(c):
                 )
 
             if episode is None:
-                raise EpisodeNotStartingFromZeroError("From file {}".format(object_file_name))
+                raise ValueError(f'From file {object_file_name}')
 
             if simulation_info['scene_i'] != episode.number_of_scenes:
-                raise SceneNotInEpisodeSequenceError('Expecting {} found {}'.format(
-                    len(episode.number_of_scenes),
-                    simulation_info['scene_i'],
-                ))
+                raise ValueError(f'Expecting {len(episode.number_of_scenes)} found {simulation_info['scene_i']}')
+                
 
             with open(object_file_name) as infile:
                 obj_file = objects.ObjectFile.from_file(infile)

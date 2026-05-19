@@ -1,8 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, Float, Text, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-
-import numpy as np
 import os.path
 from termcolor import colored
 

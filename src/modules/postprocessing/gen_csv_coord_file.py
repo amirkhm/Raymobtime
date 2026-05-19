@@ -5,32 +5,10 @@ with ak_generateInSitePlusSumoList.py
 Look at save5gmdata.py to understand the information stored in the database.
 '''
 import os
-import csv
 import numpy as np
 from shapely import geometry
-# from matplotlib import pyplot as plt
-# import h5py
+from src.modules.postprocessing import save5gmdata as fgdb
 
-# from rwisimulation.positionmatrix import position_matrix_per_object_shape, calc_position_matrix
-# from rwisimulation.calcrxpower import calc_rx_power
-
-from raw_data_handler import save5gmdata as fgdb
-
-# import config as c  #instead of reading from the config.py file, copy and paste here the used variables:
-# class c:
-#     analysis_area = (648, 348, 850, 685)
-    # analysis_area = (-167,-120,136,144)
-    # analysis_area = (744, 429, 767, 679)  # coordinates that define the areas the mobile objects should be
-    # analysis_area_resolution = 0.5 #grid resolution in meters (not used here)
-    # antenna_number = 4 #number of antenna elements in Rx array (not used here)
-    # frequency = 6e10 #carrier frequency in Hz (not used here)
-
-
-# construct an object to help identifying objects within the analysis area
-# analysis_polygon = geometry.Polygon([(c.analysis_area[0], c.analysis_area[1]),
-#                                      (c.analysis_area[2], c.analysis_area[1]),
-#                                      (c.analysis_area[2], c.analysis_area[3]),
-#                                      (c.analysis_area[0], c.analysis_area[3])])
 def gen_csv_file(c):
     main_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
     if not os.path.exists(main_folder):

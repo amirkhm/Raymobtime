@@ -250,3 +250,64 @@ def import_mimo_channel(H_csv):
             imag_part = row.iloc[3 + 2 * tx_index]  # Imaginary column
             H[rx_index, tx_index] = complex(real_part, imag_part)
     return H
+
+def calc_rx_power(departure_angle, arrival_angle, p_gain, antenna_number, frequency=6e10):
+    """This .m file uses a m*m SQUARE UPA, so the antenna number at TX, RX will be antenna_number^2.
+
+    - antenna_number^2 number of element arrays in TX, same in RX
+    - assumes one beam per antenna element
+
+    the first column will be the elevation angle, and the second column is the azimuth angle correspondingly.
+    p_gain will be a matrix size of (L, 1)
+    departure angle/arrival angle will be a matrix as size of (L, 2), where L is the number of paths
+
+    t1 will be a matrix of size (nt, nr), each
+    element of index (i,j) will be the received
+    power with the i-th precoder and the j-th
+    combiner in the departing and arrival codebooks
+    respectively
+
+    :param departure_angle: ((elevation angle, azimuth angle),) (L, 2) where L is the number of paths
+    :param arrival_angle: ((elevation angle, azimuth angle),) (L, 2) where L is the number of paths
+    :param p_gain: path gain (L, 1) where L is the number of paths
+    :param antenna_number: antenna number at TX, RX is antenna_number**2
+    :param frequency: default
+    :return:
+    """
+    departure_angle = np.deg2rad(departure_angle)
+    arrival_angle = np.deg2rad(arrival_angle)
+    c = 3e8
+    mlambda = c / frequency
+    k = 2 * np.pi / mlambda
+    d = mlambda / 2
+    nt = np.power(antenna_number, 2)
+    m = np.shape(departure_angle)[0]
+    nr = nt
+    wt = dft_codebook(nt)
+    wr = dft_codebook(nr)
+    H = np.matrix(np.zeros((nt, nr)))
+
+    # TO DO: need to generate random phase and convert gains in complex-values
+    gain_dB = p_gain
+    path_gain = np.power(10, gain_dB / 10)
+    antenna_range = np.arange(antenna_number)
+
+    def calc_omega(angle):
+        sin = np.sin(angle)
+        omegay = k * d * sin[:, 1] * sin[:, 0]
+        omegax = k * d * sin[:, 0] * np.cos(angle[:, 1])
+        return np.matrix((omegax, omegay))
+
+    departure_omega = calc_omega(departure_angle)
+    arrival_omega = calc_omega(arrival_angle)
+
+    def calc_vec_i(i, omega, antenna_range):
+        vec = np.exp(1j * omega[:, i] * antenna_range)
+        return np.matrix(np.kron(vec[1], vec[0]))
+
+    for i in range(m):
+        departure_vec = calc_vec_i(i, departure_omega, antenna_range)
+        arrival_vec = calc_vec_i(i, arrival_omega, antenna_range)
+        H = H + path_gain[i] * departure_vec.conj().T * arrival_vec
+    t1 = wt.conj().T * H * wr
+    return t1

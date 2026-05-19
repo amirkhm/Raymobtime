@@ -19,26 +19,22 @@ Episodes, scenes, etc, start counting from 0 (not 1).
 import datetime
 import numpy as np
 from shapely import geometry
-#from matplotlib import pyplot as plt
 import h5py
-import matplotlib.pyplot as plt
 import os
 import gc
-from sqlalchemy import func
 from itertools import islice
 
-
-from rwisimulation.positionmatrix import position_matrix_per_object_shape, calc_position_matrix
-#from rwisimulation.calcrxpower import calc_rx_power
-
-from raw_data_handler import save5gmdata as fgdb
-from raw_data_handler import save5gmdata_IsolatedSim as fgdbIS
+from src.modules.postprocessing import (
+    save5gmdata as fgdb,
+    save5gmdata_IsolatedSim as fgdbIS
+)
 
 def gen_rays_dataset(c):
-    analysis_polygon = geometry.Polygon([(c.analysis_area[0], c.analysis_area[1]),
-                                        (c.analysis_area[2], c.analysis_area[1]),
-                                        (c.analysis_area[2], c.analysis_area[3]),
-                                        (c.analysis_area[0], c.analysis_area[3])])
+    analysis_polygon = geometry.Polygon(
+        [(c.analysis_area[0], c.analysis_area[1]),
+        (c.analysis_area[2], c.analysis_area[1]),
+        (c.analysis_area[2], c.analysis_area[3]),
+        (c.analysis_area[0], c.analysis_area[3])])
     
     database_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
     if not os.path.exists(database_folder):

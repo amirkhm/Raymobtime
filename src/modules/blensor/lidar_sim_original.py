@@ -2,7 +2,7 @@ import sys
 import os
 import bpy
 import csv
-import raymobtime.src.modules.blensor as blensor
+import src.modules.blensor as blensor
 import shutil
 import numpy as np
 from bpy import data as D

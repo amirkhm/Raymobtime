@@ -1,11 +1,7 @@
-import sys
 import os
 import json
 import bpy
 import csv
-import sqlite3
-import shutil
-import copy
 import numpy as np
 from bpy import data as D
 from bpy import context as C

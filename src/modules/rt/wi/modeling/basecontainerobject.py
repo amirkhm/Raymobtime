@@ -1,5 +1,4 @@
 import re
-
 from src.modules.rt.wi.modeling.errors import FormatError
 from src.modules.rt.wi.modeling.utils import match_or_error, look_next_line
 
