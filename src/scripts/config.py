@@ -81,20 +81,20 @@ def base_run_dir_fn(i):
     return "run{:05d}".format(i)
 
 
-###############################################################
+###############################################################################
 ## Most information in this configuration file is used in the Stage 1 of
 ## the three stages below. But some are also used in the other stages.
 ## Stage 1: Running the ray-tracing (RT) and traffic simulators
 ## Stage 2: Organizing raw data into a 5GMdata database
 ## Stage 3: Converting the database into a file suitable to machine learning packages such as Keras
 ## This file is split into two parts. In most cases Part II is not modified.
-###############################################################
+###############################################################################
 
 # Read typical information from config.yaml
 cfg = load_config()
 
 ###############################################################
-## Part I - Basic information that typically needs to be modified / checked
+## Stage I - Basic information that typically needs to be modified / checked
 ###############################################################
 
 # Current folder (or directory). Some paths are relative to this folder:

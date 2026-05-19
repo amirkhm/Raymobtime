@@ -32,11 +32,6 @@ def pick_car_from_area(veh_list, area_lim, n_veh, return_counts=False):
 
     return veh_chosen
 
-import csv
-import os
-import platform
-
-
 def _get_csv_newline():
     """
     Avoid extra blank lines on Windows when using csv.writer.
