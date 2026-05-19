@@ -6,7 +6,7 @@ import collections
 
 import numpy as np
 
-from raymobtime.src.modules.rt.wi.parsing.p2mdoa import P2mFileParser
+from src.modules.rt.wi.parsing.p2mdoa import P2mFileParser
 
 class P2mPaths(P2mFileParser):
     """Parse a p2m paths file"""

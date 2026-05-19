@@ -13,10 +13,10 @@ from mathutils import *
 from math import *
 from datetime import datetime
 from zipfile import ZipFile
+
 def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
     """returns the `run_dir` for run `i`"""
     return "run{:05d}".format(i)
-
 
 def main():
     startTime = datetime.now()

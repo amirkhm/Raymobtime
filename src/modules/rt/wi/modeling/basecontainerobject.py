@@ -1,7 +1,7 @@
 import re
 
-from raymobtime.src.modules.rt.wi.modeling.errors import FormatError
-from raymobtime.src.modules.rt.wi.modeling.utils import match_or_error, look_next_line
+from src.modules.rt.wi.modeling.errors import FormatError
+from src.modules.rt.wi.modeling.utils import match_or_error, look_next_line
 
 MAX_LEN_NAME = 71
 

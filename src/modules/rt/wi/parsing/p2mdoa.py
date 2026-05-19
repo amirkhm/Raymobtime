@@ -1,13 +1,10 @@
 import re
 import os
 import collections
-
 import numpy as np
-
 
 class ParsingError(Exception):
     pass
-
 
 class P2mFileParser:
     """Parser for p2m files. It currently support doa, paths and cir. Notice the regular expression in the code."""

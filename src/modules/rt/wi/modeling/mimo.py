@@ -1,8 +1,8 @@
 import os 
 import numpy as np
 
-from raymobtime.src.modules.rt.wi.modeling.basecontainerobject import BaseContainerObject
-from raymobtime.src.modules.rt.wi.modeling.utils import match_or_error
+from src.modules.rt.wi.modeling.basecontainerobject import BaseContainerObject
+from src.modules.rt.wi.modeling.utils import match_or_error
 
 class MimoElement:
     _begin_re = r'^\s*begin_<MimoElement>\s*$'

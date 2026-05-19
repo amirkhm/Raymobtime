@@ -11,8 +11,14 @@ import json
 import csv
 import traci
 import src.scripts.config as c
-from src.modules.rt.wi.modeling import insite, X3dXmlFile, objects, txrx
-from src.modules.rt.wi.simulation.placement import place_on_line, place_by_sumo
+from src.modules.rt.wi.modeling import (
+    insite, 
+    X3dXmlFile, 
+    objects, 
+    txrx)
+from src.modules.rt.wi.simulation.placement import (
+    place_on_line, 
+    place_by_sumo)
 from src.modules.rt.wi.simulation.tools import *
 
 if c.insite_version == '3.3':
@@ -150,28 +156,26 @@ def onlyDronesList(idList):
             idList.remove(veh)
     return idList
 
-def main(args):
 
-    #check consistency of user input
-    if c.use_fixed_receivers:
-        if c.n_antenna_per_episode != 0:
-            print('ERROR: if use_fixed_receivers=True, n_antenna_per_episode must be 0 but it is', c.n_antenna_per_episode)
-            raise Exception()
+def main(args):
+    if c.use_fixed_receivers and c.n_antenna_per_episode != 0:
+        # At fixed receivers, position set on WI is maintained, 
+        # that manner it should not change here, default zero.
+        logging.error(f'if flag use_fixed_receivers=True, n_antenna_per_episode must be 0 but it is {c.n_antenna_per_episode}')
+        raise Exception()
     if c.isolated_sim and c.use_vehicles_template:
-        print('ERROR: isolated_sim=True and use_vehicles_template=True are not compatible')
+        # isolated sim is intended to be static, no object is placed after modelling.
+        logging.error('flags isolated_sim=True and use_vehicles_template=True are not compatible')
         raise Exception()
 
-    #setup_path=c.setup_path, xml_path=c.dst_x3d_xml_path.replace(' ', '\ ')
-    #AK: now the constructor has fewer parameters
-    insite_project = insite.InSiteProject(project_name='model', calcprop_bin=c.calcprop_bin,
+    insite_project = insite.InSiteProject(project_name='model', 
+                                          calcprop_bin=c.calcprop_bin,
                                           wibatch_bin=c.wibatch_bin)
 
-    print('########## Start simulation #############################')
+    logging.info('Simulation started')
+    #* Wireless insite ========================================================
     if args.ray_tracing_only:
-        if args.run_calcprop:
-            print('Option -r is not compatible with -c')
-            exit(-1)
-        print('Will run only ray-tracing. I am assuming all files have been placed.')
+        logging.debug('Simulation of ray-tracing will start. It is assumed all files have been placed')
 
         if c.isolated_sim:
             run_dir = os.path.join(c.isolated_results_dir)
@@ -185,9 +189,8 @@ def main(args):
                 xml_full_path=xml_full_path.replace(' ', '\ ')
                 insite_project.run_x3d(xml_full_path, project_output_dir)
             else: 
-                print("ERROR: " + p2mpaths_file + " already exists, aborting simulation!") 
-                raise Exception()
-        else:    
+                raise Exception(f'{p2mpaths_file} already exists')
+        else:
             for i in c.n_run:
                 run_dir = os.path.join(c.results_dir, c.base_run_dir_fn(i))
                 #Ray-tracing output folder (where InSite will store the results (Study Area name)).
@@ -202,12 +205,11 @@ def main(args):
                 elif os.path.exists(p2mpaths_file) and args.jump:
                     continue
                 else: 
-                    print("ERROR: " + p2mpaths_file + " already exists, aborting simulation!") 
-                    raise Exception()
-
-        print('Finished running ray-tracing')
+                    raise Exception(f'{p2mpaths_file} already exists')
+                
+        logging.info('Finished running ray-tracing')
         exit(1)
-
+    #* End Wireless insite ====================================================
     #set seed for numpy
     if c.use_sumo:
         np.random.seed(c.seed)
@@ -433,9 +435,17 @@ def main(args):
                     os.makedirs(run_dir + '_noAntennaVehicles') #create an empty folder to "indicate" the situation
                     scene_i = np.Infinity #update scene counter
                     continue
+
+
         else: #in case we should not use SUMO to position vehicles, then get a fixed position
-            structure_group, location = place_on_line(c.line_origin, c.line_destination, c.line_dimension,
-                  c.car_distances, car_structure, antenna, c.antenna_origin)
+            structure_group, location = place_on_line(
+                c.line_origin, 
+                c.line_destination, 
+                c.line_dimension,
+                c.car_distances, 
+                car_structure, 
+                antenna, 
+                c.antenna_origin)
 
         #Prepare the files for the input folder, where InSite will find them to execute the simulation
         #(obs: now InSite is writing directly to the output folder)

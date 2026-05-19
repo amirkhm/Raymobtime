@@ -1,31 +1,12 @@
-#!/usr/bin/env python
-
-
-
-
-##################################################
-## DEPENDENCIES
-import sys
-import os
-import os.path
-try:
-    import builtins as builtin
-except ImportError:
-    import __builtin__ as builtin
-from os.path import getmtime, exists
 import time
-import types
-from Cheetah.Version import MinCompatibleVersion as RequiredCheetahVersion
-from Cheetah.Version import MinCompatibleVersionTuple as RequiredCheetahVersionTuple
 from Cheetah.Template import Template
 from Cheetah.DummyTransaction import *
-from Cheetah.NameMapper import NotFound, valueForName, valueFromSearchList, valueFromFrameOrSearchList
-from Cheetah.CacheRegion import CacheRegion
-import Cheetah.Filters as Filters
-import Cheetah.ErrorCatchers as ErrorCatchers
-from Cheetah.compat import unicode
+from Cheetah.Version import (MinCompatibleVersion as RequiredCheetahVersion, 
+                             MinCompatibleVersionTuple as RequiredCheetahVersionTuple)
+from Cheetah.NameMapper import (valueForName, 
+                                valueFromSearchList, 
+                                valueFromFrameOrSearchList)
 
-##################################################
 ## MODULE CONSTANTS
 VFFSL=valueFromFrameOrSearchList
 VFSL=valueFromSearchList

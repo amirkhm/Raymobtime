@@ -1,6 +1,6 @@
-from raymobtime.src.modules.rt.wi.modeling.basecontainerobject import BaseObject
-from raymobtime.src.modules.rt.wi.modeling.utils import match_or_error
-from raymobtime.src.modules.rt.wi.modeling.verticelist import VerticeList
+from src.modules.rt.wi.modeling.basecontainerobject import BaseObject
+from src.modules.rt.wi.modeling.utils import match_or_error
+from src.modules.rt.wi.modeling.verticelist import VerticeList
 
 
 class Face(BaseObject, VerticeList):

@@ -1,20 +1,17 @@
 import copy
 import os
-
 import numpy as np
-
-from raymobtime.src.modules.rt.wi.modeling import X3dXmlFile, mimo, objects
-from raymobtime.src.modules.rt.wi.modeling import txrx
 import traci
 
-from raymobtime.src.modules.rt.wi.modeling import errors
-
-
-import config as c
-
+from src.modules.rt.wi.modeling import (
+    errors, 
+    X3dXmlFile, 
+    mimo, 
+    objects, 
+    txrx)
+import src.scripts.config as c
 if c.use_vehicles_template:
-    from Cheetah.Template import Template
-    import raymobtime.src.modules.rt.wi.modeling.vehicles_template as vt
+    import src.modules.rt.wi.modeling.vehicles_template as vt
 
 
 #def place_by_sumo(antenna, car_material_id, lane_boundary_dict, cars_with_antenna=None):

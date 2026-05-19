@@ -1,13 +1,11 @@
 import re
-
-from raymobtime.src.modules.rt.wi.modeling.errors import FormatError
+from src.modules.rt.wi.modeling.errors import FormatError
 
 def look_next_line(infile):
     now = infile.tell()
     line = infile.readline()
     infile.seek(now)
     return line
-
 
 def match_or_error(exp, infile):
     line = infile.readline()

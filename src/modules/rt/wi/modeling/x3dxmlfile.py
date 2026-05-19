@@ -1,6 +1,5 @@
 from xml.etree import ElementTree
-
-from raymobtime.src.modules.rt.wi.modeling.errors import FormatError
+from src.modules.rt.wi.modeling.errors import FormatError
 
 class X3dXmlFile3_3:
 

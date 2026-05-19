@@ -15,33 +15,50 @@ import argparse
 import src.scripts.config as c
 
 # convert simulation raw to database
-from src.modules.postprocessing import gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file
-from src.modules.postprocessing import gen_lidar_matrix, image_refinement
-from src.modules.postprocessing import sanity_check_up
+from src.modules.postprocessing import (
+    gen_database,
+    gen_csv_file, 
+    gen_rays_dataset, 
+    gen_beam_output_file,
+    gen_lidar_matrix, 
+    image_refinement,
+    sanity_check_up)
+
 # simulators
 from src.modules.blensor.blensor_src import blensor_simulation
 from src.modules.rt.wi.simulation.simulation import main
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()  
-    parser.add_argument('-d', '--data-base', choices=["db", "coord", "rays", "beams", "lidar", "image", "all"], const="all", nargs="?",
+    parser.add_argument('-d', '--data-base', 
+                        choices=["db", "coord", "rays", "beams", "lidar", "image", "all"], 
+                        const="all", 
+                        nargs="?",
                         help='Convert simulation from WI to database type: db, csv, hdf5')
-    parser.add_argument('-b', '--blensor', choices=["lidar", "image"],
+    parser.add_argument('-b', '--blensor', 
+                        choices=["lidar", "image"],
                         help='Uses Blensor to simulate lidar and image data for Raymobtime dataset')
-    parser.add_argument('-v', '--check', action='store_true',
+    parser.add_argument('-v', '--check', 
+                        action='store_true',
                         help='Run Checkup for the whole processed database')
-    parser.add_argument('-p', '--place-only', action='store_true',
+    parser.add_argument('-p', '--place-only', 
+                        action='store_true',
                         help='Run only the objects placement and save files for ray-tracing')
-    parser.add_argument('-j', '--jump', action='store_true',
+    parser.add_argument('-j', '--jump', 
+                        action='store_true',
                         help='Jumping runs that already have results (works only if utilized with the option \'-r\' )')
-    parser.add_argument('-r', '--ray-tracing-only', action='store_true',
+    parser.add_argument('-r', '--ray-tracing-only', 
+                        action='store_true',
                         help='Run only ray-tracing with previoulsy generated files')
-    parser.add_argument('-o', '--remove-results-dir', action='store_true',
-                        help='ONLY IF YOU KNOW WHAT YOU ARE DOING: it will remove the whole results folder')
+    parser.add_argument('-o', '--remove-results-dir', 
+                        action='store_true',
+                        help='Warning: it will remove the whole results folder')
     args = parser.parse_args()
     
+    #* Post processing
     # Saving the simulation files into database type db, csv, hdf5
     # and generating beams
+
     if args.data_base == "all":
         gen_database(c)
         gen_csv_file(c)

@@ -8,3 +8,6 @@ Variáveis:
 
 Módulos
     nome_do_modulo
+
+Utilizar loggin no logar dos prints
+

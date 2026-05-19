@@ -3,10 +3,8 @@ import numpy as np
 import re
 import os
 
-
 class ParsingError(Exception):
     pass
-
 
 class P2mFileParser:
     """Parser for p2m files"""

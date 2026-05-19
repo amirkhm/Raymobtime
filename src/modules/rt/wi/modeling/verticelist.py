@@ -1,7 +1,7 @@
 import numpy as np
 
-from raymobtime.src.modules.rt.wi.modeling.errors import FormatError
-from raymobtime.src.modules.rt.wi.modeling.utils import match_or_error
+from src.modules.rt.wi.modeling.errors import FormatError
+from src.modules.rt.wi.modeling.utils import match_or_error
 
 class BaseVerticeList:
     def __init__(self):

@@ -9,3 +9,4 @@ augmentation.ipynb
 *.egg
 *.db
 .venv
+/utils/animation/Blensor-x64.AppImage

@@ -1,18 +1,13 @@
-import struct
 import os
 import datetime
-
-import raymobtime.src.modules.rt.wi.parsing as parsing
-
 import numpy as np
-from raymobtime.src.modules.rt.wi.parsing import P2mPaths, P2mCir
+from src.modules.rt.wi.parsing import P2mPaths, P2mCir
 
 def dft_codebook(dim):
     seq = np.matrix(np.arange(dim))
     mat = seq.conj().T * seq
     w = np.exp(-1j * 2 * np.pi * mat / dim)
     return w
-
 
 def arrayFactorGivenAngleForULA(numAntennaElements, theta, normalizedAntDistance=0.5, angleWithArrayNormal=0):
     '''
