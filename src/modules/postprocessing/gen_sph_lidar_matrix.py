@@ -1,8 +1,6 @@
-import sys  
 import os
 import csv
 import shutil
-from tempfile import tempdir
 import numpy as np
 import scipy.spatial.distance as dist
 from src.modules.postprocessing.pypcd import pypcd

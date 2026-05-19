@@ -1,19 +1,14 @@
 import numpy as np
 import os.path
 from termcolor import colored
-
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 import sqlalchemy as db
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
+from src.modules.rt.wi.modeling.errors import FormatError
 
 Base = declarative_base()
-
-
-class FormatError(Exception):
-    pass
-
 
 class Episode(Base):
     __tablename__ = 'episodes'

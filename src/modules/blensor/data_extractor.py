@@ -2,7 +2,6 @@ import os
 import bpy
 import math
 import json
-from mathutils import Euler
 
 def get_camera_details(camera_name="Camera"):
     """

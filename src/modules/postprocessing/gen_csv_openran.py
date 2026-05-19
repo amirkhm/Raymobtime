@@ -1,8 +1,6 @@
 import os
 import csv
 
-
-
 def main():
     SIMULATION = "simulations/s004"
     RUNS = 2000
@@ -32,8 +30,6 @@ def main():
                 line = ','.join(['V', episode, scene, rx, veh, type_id, x, y, z, angle])
                 csv_file.writelines(line)
                 csv_file.writelines('\n')
-
-
 
 if __name__ == "__main__":
     main()

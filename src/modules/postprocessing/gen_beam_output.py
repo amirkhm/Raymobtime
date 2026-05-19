@@ -1,8 +1,12 @@
 import numpy as np
 import h5py
 import os
-from raw_data_handler.mimo_channels import (getNarrowBandUPAMIMOChannel, getCodebookOperatedChannel,
-                                            dft_codebook_upa, rotate_vectors, import_mimo_channel)
+from src.modules.postprocessing.mimo_channels import (
+    getNarrowBandUPAMIMOChannel, 
+    getCodebookOperatedChannel,
+    dft_codebook_upa, 
+    rotate_vectors, 
+    import_mimo_channel)
 
 def count_hmatrix(dir):
     c = 0

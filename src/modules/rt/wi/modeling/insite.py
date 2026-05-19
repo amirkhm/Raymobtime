@@ -1,7 +1,6 @@
 import subprocess
 import logging
 import os
-import shutil
 
 CALCPROP_BIN=r'"C:\Program Files\Remcom\Wireless InSite 3.2.0.3\bin\calc\calcprop"'
 
