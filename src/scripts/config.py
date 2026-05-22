@@ -6,6 +6,17 @@ from types import SimpleNamespace
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
+# simulators
+from src.modules.blensor.blensor_src import blensor_simulation
+from src.modules.rt.wi.simulation.simulation import main
+from src.modules.postprocessing import (
+    gen_database,
+    gen_csv_file, 
+    gen_rays_dataset, 
+    gen_beam_output_file,
+    gen_lidar_matrix, 
+    image_refinement,
+    sanity_check_up)
 
 def dict_to_namespace(obj):
     """
@@ -20,7 +31,6 @@ def dict_to_namespace(obj):
         return [dict_to_namespace(item) for item in obj]
     else:
         return obj
-
 
 def load_config():
     """
@@ -45,7 +55,6 @@ def load_config():
 
     return dict_to_namespace(cfg_dict)
 
-
 def get_lat_long(base_insite_project_path):
     """
     Extract latitude and longitude from the base.txrx file of a Wireless InSite project.
@@ -64,7 +73,6 @@ def get_lat_long(base_insite_project_path):
             longitude = line.split(' ')[1].replace('\n', '')
         if latitude and longitude:
             return latitude, longitude
-
 
 def get_insite_version(base_insite_project_path):
     """
@@ -92,10 +100,43 @@ def base_run_dir_fn(i):
     """
     return "run{:05d}".format(i)
 
+class parameters:
+    def __init__(self):
+        self.cfg = load_config()
+        self.base_config = self.cfg.base_config
+        self.pipeline = self.cfg.pipeline
+        self.rmt = self.cfg.rmt
+        self.sumo = self.cfg.sumo
+        self.ray_racing = self.cfg.ray_racing
+        self.blensor_options = self.cfg.blensor_options
+        self.post_processing = self.cfg.post_processing
 
-cfg = load_config() # load yaml
+        # base_config
+        self.working_directory = os.path.dirname(os.path.realpath(__file__))
+        # pipeline
 
-working_directory = os.path.dirname(os.path.realpath(__file__))
+        # rmt
+        self.use_fixed_receivers = self.cfg.rmt.features.use_fixed_receivers
+        self.use_vehicles_template = self.cfg.features.use_vehicles_template
+        self.isolated_sim = not self.cfg.rmt.enabled
+        # sumo
+
+        # ray_tracing
+        self.use_pedestrians = self.cfg.ray_racing.use_pedestrians
+        self.drone_simulation = self.cfg.ray_racing.drone_simulation
+        self.use_V2V = self.cfg.ray_racing.v2v.enable
+
+        # blensor_options
+
+        # post_processing
+
+    def setparameters(self):
+        
+        
+        
+        
+      
+
 base_insite_project_path = os.path.join(
     working_directory,
     'base_files',
@@ -108,11 +149,10 @@ isolated_results_dir = os.path.join(
     results_dir,
     cfg.simulation_paths.base_insite_path)
 sim_name = cfg.simulation_paths.results_dir_path
-isolated_sim = cfg.features.isolated_simulation
+
 insite_version = get_insite_version(base_insite_project_path)
 # InSite env variable
 locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 '
-
 
 if insite_version == '3.3':
     wibatch_bin = (
@@ -127,12 +167,7 @@ elif insite_version == '3.2':
         + f"LD_LIBRARY_PATH={cfg.insite_paths.insite_software_path}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ "
         + f"{cfg.insite_paths.insite_software_path}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch")
 
-use_fixed_receivers = cfg.features.use_fixed_receivers
-use_pedestrians = cfg.features.use_pedestrians
-use_vehicles_template = cfg.features.use_vehicles_template
-drone_simulation = cfg.features.drone_simulation
-mimo_orientation = cfg.features.mimo_orientation
-use_V2V = cfg.features.use_V2V
+
 
 n_run = range(1)
 
@@ -165,10 +200,6 @@ if not isolated_sim:
 
 n_antenna_per_episode = 0 if use_fixed_receivers else cfg.simulation_parameters.n_antenna_per_episode
 
-if use_V2V:
-    n_Tx_per_episode = cfg.simulation_parameters.n_Tx_per_episode
-    n_antenna_per_episode = cfg.simulation_parameters.n_antenna_per_episode
-
 analysis_area_enabled = cfg.data_handler.area_of_analyses.enabled
 analysis_area = cfg.data_handler.area_of_analyses.coordinates_limits
 set_area_limit = cfg.area_limits.enabled
@@ -188,6 +219,8 @@ max_dist_LIDAR = cfg.data_handler.cartesian_lidar_matrix.max_dist_LIDAR
 type_data = cfg.data_handler.cartesian_lidar_matrix.type_data
 
 if use_V2V:
+    n_Tx_per_episode = cfg.simulation_parameters.n_Tx_per_episode
+    n_antenna_per_episode = cfg.simulation_parameters.n_antenna_per_episode
     close_vehicles = cfg.v2v_options.close_vehicles
     n_of_vehicles = cfg.v2v_options.n_of_vehicles
     chosen_vehicle = cfg.v2v_options.chosen_vehicle
@@ -229,10 +262,7 @@ base_object_file_name = os.path.join(base_insite_project_path, "base.object")
 base_txrx_file_name = os.path.join(base_insite_project_path, "base.txrx")
 simulation_info_file_name = 'wri-simulation.info'
 
-# Object which will be modified in the RWI project
 dst_object_file_name = insite_vehicles_name + '.object'
-
-# txrx which will be modified in the RWI project
 dst_txrx_file_name = insite_setup_name + '.txrx'
 
 # XML project that will be executed by InSite command line tools
@@ -241,17 +271,7 @@ dst_x3d_xml_file_name = (
     insite_setup_name
     + '.'
     + insite_study_area_name
-    + '.xml'
-)
-
-# print('Output JSON file: ', simulation_info_file_name)
-# print('Reference InSite model: ', base_x3d_xml_path)
-# print('Generated InSite model that will be used: ', dst_x3d_xml_file_name)
-# print('Reference .object file: ', base_object_file_name)
-# print('Generated .object file that will be used: ', dst_object_file_name)
-# print('Reference .txrx file: ', base_txrx_file_name)
-# print('Generated .txrx file that will be used: ', dst_txrx_file_name)
-
+    + '.xml')
 
 # The mysterious information below is added in simulation.py into an XML file
 if insite_version == '3.3':
@@ -259,28 +279,21 @@ if insite_version == '3.3':
         "./remcom__rxapi__Job/Scene/remcom__rxapi__Scene/TxRxSetList/"
         "remcom__rxapi__TxRxSetList/TxRxSet/remcom__rxapi__PointSet/"
         "OutputID/remcom__rxapi__Integer[@Value='2']"
-        + "/../../ControlPoints/remcom__rxapi__ProjectedPointList"
-    )
-
+        + "/../../ControlPoints/remcom__rxapi__ProjectedPointList")
     dst_x3d_txrx_xpath_to_tx = (
         "./remcom__rxapi__Job/Scene/remcom__rxapi__Scene/TxRxSetList/"
         "remcom__rxapi__TxRxSetList/TxRxSet/remcom__rxapi__PointSet/"
         "OutputID/remcom__rxapi__Integer[@Value='1']"
-        + "/../../ControlPoints/remcom__rxapi__ProjectedPointList"
-    )
-
+        + "/../../ControlPoints/remcom__rxapi__ProjectedPointList")
 else:
     dst_x3d_txrx_xpath = (
         "./Job/Scene/Scene/TxRxSetList/TxRxSetList/TxRxSet/"
         "PointSet/OutputID/Integer[@Value='2']"
-        + "/../../ControlPoints/ProjectedPointList"
-    )
-
+        + "/../../ControlPoints/ProjectedPointList")
     dst_x3d_txrx_xpath_to_tx = (
         "./Job/Scene/Scene/TxRxSetList/TxRxSetList/TxRxSet/"
         "PointSet/OutputID/Integer[@Value='1']"
-        + "/../../ControlPoints/ProjectedPointList"
-    )
+        + "/../../ControlPoints/ProjectedPointList")
 
 
 if isolated_sim:
@@ -309,7 +322,7 @@ car_structure_name = 'car'
 antenna_points_name = insite_rx_name
 
 
-if use_sumo is True:
+if use_sumo:
     seed = cfg.seed
     np.random.seed(seed)
 
@@ -338,8 +351,7 @@ else:
     # Origin and destination of the line to place the cars
     line_origin = (
         (755.25, 470, 0.2),
-        (755.25 + 5, 470, 0.2),
-    )
+        (755.25 + 5, 470, 0.2),)
 
     # Dimension line_destination is indicating to
     line_destination = 645
@@ -348,4 +360,49 @@ else:
     # Distance between cars
     def car_distances():
         return np.random.uniform(1.5, 6)
+
+
+
+
+def raymobtime():
+
+    postprocessing_modules = {
+        "db": gen_database,
+        "coord": gen_csv_file,
+        "rays": gen_rays_dataset,
+        "beams": gen_beam_output_file,
+        "lidar": gen_lidar_matrix,
+        "image": image_refinement,
+    }
+
+    if args.database == "all":
+        for func in [gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file]:
+            func(c)
+
+    if args.database in postprocessing_modules:
+        func = postprocessing_modules[args.database]
+        func(c)
+
+    if args.check:
+        sanity_check_up(c)
+
+    # Simulation using blensor for image/lidar database
+    if (args.blensor):
+        blensor_simulation(args.blensor)
+        
+    # Saving the blensor simulation from pcd files to matrix type data
+    CoordSystem = c.CoordSystem
+    if args.data_base == "lidar":
+        if CoordSystem.lower() == 'spherical':
+            gen_lidar_matrix(c)
+        elif CoordSystem.lower() == 'cartesian':
+            gen_lidar_matrix(c)
+        else:
+            raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.json')
+    elif args.data_base == "image":
+        image_refinement(c)
+
+    # Usual Raymobtime Simulation using WI
+    if args.place_only or args.ray_tracing_only:
+        main(args)
 

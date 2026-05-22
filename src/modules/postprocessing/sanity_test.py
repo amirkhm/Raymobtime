@@ -13,7 +13,7 @@ def csv_check(main_folder):
         invalid_channels = 0  # Return an empty DataFrame
     df_inv = df_coord[df_coord['Val'] == 'I']
     df_val = df_coord[df_coord['Val'] == 'V']
-    #TODO retornar a contagem de úicos e achar episódios inteiros invlidos
+    #TODO retornar a contagem de únicos e achar episódios inteiros invalidos
     ep_inv = np.unique(df_inv['EpisodeID'])
     print("###### Coord File Check up ######")
     print(f'Invalid channels = {invalid_channels}')
