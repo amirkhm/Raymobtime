@@ -47,6 +47,12 @@ def load_config():
 
 
 def get_lat_long(base_insite_project_path):
+    """
+    Extract latitude and longitude from the base.txrx file of a Wireless InSite project.
+    Args:       base_insite_project_path (str): Path to the base InSite project directory.
+    Returns:    tuple[str, str]: A tuple containing (latitude, longitude) as strings.
+    Raises:     FileNotFoundError: If the base.txrx file does not exist.
+    """
     txrx_file = open(os.path.join(base_insite_project_path, 'base.txrx'), 'r')
     latitude = False
     longitude = False
@@ -61,14 +67,20 @@ def get_lat_long(base_insite_project_path):
 
 
 def get_insite_version(base_insite_project_path):
+    """
+    Parse and return the Wireless InSite version from the model.study.xml file.
+    Args:       base_insite_project_path (str): Path to the base InSite project directory.
+    Returns:    str: The InSite version (e.g., '3.0', '3.2').
+    Raises:     FileNotFoundError: If the model.study.xml file does not exist.
+    """
     model_file = open(os.path.join(base_insite_project_path, 'model.study.xml'), 'r')
     insite_version = False
-
     for line in model_file:
         if '<InSite version="' in line:
             insite_version = line.split('version=')[1].split(' ')[0][1:4]
+            model_file.close()
             return insite_version
-        
+
 def base_run_dir_fn(i):
     """
     Returns the run_dir for run i.
@@ -79,6 +91,7 @@ def base_run_dir_fn(i):
         ...
     """
     return "run{:05d}".format(i)
+
 
 
 ###############################################################################
