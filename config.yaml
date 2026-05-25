@@ -1,4 +1,4 @@
-base_config:
+base_config:     
   output_name: "sim_a"                        # Simulation identifier name
   scenario: "scenario_x"                      # scenario name
   resume: true                                # skip steps already concluded
@@ -6,27 +6,28 @@ base_config:
 
 pipeline:
   mobility:
-    enabled: true
-    tool: "sumo"                              # null | none
-    placement_limits:
-      enabled: false
+    enabled: true 
+    ##tool: "sumo"                            # null | none
+    placement_limits: 
+      enabled: false   
       max_lim: [843, 523]                     # [x, y] study area limits for placement of Tx and Rx
-      min_lim: [660, 334]
-      end_ep_for_no_veh: true
+      min_lim: [660, 334]                     # [x, y] study area limits for placement of Tx and Rx
+      ##end_ep_for_no_veh: true #nop
   
   ray_tracing:                                # parsing automático
-    enabled: true
-    tool: "wireless_insite"                   # wireless_insite | none
-    jump: true
+    enabled: true 
+    #tool: "wireless_insite"                  # wireless_insite | none
+    jump: true   
   
   blensor:
-    enabled: false
-    outputs:
+    enabled: false 
+    outputs: 
       - "lidar"
       - "image"
 
   post_processing:
-    which: "all"                              # all | none | selected
+    enabled: true  
+    which: "all"                              # all | selected
     outputs:                                  # ["db", "coord", "rays", "beams", "image", "lidar"]
       - "db"                                  # database (sqlite/postgres/hdf5)
       - "coord"                               # coordenadas
@@ -36,21 +37,21 @@ pipeline:
       - "lidar"
   
   validation:
-    run_checkup: false
+    run_checkup: false  
 
 rmt:
   enabled: true                               # false for isolated simulation
-  scenes_per_episode: 2
-  time_between_episodes: 35
+  scenes_per_episode: 2 
+  time_between_episodes: 35 
   sampling_parameters: [0, 100, 0.5]          # start, end, step
   features:
-    use_fixed_receivers: false
-    use_vehicles_template: false
+    use_fixed_receivers: false  
+    use_vehicles_template: false 
 
 sumo:
-  seed: 12
-  bin: /usr/bin/sumo
-  cfg: seasonal
+  seed: 12  
+  bin: /usr/bin/sumo 
+  cfg: seasonal 
 
 ray_tracing:
   use_pedestrians: false
@@ -73,7 +74,6 @@ ray_tracing:
       setup_name: model
       vehicles_name: random-line
   
-
 blensor_options:
   path_to_scenario_blend: /home/gabrielferreiravieira/Documents/repositories/r2/raymobtime/base_files/B-pnm-SP/Blender/B-pnm-SP.blend
   path_to_vehicles_blend: /home/gabrielferreiravieira/Documents/repositories/r2/raymobtime/base_files/B-pnm-SP/Blender/vehicles.blend

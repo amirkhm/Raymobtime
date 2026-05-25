@@ -107,359 +107,342 @@ class parameters:
         self.pipeline = self.cfg.pipeline
         self.rmt = self.cfg.rmt
         self.sumo = self.cfg.sumo
-        self.ray_racing = self.cfg.ray_racing
+        self.ray_tracing = self.cfg.ray_tracing
         self.blensor_options = self.cfg.blensor_options
         self.post_processing = self.cfg.post_processing
 
-        # base_config
-        self.working_directory = os.path.dirname(os.path.realpath(__file__))
-        # pipeline
-
-        # rmt
-        self.use_fixed_receivers = self.cfg.rmt.features.use_fixed_receivers
-        self.use_vehicles_template = self.cfg.features.use_vehicles_template
-        self.isolated_sim = not self.cfg.rmt.enabled
-        # sumo
-
-        # ray_tracing
-        self.use_pedestrians = self.cfg.ray_racing.use_pedestrians
-        self.drone_simulation = self.cfg.ray_racing.drone_simulation
-        self.use_V2V = self.cfg.ray_racing.v2v.enable
-
-        # blensor_options
-
-        # post_processing
+        self.setparameters()
+        #TODO Do the replace of the user yaml variables in the yaml default
 
     def setparameters(self):
+
+
+        self.working_directory = os.path.dirname(os.path.realpath(__file__))
+
+        self.use_fixed_receivers = self.rmt.features.use_fixed_receivers
+        self.use_vehicles_template = self.rmt.features.use_vehicles_template
+        self.isolated_sim = not self.rmt.enabled
         
+        self.use_pedestrians = self.ray_tracing.use_pedestrians
+        self.drone_simulation = self.ray_tracing.use_drone
+        self.use_V2V = self.ray_tracing.v2v.enable
         
-        
-        
-      
+        self.base_insite_project_path = os.path.join(self.working_directory,
+                    "data",                                
+                    self.base_config.scenario,
+                    "wi" #It's possible differents base InSite projects, add in yaml
+        ) 
 
-base_insite_project_path = os.path.join(
-    working_directory,
-    'base_files',
-    cfg.simulation_paths.base_insite_path
-)
-
-# Folder to store each InSite project and its results
-# Will create subfolders for each "run", run0000, run0001, etc.
-results_dir = os.path.join(
-    working_directory,
-    'simulations',
-    cfg.simulation_paths.results_dir_path
-)
-
-isolated_results_dir = os.path.join(
-    results_dir,
-    cfg.simulation_paths.base_insite_path
-)
-
-# Folders and files for InSite and its license.
-# For Windows you may simply inform the path to the executable files,
-# not minding about the license file location.
-# Folders for SUMO and InSite.
-# Use executable sumo-gui if want to see the GUI or sumo otherwise.
-
-sim_name = cfg.simulation_paths.results_dir_path
-
-insite_version = get_insite_version(base_insite_project_path)
-
-# InSite env variable
-locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 '
-
-if insite_version == '3.3':
-    wibatch_bin = (
-        locale
-        + '{} '.format(cfg.insite_paths.REMCOMINC_LICENSE_FILE)
-        + 'LD_LIBRARY_PATH={}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ '.format(
-            cfg.insite_paths.insite_software_path
+            # Folder to store each InSite project and its results
+            # Will create subfolders for each "run", run0000, run0001, etc.
+        self.results_dir = os.path.join(self.working_directory,
+            'data',
+            self.base_config.scenario,
+            self.base_config.output_name,
+            'out/runs'
         )
-        + '{}/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/wibatch'.format(
-            cfg.insite_paths.insite_software_path
+
+        self.resume = self.base_config.resume
+        self.clean_previous = self.base_config.clean_previous 
+        
+        self.isolated_results_dir = os.path.join(
+            self.results_dir,
+            self.base_config.scenario
         )
-    )
-
-elif insite_version == '3.2':
-    wibatch_bin = (
-        locale
-        + f"{cfg.insite_paths.REMCOMINC_LICENSE_FILE} "
-        + f"LD_LIBRARY_PATH={cfg.insite_paths.insite_software_path}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ "
-        + f"{cfg.insite_paths.insite_software_path}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch")
-
-
-
-
-if not isolated_sim:
-    ### HERE STARTS CONFIGURATION ###
-    ### NOTE: ONLY CHANGE IF YOU KNOW WHAT YOU ARE DOING
-
-    # SUMO configuration file
-    sumo_bin = cfg.sumo_files.sumo_bin
-    sumo_cfg = os.path.join(
-        working_directory,
-        'base_files',
-        'sumo',
-        '{}.sumocfg'.format(cfg.sumo_files.sumo_cfg)
-    )
-
-    # SUMO configuration file
-    sumo_bin = cfg.sumo_files.sumo_bin
-    sumo_cfg = os.path.join(
-        working_directory,
-        'base_files',
-        'sumo',
-        '{}.sumo.cfg'.format(cfg.sumo_files.sumo_cfg)
-    )
-
-    # print('########## Scripts will assume the following files: ##########')
-    # print('SUMO executable: ', sumo_bin)
-    # print('SUMO configuration: ', sumo_cfg)
-    # print('InSite calcprop executable: ', calcprop_bin)
-    # print('InSite wibatch executable: ', wibatch_bin)
-    # print('Working folder (base for several folders): ', working_directory)
-    # print('InSite input files folder: ', base_insite_project_path)
-    # print('Final output parent folder: ', results_dir)
-
-    # Iterator that determines maximum number of RT simulations
-    n_run = range(
-        cfg.simulation_parameters.n_init_run,
-        cfg.simulation_parameters.n_end_run,
-        1
-    )
-
-    # Time interval between scenes, in seconds
-    sampling_interval = float(cfg.simulation_parameters.sampling_interval)
-
-    # Number of scenes of each episode
-    time_of_episode = int(cfg.simulation_parameters.n_scenes_of_each_episode)
 
-    # Time among episodes, in steps
-    # If you specify x/Ts, then x is in seconds
-    time_between_episodes = int(
-        float(cfg.simulation_parameters.time_between_episodes) / sampling_interval
-    )
-
-
-if use_fixed_receivers:
-    # Number of receivers per episode
-    n_antenna_per_episode = 0
-else:
-    # Number of receivers per episode
-    n_antenna_per_episode = cfg.simulation_parameters.n_antenna_per_episode
-
-
-analysis_area_enabled = cfg.data_handler.area_of_analyses.enabled
-analysis_area = cfg.data_handler.area_of_analyses.coordinates_limits
-analysis_area_resolution = 0.5
-
-antenna_number = 10
-
-# Frequency in Hz for the RT simulation
-frequency = 60e9
-
-set_area_limit = cfg.area_limits.enabled
-max_lim = cfg.area_limits.max_lim
-min_lim = cfg.area_limits.min_lim
-
-# Blender Options
-sim_BS_img = cfg.blensor_options.img_simulation_options.BS_camera
-sim_UE_img = cfg.blensor_options.img_simulation_options.UE_camera
-n_cameras_blensor_scenario = cfg.blensor_options.img_simulation_options.n_camera_BS
-
-CoordSystem = cfg.data_handler.cartesian_lidar_matrix.coordinate_system
-QP = cfg.data_handler.cartesian_lidar_matrix.QP
-QPsph = cfg.data_handler.cartesian_lidar_matrix.QPsph
-Tx_position = cfg.data_handler.cartesian_lidar_matrix.Tx_position
-max_dist_LIDAR = cfg.data_handler.cartesian_lidar_matrix.max_dist_LIDAR
-type_data = cfg.data_handler.cartesian_lidar_matrix.type_data
-
-
-if use_V2V:
-    n_Tx_per_episode = cfg.simulation_parameters.n_Tx_per_episode
-    n_antenna_per_episode = cfg.simulation_parameters.n_antenna_per_episode
-    close_vehicles = cfg.v2v_options.close_vehicles
-    n_of_vehicles = cfg.v2v_options.n_of_vehicles
-    chosen_vehicle = cfg.v2v_options.chosen_vehicle
-
-
-import_precoding = cfg.data_handler.antenna_arr.import_precoding
-import_hmatrix = cfg.data_handler.antenna_arr.import_hmatrix
-import_combining = cfg.data_handler.antenna_arr.import_combining
-expansion = cfg.data_handler.antenna_arr.expansion
-rotation = cfg.data_handler.antenna_arr.rotation
-normalized_antenna_distance = cfg.data_handler.antenna_arr.normalized_antenna_distance
-
-blensor_scenario_path = cfg.blensor_options.path_to_scenario
-blensor_runfile_path = cfg.blensor_options.blensor_img_path
-
-
-###############################################################
-## Part II - Extra information that typically does not need to be modified
-## unless you changed the InSite model, using the GUI, for example.
-###############################################################
-
-# Fullfill this parameters with InSite's information
-insite_study_area_name = cfg.base_files_names.insite_study_area_name
-insite_tx_name = cfg.base_files_names.insite_tx_name
-insite_rx_name = cfg.base_files_names.insite_rx_name
-insite_setup_name = cfg.base_files_names.insite_setup_name
-insite_vehicles_name = cfg.base_files_names.insite_vehicles_name
-
-
-if use_vehicles_template:
-    latitude, longitude = get_lat_long(base_insite_project_path)
-    insite_vehicles_name_model = insite_vehicles_name
-    insite_vehicles_name = insite_vehicles_name + '_'
-
-
-##### Folders and files for InSite ####
-
-# Copy of the RWI project used in the simulation
-# AK-TODO: instead of "base", it should match the name InSite gives,
-# to facilitate porting.
-if isolated_sim:
-    results_base_model_dir = isolated_results_dir
-else:
-    results_base_model_dir = os.path.join(results_dir, 'base')
-
-results_base_model_dir.replace('\\', '/')
-
-# Input files, which are read by the Python scripts
-
-# File that has the base InSite project
-setup_path = os.path.join(base_insite_project_path, insite_setup_name + '.setup')
-base_setup_path = os.path.join(base_insite_project_path, 'base.setup')
-
-# setup_path = setup_path.replace(' ', '\ ') # deal with paths with blank spaces
-
-# XML that has information about the simulations
-base_x3d_xml_path = os.path.join(
-    base_insite_project_path,
-    'base.' + insite_study_area_name + '.xml'
-)
-
-# Name, basename, of the paths file generated in the simulation
-paths_file_name = insite_setup_name + '.paths.t001_01.r002.p2m'
-
-# Base object file to generate the object_dst_file_name
-base_object_file_name = os.path.join(base_insite_project_path, "base.object")
-
-# Base txrx file to generate the txrx_dst_file_name
-base_txrx_file_name = os.path.join(base_insite_project_path, "base.txrx")
-
-
-# Output files, which are written by the Python scripts.
-# Provide here only the names.
-# The full paths will be created by simulation.py, using the run folder.
-
-# Name, basename, of the JSON output simulation info file
-simulation_info_file_name = 'wri-simulation.info'
-
-dst_object_file_name = insite_vehicles_name + '.object'
-dst_txrx_file_name = insite_setup_name + '.txrx'
-
-# XML project that will be executed by InSite command line tools
-# Its path will be the run folder.
-dst_x3d_xml_file_name = (
-    insite_setup_name
-    + '.'
-    + insite_study_area_name
-    + '.xml')
-
-# The mysterious information below is added in simulation.py into an XML file
-if insite_version == '3.3':
-    dst_x3d_txrx_xpath = (
-        "./remcom__rxapi__Job/Scene/remcom__rxapi__Scene/TxRxSetList/"
-        "remcom__rxapi__TxRxSetList/TxRxSet/remcom__rxapi__PointSet/"
-        "OutputID/remcom__rxapi__Integer[@Value='2']"
-        + "/../../ControlPoints/remcom__rxapi__ProjectedPointList")
-    dst_x3d_txrx_xpath_to_tx = (
-        "./remcom__rxapi__Job/Scene/remcom__rxapi__Scene/TxRxSetList/"
-        "remcom__rxapi__TxRxSetList/TxRxSet/remcom__rxapi__PointSet/"
-        "OutputID/remcom__rxapi__Integer[@Value='1']"
-        + "/../../ControlPoints/remcom__rxapi__ProjectedPointList")
-else:
-    dst_x3d_txrx_xpath = (
-        "./Job/Scene/Scene/TxRxSetList/TxRxSetList/TxRxSet/"
-        "PointSet/OutputID/Integer[@Value='2']"
-        + "/../../ControlPoints/ProjectedPointList")
-    dst_x3d_txrx_xpath_to_tx = (
-        "./Job/Scene/Scene/TxRxSetList/TxRxSetList/TxRxSet/"
-        "PointSet/OutputID/Integer[@Value='1']"
-        + "/../../ControlPoints/ProjectedPointList")
-
-
-if isolated_sim:
-    use_sumo = False
-else:
-    use_sumo = True
-
-
-# Dimensions of the Mobile Objects, MOBJS, which will be placed on dst_object_file_name
-# car_dimensions = (1.76, 4.54, 1.47)
-car_dimensions = (2, 6, 1.47)
-
-# Antenna to be placed above the cars
-antenna_origin = (
-    car_dimensions[0] / 2,
-    car_dimensions[1] / 2,
-    car_dimensions[2]
-)
-
-# ID of the car material.
-# Must be defined on base_object_file_name and it is processed by simulation.py.
-car_material_id = 0
-car_structure_name = 'car'
-
-# Name of the antenna points in base_txrx_file_name
-antenna_points_name = insite_rx_name
-
-
-if use_sumo:
-    seed = cfg.seed
-    np.random.seed(seed)
-
-    sumo_cmd = [
-        sumo_bin,
-        '-c',
-        sumo_cfg,
-        '--step-length',
-        str(sampling_interval),
-        '--seed',
-        '{}'.format(seed)
-    ]
-
-    # Mapping from SUMO to InSite coordinates.
-    # Take only min and max for x and y and put there.
-    lane_boundary_dict = {
-        "laneA_0": [[758.5, 460], [744.5, 660]],
-        "laneB_0": [[658.82, 460], [747.5, 358.76]],
-        "laneC_0": [[658.82, 460], [752.5, 675.90]],
-        "laneD_0": [[840.08, 460], [755.5, 660]]
-    }
-
-else:
-    # Not sure if this is ancient code used for debugging with use_sumo = False.
-
-    # Origin and destination of the line to place the cars
-    line_origin = (
-        (755.25, 470, 0.2),
-        (755.25 + 5, 470, 0.2),)
-
-    # Dimension line_destination is indicating to
-    line_destination = 645
-    line_dimension = 1
-
-    # Distance between cars
-    def car_distances():
-        return np.random.uniform(1.5, 6)
-
-
+            # Folders and files for InSite and its license.
+            # For Windows you may simply inform the path to the executable files,
+            # not minding about the license file location.
+            # Folders for SUMO and InSite.
+            # Use executable sumo-gui if want to see the GUI or sumo otherwise.
+        self.insite_version = get_insite_version(self.base_insite_project_path)
+
+        # InSite env variable
+        self.locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 '
+
+        if self.insite_version == '3.3':
+            self.wibatch_bin = (
+                self.locale
+                + '{} '.format(self.ray_racing.wireless_insite.software_paths.LICENSE_FILE)
+                + 'LD_LIBRARY_PATH={}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ '.format(
+                    self.ray_racing.wireless_insite.software_paths
+                )
+                + '{}/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/wibatch'.format(
+                    self.ray_racing.wireless_insite.software_paths
+                )
+            )
+
+        elif self.insite_version == '3.2':
+            self.wibatch_bin = (
+                self.locale
+                + f"{self.ray_racing.wireless_insite.software_paths.LICENSE_FILE} "
+                + f"LD_LIBRARY_PATH={self.ray_racing.wireless_insite.software_paths}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ "
+                + f"{self.ray_racing.wireless_insite.software_paths}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch")
+
+        if not self.isolated_sim:
+            ### HERE STARTS CONFIGURATION ###
+            ### NOTE: ONLY CHANGE IF YOU KNOW WHAT YOU ARE DOING
+
+            # SUMO configuration file
+            self.sumo_bin = self.sumo.bin
+            self.sumo_cfg = os.path.join(
+                self.working_directory,
+                'data',
+                self.base_config.scenario,
+                'sumo',
+                '{}.sumocfg'.format(self.sumo.cfg)
+            )
+
+            # Iterator that determines maximum number of RT simulations
+            self.n_run = range(
+                self.rmt.sampling_parameters[0],
+                self.rmt.sampling_parameters[1],
+            )
+
+            # Time interval between scenes, in seconds
+            self.sampling_interval = float(self.rmt.sampling_parameters[2])
+
+            # Number of scenes of each episode
+            self.time_of_episode = int(self.rmt.scenes_per_episode)
+
+            # Time among episodes, in steps
+            # If you specify x/Ts, then x is in seconds
+            self.time_between_episodes = int(
+                float(self.rmt.time_between_episodes) / self.sampling_interval
+            )
+
+        if self.use_fixed_receivers:
+            # Number of receivers per episode
+            self.n_antenna_per_episode = 0
+        else:
+            # Number of receivers per episode
+            self.n_antenna_per_episode = self.ray_tracing.receivers_per_episode
+
+
+        self.analysis_area_enabled = self.post_processing.area_of_analyses.enabled
+        self.analysis_area = self.post_processing.area_of_analyses.limits
+        self.analysis_area_resolution = 0.5
+
+        self.antenna_number = 10 #VERIFY
+
+        # Frequency in Hz for the RT simulation
+        self.frequency = 60e9
+
+        self.set_area_limit = self.pipeline.mobility.placement_limits.enabled
+        self.max_lim = self.pipeline.mobility.placement_limits.max_lim
+        self.min_lim = self.pipeline.mobility.placement_limits.min_lim
+
+        # Blender Options
+        self.sim_BS_img = self.blensor_options.image_options.BS_camera
+        self.sim_UE_img = self.blensor_options.image_options.UE_camera
+        self.n_cameras_blensor_scenario = self.blensor_options.image_options.n_camera_BS
+
+        self.blensor_scenario_path = self.blensor_options.path_to_scenario_blend
+        self.blensor_runfile_path = self.blensor_options.path_blensor_image
+        self.path_to_vehicles_blend = self.blensor_options.path_to_vehicles_blend  
+
+        self.CoordSystem = self.post_processing.cartesian_lidar_matrix.coordinate_system
+        self.QP = self.cartesian_lidar_matrix.post_processing.QP
+        self.QPsph = self.cartesian_lidar_matrix.post_processing.QPsph
+        self.Tx_position = self.post_processing.cartesian_lidar_matrix.Tx_position
+        self.max_dist_LIDAR = self.post_processing.cartesian_lidar_matrix.max_dist_LIDAR
+        self.type_data = self.post_processing.cartesian_lidar_matrix.type_data
+
+        if self.use_V2V:
+            self.n_Tx_per_episode = self.ray_tracing.transmitters_per_episode
+            self.n_antenna_per_episode = self.ray_tracing.receivers_per_episode
+            self.close_vehicles = self.ray_tracing.v2v.close_vehicles
+            self.n_of_vehicles = self.ray_tracing.v2v.n_of_vehicles
+            if self.ray_tracing.v2v.chosen_vehicle:
+                self.chosen_vehicle = self.ray_tracing.v2v.chosen_vehicle
+
+        self.import_precoding = self.post_processing.mimo.import_precoding
+        self.import_hmatrix = self.post_processing.mimo.import_channels
+        self.import_combining = self.post_processing.mimo.import_combining
+        self.expansion = self.post_processing.mimo.antenna_array_expansion
+        self.rotation = self.post_processing.mimo.array_rotation
+        self.normalized_antenna_distance = self.post_processing.mimo.antenna_array_expansion.normalized_antenna_distance
+
+        ###############################################################
+        ## Part II - Extra information that typically does not need to be modified
+        ## unless you changed the InSite model, using the GUI, for example.
+        ###############################################################
+
+        # Fullfill this parameters with InSite's information
+        self.insite_study_area_name = self.ray_tracing.wireless_insite.base_files_names.study_area_name
+        self.insite_tx_name = self.ray_tracing.wireless_insite.base_files_names.tx_name
+        self.insite_rx_name = self.ray_tracing.wireless_insite.base_files_names.rx_name
+        self.insite_setup_name = self.ray_tracing.wireless_insite.base_files_names.setup_name
+        self.insite_vehicles_name = self.ray_tracing.wireless_insite.base_files_names.vehicles_name
+
+
+        if self.use_vehicles_template:
+            self.latitude, self.longitude = get_lat_long(self.base_insite_project_path)
+            self.insite_vehicles_name_model = self.insite_vehicles_name
+            self.insite_vehicles_name = self.insite_vehicles_name + '_'
+
+
+        ##### Folders and files for InSite ####
+
+        # Copy of the RWI project used in the simulation
+        # AK-TODO: instead of "base", it should match the name InSite gives,
+        # to facilitate porting.
+        if self.isolated_sim:
+            self.results_base_model_dir = self.isolated_results_dir
+        else:
+            self.results_base_model_dir = os.path.join(self.results_dir, 'base')
+
+        self.results_base_model_dir.replace('\\', '/')
+        # Input files, which are read by the Python scripts
+
+        # File that has the base InSite project
+        self.setup_path = os.path.join(self.base_insite_project_path, self.insite_setup_name + '.setup')
+        self.base_setup_path = os.path.join(self.base_insite_project_path, 'base.setup')
+
+        # setup_path = setup_path.replace(' ', '\ ') # deal with paths with blank spaces
+
+        # XML that has information about the simulations
+        self.base_x3d_xml_path = os.path.join(
+            self.base_insite_project_path,
+            'base.' + self.insite_study_area_name + '.xml'
+        )
+
+        # Name, basename, of the paths file generated in the simulation
+        self.paths_file_name = self.insite_setup_name + '.paths.t001_01.r002.p2m'
+
+        # Base object file to generate the object_dst_file_name
+        self.base_object_file_name = os.path.join(self.base_insite_project_path, "base.object")
+
+        # Base txrx file to generate the txrx_dst_file_name
+        self.base_txrx_file_name = os.path.join(self.base_insite_project_path, "base.txrx")
+
+
+        # Output files, which are written by the Python scripts.
+        # Provide here only the names.
+        # The full paths will be created by simulation.py, using the run folder.
+
+        # Name, basename, of the JSON output simulation info file
+        self.simulation_info_file_name = 'wri-simulation.info'
+
+        self.dst_object_file_name = self.insite_vehicles_name + '.object'
+        self.dst_txrx_file_name = self.insite_setup_name + '.txrx'
+
+        # XML project that will be executed by InSite command line tools
+        # Its path will be the run folder.
+        self.dst_x3d_xml_file_name = (
+            self.insite_setup_name
+            + '.'
+            + self.insite_study_area_name
+            + '.xml')
+
+        # The mysterious information below is added in simulation.py into an XML file
+        if self.insite_version == '3.3':
+            self.dst_x3d_txrx_xpath = (
+                "./remcom__rxapi__Job/Scene/remcom__rxapi__Scene/TxRxSetList/"
+                "remcom__rxapi__TxRxSetList/TxRxSet/remcom__rxapi__PointSet/"
+                "OutputID/remcom__rxapi__Integer[@Value='2']"
+                + "/../../ControlPoints/remcom__rxapi__ProjectedPointList")
+            self.dst_x3d_txrx_xpath_to_tx = (
+                "./remcom__rxapi__Job/Scene/remcom__rxapi__Scene/TxRxSetList/"
+                "remcom__rxapi__TxRxSetList/TxRxSet/remcom__rxapi__PointSet/"
+                "OutputID/remcom__rxapi__Integer[@Value='1']"
+                + "/../../ControlPoints/remcom__rxapi__ProjectedPointList")
+        else:
+            self.dst_x3d_txrx_xpath = (
+                "./Job/Scene/Scene/TxRxSetList/TxRxSetList/TxRxSet/"
+                "PointSet/OutputID/Integer[@Value='2']"
+                + "/../../ControlPoints/ProjectedPointList")
+            self.dst_x3d_txrx_xpath_to_tx = (
+                "./Job/Scene/Scene/TxRxSetList/TxRxSetList/TxRxSet/"
+                "PointSet/OutputID/Integer[@Value='1']"
+                + "/../../ControlPoints/ProjectedPointList")
+
+
+        if self.isolated_sim:
+            use_sumo = False
+        else:
+            use_sumo = True
+
+        # Dimensions of the Mobile Objects, MOBJS, which will be placed on dst_object_file_name
+        # car_dimensions = (1.76, 4.54, 1.47)
+        car_dimensions = (2, 6, 1.47)
+
+        # Antenna to be placed above the cars
+        self.antenna_origin = (
+            car_dimensions[0] / 2,
+            car_dimensions[1] / 2,
+            car_dimensions[2]
+        )
+
+        # ID of the car material.
+        # Must be defined on base_object_file_name and it is processed by simulation.py.
+        self.car_material_id = 0
+        self.car_structure_name = 'car'
+
+        # Name of the antenna points in base_txrx_file_name
+        self.antenna_points_name = self.insite_rx_name
+
+
+        if use_sumo:
+            seed = self.sumo.seed
+            np.random.seed(seed)
+
+            self.sumo_cmd = [
+                self.sumo.bin,
+                '-c',
+                self.sumo.cfg,
+                '--step-length',
+                str(self.sampling_interval),
+                '--seed',
+                '{}'.format(seed)
+            ]
+
+            # Mapping from SUMO to InSite coordinates.
+            # Take only min and max for x and y and put there.
+            self.lane_boundary_dict = {
+                "laneA_0": [[758.5, 460], [744.5, 660]],
+                "laneB_0": [[658.82, 460], [747.5, 358.76]],
+                "laneC_0": [[658.82, 460], [752.5, 675.90]],
+                "laneD_0": [[840.08, 460], [755.5, 660]]
+            }
+
+        else:
+            # Not sure if this is ancient code used for debugging with use_sumo = False.
+
+            # Origin and destination of the line to place the cars
+            self.line_origin = (
+                (755.25, 470, 0.2),
+                (755.25 + 5, 470, 0.2),)
+
+            # Dimension line_destination is indicating to
+            self.line_destination = 645
+            self.line_dimension = 1
+
+            # Distance between cars
+            def car_distances():
+                return np.random.uniform(1.5, 6)
+        
+        self.mobility = self.pipeline.mobility
+        self.ray_tracing = self.pipeline.ray_tracing
+        self.jump = self.ray_tracing.jump
+        self.post_processing = self.pipeline.post_processing
+        self.blensor = self.pipeline.blensor
+        self.validation = self.pipeline.validation
+        
 
 
 def raymobtime():
+    """
+    Raymobtime simulation and post-processing entry point.
+
+    This function run the main Raymobtime workflow stages, including Wireless InSite ray-tracing simulation,
+    Blensor-based LiDAR/image generation, and post-processing routines for database, coordinate,
+    ray, beam, LiDAR, and image outputs.
+
+    Depending on the selected inputs in, it can generate simulation input files,
+    execute ray tracing, convert raw results into structured datasets, run sanity
+    checks, or process auxiliary sensor data.
+    """
 
     postprocessing_modules = {
         "db": gen_database,
@@ -470,34 +453,35 @@ def raymobtime():
         "image": image_refinement,
     }
 
-    if args.database == "all":
-        for func in [gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file]:
+    c = parameters()
+
+    if c.post_processing.enabled: 
+        if c.post_processing.which == "all":
+            for func in [gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file]:
+                func(c)
+
+        elif c.post_processing.outputs in postprocessing_modules:
+            func = postprocessing_modules[c.post_processing.outputs]
             func(c)
 
-    if args.database in postprocessing_modules:
-        func = postprocessing_modules[args.database]
-        func(c)
-
-    if args.check:
+    if c.validation.run_checkup:
         sanity_check_up(c)
 
     # Simulation using blensor for image/lidar database
-    if (args.blensor):
-        blensor_simulation(args.blensor)
+    if (c.blensor.enabled):
+        blensor_simulation(c.blensor.outputs)
         
     # Saving the blensor simulation from pcd files to matrix type data
     CoordSystem = c.CoordSystem
-    if args.data_base == "lidar":
-        if CoordSystem.lower() == 'spherical':
-            gen_lidar_matrix(c)
-        elif CoordSystem.lower() == 'cartesian':
+    if "lidar" in c.post_processing.outputs:
+        if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'sph':
             gen_lidar_matrix(c)
         else:
             raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.json')
-    elif args.data_base == "image":
+    elif "image" in c.post_processing.outputs:
         image_refinement(c)
 
     # Usual Raymobtime Simulation using WI
-    if args.place_only or args.ray_tracing_only:
-        main(args)
+    if c.mobility.enabled or c.ray_tracing.enabled:
+        main(c)
 
