@@ -391,7 +391,7 @@ class parameters:
                 "PointSet/OutputID/Integer[@Value='1']"
                 + "/../../ControlPoints/ProjectedPointList")
 
-
+        self.tool = self.pipeline.mobility.tool
         if self.isolated_sim:
             use_sumo = False
         else:

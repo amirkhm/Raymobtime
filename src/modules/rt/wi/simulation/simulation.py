@@ -93,8 +93,35 @@ def sumo_flux(c):
     print('Starting SUMO Traci')
     traci.start(c.sumo_cmd)
 
-def main(c):
+    scene_i = 0
+    episode_i = 0
 
+    for tmp_var in range(int(c.n_run[0])):
+        # Só na passagem de episódios ou primeira vez
+        if scene_i == 0:
+            while True:   
+                traci_vehicle_IDList = traci.vehicle.getIDList()
+                # Only drone, remove the non-drone vehicles from the list
+                if c.drone_simulation:
+                    traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
+                if len(traci_vehicle_IDList) < c.n_antenna_per_episode:
+                    traci.simulationStep()
+                    logging.debug('not enough vehicles at time ' + str(traci.simulation.getCurrentTime()))
+                else:
+                    break
+            cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
+        else:
+            traci.simulationStep()
+            scene_i += 1
+            if scene_i == c.time_of_episode:
+                scene_i = 0
+                episode_i += 1
+                for _ in range(c.time_between_episodes):
+                    traci.simulationStep()
+        logging.info(f'Jump until the step {c.n_run[0]}: {int((tmp_var/c.n_run[0])* 100)}%')
+        
+
+def main(c):
     if c.ray_tracing_only:
         wireless_insite_simulation(c)
         return
@@ -125,63 +152,28 @@ def main(c):
 
     antenna = txrxFile[c.antenna_points_name].location_list[0]
 
-    
-
-    if c.use_sumo:
+    if c.mobility.enabled and c.mobility.tool == 'sumo':
         sumo_flux(c)
-
-
-    scene_i = 0
-    episode_i = 0
-
-    for tmp_var in range(int(c.n_run[0])):
-        # Só na passagem de episódios ou primeira vez
-        if (scene_i ==0 and episode_i ==0) or scene_i == c.time_of_episode:
-            #first scene of an episode
-            if episode_i is None:
-                episode_i = 0
-            else:
-                episode_i += 1
-            scene_i = 0
-            # step time_between_episodes from the last one
-            for count in range(c.time_between_episodes):
-                traci.simulationStep()
-
-            traci_vehicle_IDList = traci.vehicle.getIDList()
-            # Filter list to have only drones
-            if c.drone_simulation: 
-                traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
-            # Pula as runs que não tem carros suficientes 
-            while len(traci_vehicle_IDList) < c.n_antenna_per_episode:
-                traci.simulationStep()
-                traci_vehicle_IDList = traci.vehicle.getIDList()
-                if c.drone_simulation: 
-                    traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
-
-                logging.warning('not enough vehicles at time ' + str(traci.simulation.getCurrentTime()) )
-            cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
-        else:
-            traci.simulationStep()
-        print(f'Jump until the step {c.n_run[0]}: {int((tmp_var/c.n_run[0])* 100)}%')
-        scene_i += 1
+    if c.mobility.enabled and c.mobility.tool == 'line':
+        count_nar = 0 # Number of Runs without cars with antenna while mobile
+        for i in c.n_run:
+            run_dir = os.path.join(c.results_dir, c.base_run_dir_fn(i - count_nar))
+            objFile.clear()
+            structure_group, location = place_on_line(
+                c.line_origin, 
+                c.line_destination, 
+                c.line_dimension,
+                c.car_distances, 
+                car_structure, 
+                antenna, 
+                c.antenna_origin)
+    
+        
 
     count_nar = 0 # Number of Runs without cars with antenna while mobile
     for i in c.n_run:
-
         run_dir = os.path.join(c.results_dir, c.base_run_dir_fn(i - count_nar))
-        #Ray-tracing output folder (where InSite will store the results (Study Area name)).
-        #They will be later copied to the corresponding output folder specified by results_dir
-        project_output_dir = os.path.join(run_dir, c.insite_study_area_name) #output InSite folder
 
-        #Disabled below because the paths will be created later on by shutil.copytree
-        #and shutil.copytree does not support folders that already exist
-        #if not os.path.exists(run_dir):
-        #os.makedirs(run_dir)
-
-        objFile.clear()
-
-        #if it's the beginning of the episode, the code searches for a minimium number of cars. After the
-        #episode starts, then it does not do that. But it does not simulate scenarios without vehicles
         if c.use_sumo:
             # when to start a new episode
             if scene_i is None or scene_i >= c.time_of_episode:
@@ -309,23 +301,15 @@ def main(c):
                     scene_i = np.Infinity #update scene counter
                     continue
 
+        # Parsing =====================================================================================
+        # Toda run limpa o objfile
+        objFile.clear()
 
-        else: #in case we should not use SUMO to position vehicles, then get a fixed position
-            structure_group, location = place_on_line(
-                c.line_origin, 
-                c.line_destination, 
-                c.line_dimension,
-                c.car_distances, 
-                car_structure, 
-                antenna, 
-                c.antenna_origin)
-
-        #Prepare the files for the input folder, where InSite will find them to execute the simulation
-        #(obs: now InSite is writing directly to the output folder)
+        # if use wireless insite copy base ============================================================
         shutil.copytree(c.base_insite_project_path, run_dir)
         print('Copied',c.base_insite_project_path,'into',run_dir)
 
-        #Writing to the final run folder
+        # writes at a run
         objFile.add_structure_groups(structure_group)
         dst_object_full_path = os.path.join(run_dir, c.dst_object_file_name)
         objFile.write(dst_object_full_path)
@@ -341,7 +325,7 @@ def main(c):
         xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
         xml_full_path=xml_full_path.replace(' ', '\ ')
 
-        if not c.use_fixed_receivers: #Marcus' workaround
+        if not c.use_fixed_receivers:
             x3d_xml_file.add_vertice_list(location, c.dst_x3d_txrx_xpath)
             if c.use_V2V:
                 x3d_xml_file.add_vertice_list(location_Tx, c.dst_x3d_txrx_xpath_to_tx)
@@ -369,7 +353,14 @@ def main(c):
 
         #save SUMO information for this scene as text CSV file
         sumoOutputInfoFileName = os.path.join(run_dir,'sumoOutputInfoFileName.txt')
-        writeSUMOInfoIntoFile(sumoOutputInfoFileName, episode_i, scene_i, c.lane_boundary_dict, cars_with_antenna, cars_with_Tx, c.use_fixed_receivers, c.use_pedestrians)
+        writeSUMOInfoIntoFile(
+            sumoOutputInfoFileName, 
+            episode_i, scene_i, 
+            c.lane_boundary_dict, 
+            cars_with_antenna, 
+            cars_with_Tx, 
+            c.use_fixed_receivers, 
+            c.use_pedestrians)
 
         scene_i += 1 #update scene counter
     traci.close()
