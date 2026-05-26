@@ -62,7 +62,7 @@ ray_tracing:
     enabled: false
     close_vehicles: true
     n_of_vehicles: 7
-    chose_vehcile: false
+    chose_vehicle: false
     chosen_vehicle: Truck
   wireless_insite:
     software_path: /home/fritz/data/Softwares/Wireless_Insite/remcom

@@ -20,7 +20,7 @@ from src.modules.postprocessing import (
 
 def dict_to_namespace(obj):
     """
-    Converts dictionaries loaded from YAML into objects with dot access.nto.
+    Converts a dictionary to a SimpleNamespace, allowing access to keys as attributes.
     """
     if isinstance(obj, dict):
         return SimpleNamespace(**{
@@ -32,28 +32,74 @@ def dict_to_namespace(obj):
     else:
         return obj
 
+
+def load_yaml(path):
+    """
+    Loads a YAML file and returns its content as a dictionary.
+    """
+    path = Path(path)
+
+    if not path.exists():
+        return {}
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    return data or {}
+
+
+def deep_merge(default_dict, user_dict):
+    """
+    Does a deep merge between the default configuration dictionary and the user configuration dictionary.
+
+    Rules:
+    - if the key exists in the user dictionary, use the value from the user dictionary;
+    - if the key does not exist in the user dictionary, keep the value from the default dictionary;
+    - if both values are dictionaries, perform an internal merge.    
+
+    """
+    result = default_dict.copy()
+
+    for key, user_value in user_dict.items():
+        default_value = result.get(key)
+
+        if isinstance(default_value, dict) and isinstance(user_value, dict):
+            result[key] = deep_merge(default_value, user_value)
+        else:
+            result[key] = user_value
+
+    return result
+
 def load_config():
     """
-    Loads the configuration from a YAML file (config.yaml or config.yml) and returns it as an object with access por ponto.
+    Loads default.yaml and config.yaml.
+
+    The default.yaml contains all possible variables.
+    The config.yaml contains only the variables chosen by the user.
     """
-    config_path = Path("config.yaml")
 
-    if not config_path.exists():
-        config_path = Path("config.yml")
+    default_path = Path("src/configs/default.yaml")
 
-    if not config_path.exists():
+    user_path = Path("config.yaml")
+    if not user_path.exists():
+        user_path = Path("config.yml")
+
+    if not default_path.exists():
         raise FileNotFoundError(
-            "File not found. "
-            "Please create a config.yaml or config.yml file in the execution directory."
+            "File default.yaml not found in src/configs/default.yaml"
         )
 
-    with open(config_path, "r", encoding="utf-8") as f:
-        cfg_dict = yaml.safe_load(f)
+    if not user_path.exists():
+        raise FileNotFoundError(
+            "File config.yaml or config.yml not found in the project root."
+        )
 
-    if cfg_dict is None:
-        raise ValueError(f"The file {config_path} is empty or invalid.")
+    default_cfg = load_yaml(default_path)
+    user_cfg = load_yaml(user_path)
 
-    return dict_to_namespace(cfg_dict)
+    merged_cfg = deep_merge(default_cfg, user_cfg)
+
+    return dict_to_namespace(merged_cfg)
 
 def get_lat_long(base_insite_project_path):
     """
@@ -103,6 +149,7 @@ def base_run_dir_fn(i):
 class parameters:
     def __init__(self):
         self.cfg = load_config()
+
         self.base_config = self.cfg.base_config
         self.pipeline = self.cfg.pipeline
         self.rmt = self.cfg.rmt
@@ -112,7 +159,6 @@ class parameters:
         self.post_processing = self.cfg.post_processing
 
         self.setparameters()
-        #TODO Do the replace of the user yaml variables in the yaml default
 
     def setparameters(self):
 
@@ -253,7 +299,7 @@ class parameters:
             self.n_antenna_per_episode = self.ray_tracing.receivers_per_episode
             self.close_vehicles = self.ray_tracing.v2v.close_vehicles
             self.n_of_vehicles = self.ray_tracing.v2v.n_of_vehicles
-            if self.ray_tracing.v2v.chosen_vehicle:
+            if self.ray_tracing.v2v.chose_vehicle:
                 self.chosen_vehicle = self.ray_tracing.v2v.chosen_vehicle
 
         self.import_precoding = self.post_processing.mimo.import_precoding

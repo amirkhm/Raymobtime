@@ -1,117 +1,96 @@
-seed: null
-simulation_name: dafault
+base_config:
+  scenario: null
+  output_name: null
+  resume: null
+  clean_previous: null
 
-features:
-  use_fixed_receivers: null
-  use_pedestrians: null
-  use_vehicles_template: null
-  drone_simulation: null
-  mimo_orientation: null
-  use_V2V: null
-  isolated_simulation: null
+pipeline:
+  mobility:
+    enabled: null
+    tool: null
+    placement_limits:
+      enabled: null
+      max_lim: null
+      min_lim: null
 
-simulation_parameters:
-  n_init_run: null
-  n_end_run: null
-  sampling_interval: null
-  n_scenes_of_each_episode: null
+  ray_tracing:
+    enabled: null
+    tool: null
+    jump: null
+
+  post_processing:
+    enabled: null
+    which: null
+    outputs: null
+
+  blensor:
+    enabled: null
+    outputs: null
+
+  validation:
+    run_checkup: null
+
+rmt:
+  enabled: null
+  sampling_parameters: null
+  scenes_per_episode: null
   time_between_episodes: null
-  n_antenna_per_episode: null
-  n_Tx_per_episode: null
+  features:
+    use_fixed_receivers: null
+    use_vehicles_template: null
 
-simulation_paths:
-  base_insite_path: null
-  results_dir_path: null
+sumo:
+  bin: null
+  cfg: null
+  seed: null
 
-sumo_files:
-  sumo_bin: null
-  sumo_cfg: null
-
-insite_paths:
-  insite_software_path: null
-  REMCOMINC_LICENSE_FILE: null
-
-area_limits:
-  enabled: false
-  max_lim: [null, null]
-  min_lim: [null, null]
-  end_ep_for_no_veh: null
-
-data_handler:
-  area_of_analyses:
-    enabled: false
-    coordinates_limits: [null , null, null, null]
-
-  antenna_arr:
-    import_precoding: null
-    import_hmatrix: null
-    import_combining: null
-
-    expansion:
-      Tx_x: null
-      Tx_y: null
-      Rx_x: null
-      Rx_y: null
-
-    rotation:
-      Tx_alpha: null
-      Tx_beta: null
-      Tx_gamma: null
-      Rx_alpha: null
-      Rx_beta: null
-      Rx_gamma: null
-
-    normalized_antenna_distance: null
-
-  cartesian_lidar_matrix:
-    coordinate_system: null
-
-    QP:
-      Xp: null
-      Yp: null
-      Zp: null
-      Xmax: null
-      Ymax: null
-      Zmax: null
-      Xmin: null
-      Ymin: null
-      Zmin: null
-
-    QPsph:
-      Xp: null
-      Yp: null
-      Zp: null
-      Xmax: null
-      Ymax: null
-      Zmax: null
-      Xmin: null
-      Ymin: null
-      Zmin: null
-
-    Tx_position: [null, null, null]
-
-    max_dist_LIDAR: null
-    type_data: null
-
-v2v_options:
-  close_vehicles: null
-  n_of_vehicles: null
-  chose_vehcile: null
-  chosen_vehicle: null
-
-base_files_names:
-  insite_study_area_name: null
-  insite_tx_name: null
-  insite_rx_name: null
-  insite_setup_name: null
-  insite_vehicles_name: null
+ray_tracing:
+  use_pedestrians: null
+  use_drone: null
+  receivers_per_episode: null
+  transmitters_per_episode: null
+  v2v:
+    enable: null
+    close_vehicles: null
+    n_of_vehicles: null
+    chose_vehicle: null
+    chosen_vehicle: null
+  wireless_insite:
+    software_paths: null
+    LICENSE_FILE: null
+    base_files_names:
+      study_area_name: null
+      tx_name: null
+      rx_name: null
+      setup_name: null
+      vehicles_name: null
 
 blensor_options:
-  path_to_scenario: null
-  path_to_vehicles: null
-  blensor_img_path: null
-
-  img_simulation_options:
+  path_to_scenario_blend: null
+  path_blensor_image: null
+  path_to_vehicles_blend: null
+  image_options:
     BS_camera: null
     UE_camera: null
     n_camera_BS: null
+
+post_processing:
+  area_of_analyses:
+    enabled: null
+    limits: null
+
+  cartesian_lidar_matrix:
+    coordinate_system: null
+    QP: null
+    QPsph: null
+    Tx_position: null
+    max_dist_LIDAR: null
+    type_data: null
+
+  mimo:
+    import_precoding: null
+    import_channels: null
+    import_combining: null
+    antenna_array_expansion:
+      normalized_antenna_distance: null
+    array_rotation: null
