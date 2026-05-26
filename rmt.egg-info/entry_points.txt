@@ -1,2 +1,0 @@
-[console_scripts]
-raymobtime = src.scripts.config:raymobtime
