@@ -12,15 +12,6 @@ def obstruction_flag(c):
     main_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
     if not os.path.exists(main_folder):
         raise FileNotFoundError(f"ERROR: folder {main_folder} not found")
-    
-    # csv_path = os.path.join(main_folder, 'CoordVehicleTxRx.csv')
-    # if not os.path.exists(csv_path):
-    #     raise FileNotFoundError(f"ERROR: csv file {csv_path} not found")
-    # df = csv_to_df(csv_path, c.n_run)
-    
-    # refined_img_path = os.path.join(main_folder, 'refined_images')
-    # if not os.path.exists(refined_img_path):
-    #     os.makedirs(refined_img_path)
 
     database_path = os.path.join(main_folder, f'{c.sim_name}.db')
     session = fgdb.open_database(database_path)
@@ -29,7 +20,7 @@ def obstruction_flag(c):
     # Check for camera info
     cam_info_path = os.path.join(main_folder, 'blend_info', 'cam_info.json')
     if not os.path.exists(cam_info_path):
-        export_cam_info() # Export and generate the json file
+        export_cam_info(c) # Export and generate the json file
     with open(cam_info_path, 'r') as file:
         cam_info = json.load(file)
     cams = gen_K(cam_info)

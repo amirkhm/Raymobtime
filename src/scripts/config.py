@@ -500,7 +500,7 @@ def raymobtime():
 
     # Simulation using blensor for image/lidar database
     if (c.blensor.enabled):
-        blensor_simulation(c.blensor.outputs)
+        blensor_simulation(c)
         
     # Saving the blensor simulation from pcd files to matrix type data
     CoordSystem = c.CoordSystem

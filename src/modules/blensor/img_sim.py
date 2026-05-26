@@ -30,10 +30,6 @@ def main():
 
     if not os.path.exists(folder_img_dataset):
         os.makedirs(folder_img_dataset)
-    # folder_scanned_name = args[args.index('--simulation')+1]
-    # vehicles_blend_path = args[args.index('--veh_path')+1]
-    # start_run = int(args[args.index('--from_run')+1])
-    # end_run = int(args[args.index('--to')+1])
 
     current_scn = 0
     current_ep = 0
@@ -73,7 +69,6 @@ def main():
     endAnimation(frame_num)
     time_elapsed = datetime.now() - startTime
     print("Total time elapsed: " + str(time_elapsed))
-    #bpy.ops.wm.quit_blender()
 
 def getPhoto360(file_path,current_ep,current_scn,run):
     bpy.context.scene.render.resolution_x = 2000
@@ -116,20 +111,17 @@ def get4Photos(file_path,dataset_path,current_ep,current_scn,run):
         for row in reader:
             if current_scn == int(row['SceneID']) and current_ep == int(row['EpisodeID']) and row['Val'] == 'V':
                 scan_vehicles.append(row['VehicleName'])    
-    # print(scan_vehicles)
+ 
     camera_name = ['front']
     for vehicle in scan_vehicles:
-        # print(vehicle)
         angle = 0
         veh = D.objects[vehicle]
         cam.location = (0,0,0)
-        #cam.parent = D.objects[vehicle]
         cam.location = veh.location
         cam.location[2] = veh.dimensions[2] + 3
         cam.rotation_euler = (radians(90), 0, veh.rotation_euler[2])
         while angle < 4:
             D.scenes['Scene'].render.filepath = os.path.join(dataset_path, 'UE', f'run{run}', f'Camera_{vehicle}', f'{angle}')
-            # D.scenes['Scene'].render.filepath = f'{dataset_path}/imgs/'+str(run)+'/'+'Camera_'+vehicle+'/'+str(angle)
             bpy.ops.render.render(write_still=True)
             cam.rotation_euler[2] += radians(90)
             angle+=1
@@ -166,7 +158,6 @@ def getInfoPath(path_info_file, Rx_number = 0):
                         RaysOver = True
                 tmp = line.split('-')
                 npoints = len(tmp)
-                #ray_number = '%05d' % count
                 pathInfoList[count]  = []
                 raysInfoLine = previousLine
                 RayInfo = int(raysInfoLine.split(' ')[0])
@@ -197,7 +188,6 @@ def getInfoVehicles(sumo_info_file):
     #first rotate and then translate
     with open(sumo_info_file) as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',', quotechar='`')
-        #line = 0
         vPosition = {}
         for row in reader:
             row['isRx'] = False

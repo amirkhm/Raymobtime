@@ -128,7 +128,7 @@ def image_refinement(c):
     # Check for camera info
     cam_info_path = os.path.join(main_folder, 'blend_info', 'cam_info.json')
     if not os.path.exists(cam_info_path):
-        export_cam_info() # Export and generate the json file
+        export_cam_info(c) # Export and generate the json file
     with open(cam_info_path, 'r') as file:
         cam_info = json.load(file)
     cam_info = gen_K(cam_info)

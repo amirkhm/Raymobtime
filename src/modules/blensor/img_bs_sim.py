@@ -11,6 +11,7 @@ from mathutils import *
 from math import *
 from datetime import datetime
 from zipfile import ZipFile
+
 def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
     """returns the `run_dir` for run `i`"""
     return "run{:05d}".format(i)
@@ -35,11 +36,9 @@ def main():
     usePed = False
 
     c = 0
-    #for key,scene_path in scenes_path.items():
     frame_num = 0
     frame_step = 1
     run = start_run
-    # cameras = ['Local1','Local2','Local3']
     camera_n = cfg['blensor_options']['img_simulation_options']['n_camera_BS']
     cameras = []
     for i in range(camera_n):
@@ -64,8 +63,6 @@ def main():
             Position = dict(vPosition, **vPedPosition)
         else:
             Position = vPosition
-        # vectorsPath= getInfoPath(path_info_file)
-        # nVectorsPath = classifyRays(vectorsPath, 1)
         animateVehiclesBlender(Position, vehicles_blend_path)
         for cam in cameras:
             take_image(cam, folder_img_dataset, run)
@@ -73,17 +70,13 @@ def main():
             if obj.name.startswith('flow') or obj.name.startswith('_flow'):
                 obj.select = True
                 bpy.ops.object.delete()
-        #buildVehiclesBlender(vPosition)
-        # if useRays:
-        #     rayAnimation(nVectorsPath,frame_num,frame_step)
-        #     endRayAnimation(frame_num,frame_step)
         run += 1
         frame_num += frame_step
 
     endAnimation(frame_num)
     time_elapsed = datetime.now() - startTime
     print("Total time elapsed: " + str(time_elapsed))
-    #bpy.ops.wm.quit_blender()
+
 def take_image(camera, output_folder_name, run):
     scene = C.scene
     try:
@@ -91,7 +84,6 @@ def take_image(camera, output_folder_name, run):
     except:
         raise NameError(f"\n\nERROR: object camera '{camera}' not found, try following the naming pattern CameraN in blender scenario")
     scene.camera = cam
-    # scene.render.filepath = "C:/Users/Celcom/Desktop/Walter/h/"+camera+'/'+str(run)
     scene.render.filepath = os.path.join(output_folder_name, 'BS', f'run{run}', f'{camera}')
     bpy.ops.render.render(write_still = True)
     
@@ -118,17 +110,6 @@ def classifyRays(pathInfoList,  numCl=2):
 
     return cleanPathInfo
 
-    # Classify/Clean part
-    # For each Rx only a certain number of Rays.
-    #for rays in pathInfoList.items():
-    #    if (typeCl == 'Best'):
-    #
-    #    elif (typeCl == 'Worst')
-
-
-    #print(raysCl)
-    #exit(1)
-    #return raysCl
 
 def getInfoPath(path_info_file):
     with open(path_info_file) as pathfile:
@@ -260,8 +241,6 @@ def endRayAnimation(frame_num, frame_step):
     for x in range(0, len(bpy.context.scene.objects)):
         obj_name = bpy.context.scene.objects[x].name
         if obj_name.startswith(str(frame_num)): # Add to list
-            #objects_in_scene.append(obj_name)
-            #bpy.data.objects[obj_name].select = True
             bpy.data.objects[obj_name].hide_render = True
             bpy.data.objects[obj_name].hide = True
             bpy.data.objects[obj_name].keyframe_insert(data_path="hide_render", index=-1)
@@ -272,8 +251,6 @@ def endAnimation(frame_num):
     for x in range(0, len(bpy.context.scene.objects)):
         obj_name = bpy.context.scene.objects[x].name
         if obj_name.startswith('flow'): # Add to list
-            #objects_in_scene.append(obj_name)
-            #bpy.data.objects[obj_name].select = True
             bpy.data.objects[obj_name].hide_render = True
             bpy.data.objects[obj_name].hide = True
             bpy.data.objects[obj_name].keyframe_insert(data_path="hide_render", index=-1)
@@ -284,50 +261,34 @@ def endAnimation(frame_num):
 # se existia e n existe mais retirar
 def animateVehiclesBlender(vPosition, vehicles_blend_path):
     bpy.context.scene.frame_set(0)
-    #print(frame_num)
-    # deselect all
-    #bpy.ops.object.select_all(action='DESELECT')
+
     # Pre processamento dos que estao na cena
     objects_in_scene = []
     for x in range(0, len(bpy.context.scene.objects)):
         obj_name = bpy.context.scene.objects[x].name
         if obj_name.startswith('flow') or obj_name.startswith('dflow') or obj_name.startswith('ped'): # Add to list
-            #objects_in_scene.append(obj_name)
-            #if not obj_name in vPosition:
+
             if not obj_name in vPosition:
-                #print("Hiding",obj_name,"in Frame number:",frame_num)
-                #bpy.data.objects[obj_name].select = True
                 bpy.data.objects[obj_name].hide_render = True
                 bpy.data.objects[obj_name].hide = True
                 bpy.data.objects[obj_name].keyframe_insert(data_path="hide_render", index=-1)
                 bpy.data.objects[obj_name].keyframe_insert(data_path="hide", index=-1)
                 bpy.data.objects[obj_name].name = '_'+bpy.data.objects[obj_name].name
-    #bpy.ops.object.delete()
-    #mat = bpy.data.materials.new("PKHG")
-    #mat.diffuse_color = (1,0,0)
-    #mat2 = bpy.data.materials.new("PKHG")
-    #mat2.diffuse_color = (1.0,1.0,0)
-    #mat3 = bpy.data.materials.new("PKHG")
-    #mat3.diffuse_color = (0,1.0,0.082)
-    #mat4 = bpy.data.materials.new("PKHG")
-    #mat4.diffuse_color = (1.01,0,0.1)
+
     for vehicles in vPosition.items():
         if bpy.data.objects.get(vehicles[0]) is not None: # Existe, code to move
-            #print("found object")
+
             veh = bpy.data.objects[vehicles[0]]
         else:
             if (float(vehicles[1]['height']) == 1.59): # Car
                 bpy.ops.wm.append(directory=vehicles_blend_path.replace('/','//') + "/Object/", filepath="vehicles.blend", filename="Car")
                 veh = bpy.data.objects["Car"]
-                #veh.active_material = mat
             elif (float(vehicles[1]['height']) == 3.2): # Bus
                 bpy.ops.wm.append(directory=vehicles_blend_path.replace('/','//') + "/Object/", filepath="vehicles.blend", filename="Bus")
                 veh = bpy.data.objects["Bus"]
-                #veh.active_material = mat2
             elif (float(vehicles[1]['height']) == 4.3): # Truck
                 bpy.ops.wm.append(directory= vehicles_blend_path.replace('/','//') + "/Object/", filepath="vehicles.blend", filename="Truck")
                 veh = bpy.data.objects["Truck"]
-                #veh.active_material = mat3
             elif (float(vehicles[1]['height']) == 0.295): # Drone
                 bpy.ops.wm.append(directory= vehicles_blend_path.replace('/','//') + "/Object/", filepath="vehicles.blend", filename="Drone")
                 veh = bpy.data.objects["Drone"]
