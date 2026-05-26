@@ -1,16 +1,10 @@
-'''
-This code executes Sumo and InSite repeatedly.
-'''
-
 import os
-import platform
 import shutil
 import numpy as np
 import logging
 import json
-import csv
 import traci
-import src.scripts.config as c
+from src.modules.rt.wi.modeling import  X3dXmlFile3_3
 from src.modules.rt.wi.modeling import (
     insite, 
     X3dXmlFile, 
@@ -21,17 +15,13 @@ from src.modules.rt.wi.simulation.placement import (
     place_by_sumo)
 from src.modules.rt.wi.simulation.tools import *
 
-if c.insite_version == '3.3':
-    from src.modules.rt.wi.modeling import  X3dXmlFile3_3
-
 def onlyDronesList(idList):
     for v_id, veh in enumerate(idList[:]):
         if not veh.startswith('dflow'):
             idList.remove(veh)
     return idList
 
-
-def main(args):
+def wireless_insite_simulation(c):
     if c.use_fixed_receivers and c.n_antenna_per_episode != 0:
         # At fixed receivers, position set on WI is maintained, 
         # that manner it should not change here, default zero.
@@ -42,57 +32,54 @@ def main(args):
         logging.error('flags isolated_sim=True and use_vehicles_template=True are not compatible')
         raise Exception()
 
-    insite_project = insite.InSiteProject(project_name='model', 
-                                          calcprop_bin=c.calcprop_bin,
-                                          wibatch_bin=c.wibatch_bin)
+    insite_project = insite.InSiteProject(
+        project_name='model', 
+        calcprop_bin=c.calcprop_bin,
+        wibatch_bin=c.wibatch_bin)
 
     logging.info('Simulation started')
-    #* Wireless insite ========================================================
-    if args.ray_tracing_only:
-        logging.debug('Simulation of ray-tracing will start. It is assumed all files have been placed')
 
-        if c.isolated_sim:
-            run_dir = os.path.join(c.isolated_results_dir)
+    logging.debug('Simulation of ray-tracing will start. It is assumed all files have been placed')
+
+    if c.isolated_sim:
+        run_dir = os.path.join(c.isolated_results_dir)
+        #Ray-tracing output folder (where InSite will store the results (Study Area name)).
+        #They will be later copied to the corresponding output folder specified by results_dir
+        project_output_dir = os.path.join(run_dir, c.insite_study_area_name) #output InSite folder
+
+        p2mpaths_file = os.path.join(project_output_dir, c.insite_setup_name + '.paths.t001_01.r002.p2m')
+        if not os.path.exists(p2mpaths_file) or c.remove_results_dir:
+            xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
+            xml_full_path=xml_full_path.replace(' ', '\ ')
+            insite_project.run_x3d(xml_full_path, project_output_dir)
+        else: 
+            raise Exception(f'{p2mpaths_file} already exists')
+        return
+    else:
+        for i in c.n_run:
+            run_dir = os.path.join(c.results_dir, c.base_run_dir_fn(i))
             #Ray-tracing output folder (where InSite will store the results (Study Area name)).
             #They will be later copied to the corresponding output folder specified by results_dir
             project_output_dir = os.path.join(run_dir, c.insite_study_area_name) #output InSite folder
 
             p2mpaths_file = os.path.join(project_output_dir, c.insite_setup_name + '.paths.t001_01.r002.p2m')
-            if not os.path.exists(p2mpaths_file) or args.remove_results_dir:
+            if not os.path.exists(p2mpaths_file) or c.remove_results_dir:
                 xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
                 xml_full_path=xml_full_path.replace(' ', '\ ')
                 insite_project.run_x3d(xml_full_path, project_output_dir)
+            elif os.path.exists(p2mpaths_file) and c.jump:
+                continue
             else: 
                 raise Exception(f'{p2mpaths_file} already exists')
-        else:
-            for i in c.n_run:
-                run_dir = os.path.join(c.results_dir, c.base_run_dir_fn(i))
-                #Ray-tracing output folder (where InSite will store the results (Study Area name)).
-                #They will be later copied to the corresponding output folder specified by results_dir
-                project_output_dir = os.path.join(run_dir, c.insite_study_area_name) #output InSite folder
+            
+    logging.info('Finished running ray-tracing')
 
-                p2mpaths_file = os.path.join(project_output_dir, c.insite_setup_name + '.paths.t001_01.r002.p2m')
-                if not os.path.exists(p2mpaths_file) or args.remove_results_dir:
-                    xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
-                    xml_full_path=xml_full_path.replace(' ', '\ ')
-                    insite_project.run_x3d(xml_full_path, project_output_dir)
-                elif os.path.exists(p2mpaths_file) and args.jump:
-                    continue
-                else: 
-                    raise Exception(f'{p2mpaths_file} already exists')
-                
-        logging.info('Finished running ray-tracing')
-        exit(1)
-    #* End Wireless insite ====================================================
-    #set seed for numpy
-    if c.use_sumo:
-        np.random.seed(c.seed)
-
+def copytree_base_files(c):
     #copy files from initial (source folder) to results base folder
     try:
         shutil.copytree(c.base_insite_project_path, c.results_base_model_dir, )
     except FileExistsError:
-        if args.remove_results_dir:
+        if c.remove_results_dir:
             shutil.rmtree(c.results_dir)
             print('Removed folder',c.results_dir)
             shutil.copytree(c.base_insite_project_path, c.results_base_model_dir, )
@@ -101,9 +88,15 @@ def main(args):
             raise FileExistsError
     print('Copied folder ',c.base_insite_project_path,'into',c.results_base_model_dir)
 
-    if c.isolated_sim:
-        exit(-1) 
-        
+def main(c):
+
+    if c.ray_tracing_only:
+        wireless_insite_simulation(c)
+        return
+    
+    copytree_base_files(c)
+    
+    #* Open files for parsing ============================================================
     #open InSite files that are used as the base to create each new scene / simulation
     with open(c.base_object_file_name) as infile:
         objFile = objects.ObjectFile.from_file(infile)
@@ -116,26 +109,27 @@ def main(args):
     else:
         x3d_xml_file = X3dXmlFile(c.base_x3d_xml_path)
     print('Opened file with InSite XML:', c.base_x3d_xml_path)
+    #* End Open files for parsing ============================================================
 
-    #AK-TODO document and comment the methods below.
+    #* Create car structure for placement ====================================================
     car = objects.RectangularPrism(*c.car_dimensions, material=c.car_material_id)
-    car_structure = objects.Structure(name=c.car_structure_name) #AK-TODO what is the role of c.car_structure_name ?
+    car_structure = objects.Structure(name=c.car_structure_name)
     car_structure.add_sub_structures(car)
     car_structure.dimensions = car.dimensions
+    #* End Create car structure for placement ================================================
 
     antenna = txrxFile[c.antenna_points_name].location_list[0]
 
     if c.use_sumo:
+        np.random.seed(c.seed)
         print('Starting SUMO Traci')
         traci.start(c.sumo_cmd)
 
     scene_i = None
     episode_i = None
 
-    # Trick to start simulations from a given run as it was started from 0
-    if c.n_run[0] != 0:
-        tmp_var = 0
-        while (tmp_var < int(c.n_run[0])):
+    if c.n_run[0] > 0:
+        for tmp_var in range(int(c.n_run[0])):
             if c.use_sumo:
                 # when to start a new episode
                 if scene_i is None or scene_i >= c.time_of_episode:
@@ -164,7 +158,6 @@ def main(args):
                 else:
                     traci.simulationStep()
                 scene_i += 1 #update scene counter
-            tmp_var += 1
             print('Jump until the step '+ str(c.n_run[0]) + ': '+ str(int((tmp_var/c.n_run[0])* 100))+ '%')
 
     count_nar = 0 # Number of Runs without cars with antenna while mobile
@@ -295,8 +288,8 @@ def main(args):
                 logging.warning("No vehicles in scene " + str(scene_i) + " time " + str(traci.simulation.getCurrentTime()))
                 os.makedirs(run_dir + '_novehicles') #create an empty folder to "indicate" the situation
                 #save SUMO information for this scene as text CSV file
-                #sumoOutputInfoFileName = os.path.join(run_dir,'sumoOutputInfoFileName_novehicles.txt')
-                #writeSUMOInfoIntoFile(sumoOutputInfoFileName, episode_i, scene_i, c.lane_boundary_dict, cars_with_antenna)
+                sumoOutputInfoFileName = os.path.join(run_dir,'sumoOutputInfoFileName_novehicles.txt')
+                writeSUMOInfoIntoFile(sumoOutputInfoFileName, episode_i, scene_i, c.lane_boundary_dict, cars_with_antenna)
                 scene_i += 1 #update scene counter
                 continue
             #check if there are cars with antennas in this episode (all have left)
@@ -343,52 +336,30 @@ def main(args):
         xml_full_path=xml_full_path.replace(' ', '\ ')
 
         if not c.use_fixed_receivers: #Marcus' workaround
-            if args.mimo_only: #Ailton workaround
-                x3d_xml_file.add_vertice_list(location, c.dst_x3d_txrx_xpath)
-                x3d_xml_file.write(xml_full_path)
+            x3d_xml_file.add_vertice_list(location, c.dst_x3d_txrx_xpath)
+            if c.use_V2V:
+                x3d_xml_file.add_vertice_list(location_Tx, c.dst_x3d_txrx_xpath_to_tx)
+            x3d_xml_file.write(xml_full_path)
 
-                txrxFile[c.antenna_points_name].location_list[0] = location
-                # txrx modified in the RWI project
-                dst_txrx_full_path = os.path.join(run_dir, c.dst_txrx_file_name)
-                txrxFile.write(dst_txrx_full_path)
-            else:
-                x3d_xml_file.add_vertice_list(location, c.dst_x3d_txrx_xpath)
-                if c.use_V2V:
-                    x3d_xml_file.add_vertice_list(location_Tx, c.dst_x3d_txrx_xpath_to_tx)
-                x3d_xml_file.write(xml_full_path)
-
-                # add vertices from receivers to the txrx file
-                txrxFile[c.antenna_points_name].location_list[0] = location
-                if c.use_V2V:
-                    txrxFile[c.insite_tx_name].location_list[0] = location_Tx # add vertices from transmitters to the txrx file
-                # txrx modified in the RWI project
-                dst_txrx_full_path = os.path.join(run_dir, c.dst_txrx_file_name)
-                txrxFile.write(dst_txrx_full_path)
-
-        #check if we should run ray-tracing
-        if not args.place_only:
-            if args.run_calcprop:
-                #AK-TODO: Need to fix run_calcprop in insite.py: should not copy unless necessary (need to check)
-                insite_project.run_calcprop(output_dir=project_output_dir, delete_temp=True)
-            else:
-                insite_project.run_x3d(xml_full_path, project_output_dir)
+            # add vertices from receivers to the txrx file
+            txrxFile[c.antenna_points_name].location_list[0] = location
+            if c.use_V2V:
+                txrxFile[c.insite_tx_name].location_list[0] = location_Tx # add vertices from transmitters to the txrx file
+            # txrx modified in the RWI project
+            dst_txrx_full_path = os.path.join(run_dir, c.dst_txrx_file_name)
+            txrxFile.write(dst_txrx_full_path)
 
         with open(os.path.join(run_dir, c.simulation_info_file_name), 'w') as infofile:
-            #if c.use_fixed_receivers:  #AK-TODO take in account fixed receivers
-            #    listToBeSaved = list('only_fixed_receivers')
-            #else:
             if c.use_V2V:
                 info_dict = dict(
                     cars_with_antenna=list(cars_with_antenna),
                     cars_with_Tx=list(cars_with_Tx),
-                    scene_i=scene_i,
-                )
+                    scene_i=scene_i)
             else:
                 info_dict = dict(
-                        cars_with_antenna=list(cars_with_antenna),
-                        scene_i=scene_i,
-                )
-            json.dump(info_dict, infofile) #write JSON infofile
+                    cars_with_antenna=list(cars_with_antenna),
+                    scene_i=scene_i)
+            json.dump(info_dict, infofile)
 
         #save SUMO information for this scene as text CSV file
         sumoOutputInfoFileName = os.path.join(run_dir,'sumoOutputInfoFileName.txt')

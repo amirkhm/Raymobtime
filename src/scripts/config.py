@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # simulators
 from src.modules.blensor.blensor_src import blensor_simulation
-from src.modules.rt.wi.simulation.simulation import main
+from src.modules.rt.wi.simulation.simulation import main as simulation_main
 from src.modules.postprocessing import (
     gen_database,
     gen_csv_file, 
@@ -160,8 +160,6 @@ class parameters:
         self.setparameters()
 
     def setparameters(self):
-
-
         self.working_directory = os.path.dirname(os.path.realpath(__file__))
 
         self.use_fixed_receivers = self.rmt.features.use_fixed_receivers
@@ -172,34 +170,43 @@ class parameters:
         self.drone_simulation = self.ray_tracing.use_drone
         self.use_V2V = self.ray_tracing.v2v.enable
         
-        self.base_insite_project_path = os.path.join(self.working_directory,
-                    "data",                                
-                    self.base_config.scenario,
-                    "wi" #It's possible differents base InSite projects, add in yaml
+        self.base_insite_project_path = os.path.join(
+            self.working_directory,
+            "data",                                
+            self.base_config.scenario,
+            "wi" #It's possible differents base InSite projects, add in yaml
         ) 
 
-            # Folder to store each InSite project and its results
-            # Will create subfolders for each "run", run0000, run0001, etc.
-        self.results_dir = os.path.join(self.working_directory,
+        # Folder to store each InSite project and its results
+        # Will create subfolders for each "run", run0000, run0001, etc.
+        self.results_dir = os.path.join(
+            self.working_directory,
             'data',
             self.base_config.scenario,
+            'out',
             self.base_config.output_name,
-            'out/runs'
-        )
+            'rt_simulations')
+        
+        self.results_dir_postprocessed = os.path.join(
+            self.working_directory,
+            'data',
+            self.base_config.scenario,
+            'out',
+            self.base_config.output_name,
+            'processed_data')
 
         self.resume = self.base_config.resume
         self.clean_previous = self.base_config.clean_previous 
         
         self.isolated_results_dir = os.path.join(
             self.results_dir,
-            self.base_config.scenario
-        )
+            self.base_config.scenario)
 
-            # Folders and files for InSite and its license.
-            # For Windows you may simply inform the path to the executable files,
-            # not minding about the license file location.
-            # Folders for SUMO and InSite.
-            # Use executable sumo-gui if want to see the GUI or sumo otherwise.
+        # Folders and files for InSite and its license.
+        # For Windows you may simply inform the path to the executable files,
+        # not minding about the license file location.
+        # Folders for SUMO and InSite.
+        # Use executable sumo-gui if want to see the GUI or sumo otherwise.
         self.insite_version = get_insite_version(self.base_insite_project_path)
 
         # InSite env variable
@@ -210,12 +217,9 @@ class parameters:
                 self.locale
                 + '{} '.format(self.ray_racing.wireless_insite.software_paths.LICENSE_FILE)
                 + 'LD_LIBRARY_PATH={}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ '.format(
-                    self.ray_racing.wireless_insite.software_paths
-                )
+                    self.ray_racing.wireless_insite.software_paths)
                 + '{}/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/wibatch'.format(
-                    self.ray_racing.wireless_insite.software_paths
-                )
-            )
+                    self.ray_racing.wireless_insite.software_paths))
 
         elif self.insite_version == '3.2':
             self.wibatch_bin = (
@@ -225,24 +229,18 @@ class parameters:
                 + f"{self.ray_racing.wireless_insite.software_paths}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch")
 
         if not self.isolated_sim:
-            ### HERE STARTS CONFIGURATION ###
-            ### NOTE: ONLY CHANGE IF YOU KNOW WHAT YOU ARE DOING
-
-            # SUMO configuration file
             self.sumo_bin = self.sumo.bin
             self.sumo_cfg = os.path.join(
                 self.working_directory,
                 'data',
                 self.base_config.scenario,
                 'sumo',
-                '{}.sumocfg'.format(self.sumo.cfg)
-            )
+                '{}.sumocfg'.format(self.sumo.cfg))
 
             # Iterator that determines maximum number of RT simulations
             self.n_run = range(
                 self.rmt.sampling_parameters[0],
-                self.rmt.sampling_parameters[1],
-            )
+                self.rmt.sampling_parameters[1])
 
             # Time interval between scenes, in seconds
             self.sampling_interval = float(self.rmt.sampling_parameters[2])
@@ -253,8 +251,7 @@ class parameters:
             # Time among episodes, in steps
             # If you specify x/Ts, then x is in seconds
             self.time_between_episodes = int(
-                float(self.rmt.time_between_episodes) / self.sampling_interval
-            )
+                float(self.rmt.time_between_episodes) / self.sampling_interval)
 
         if self.use_fixed_receivers:
             # Number of receivers per episode
@@ -262,7 +259,6 @@ class parameters:
         else:
             # Number of receivers per episode
             self.n_antenna_per_episode = self.ray_tracing.receivers_per_episode
-
 
         self.analysis_area_enabled = self.post_processing.area_of_analyses.enabled
         self.analysis_area = self.post_processing.area_of_analyses.limits
@@ -308,10 +304,6 @@ class parameters:
         self.rotation = self.post_processing.mimo.array_rotation
         self.normalized_antenna_distance = self.post_processing.mimo.antenna_array_expansion.normalized_antenna_distance
 
-        ###############################################################
-        ## Part II - Extra information that typically does not need to be modified
-        ## unless you changed the InSite model, using the GUI, for example.
-        ###############################################################
 
         # Fullfill this parameters with InSite's information
         self.insite_study_area_name = self.ray_tracing.wireless_insite.base_files_names.study_area_name
@@ -320,18 +312,12 @@ class parameters:
         self.insite_setup_name = self.ray_tracing.wireless_insite.base_files_names.setup_name
         self.insite_vehicles_name = self.ray_tracing.wireless_insite.base_files_names.vehicles_name
 
-
         if self.use_vehicles_template:
             self.latitude, self.longitude = get_lat_long(self.base_insite_project_path)
             self.insite_vehicles_name_model = self.insite_vehicles_name
             self.insite_vehicles_name = self.insite_vehicles_name + '_'
 
 
-        ##### Folders and files for InSite ####
-
-        # Copy of the RWI project used in the simulation
-        # AK-TODO: instead of "base", it should match the name InSite gives,
-        # to facilitate porting.
         if self.isolated_sim:
             self.results_base_model_dir = self.isolated_results_dir
         else:
@@ -349,17 +335,20 @@ class parameters:
         # XML that has information about the simulations
         self.base_x3d_xml_path = os.path.join(
             self.base_insite_project_path,
-            'base.' + self.insite_study_area_name + '.xml'
-        )
+            'base.' + self.insite_study_area_name + '.xml')
 
         # Name, basename, of the paths file generated in the simulation
         self.paths_file_name = self.insite_setup_name + '.paths.t001_01.r002.p2m'
 
         # Base object file to generate the object_dst_file_name
-        self.base_object_file_name = os.path.join(self.base_insite_project_path, "base.object")
+        self.base_object_file_name = os.path.join(
+            self.base_insite_project_path, 
+            "base.object")
 
         # Base txrx file to generate the txrx_dst_file_name
-        self.base_txrx_file_name = os.path.join(self.base_insite_project_path, "base.txrx")
+        self.base_txrx_file_name = os.path.join(
+            self.base_insite_project_path, 
+            "base.txrx")
 
 
         # Output files, which are written by the Python scripts.
@@ -416,8 +405,7 @@ class parameters:
         self.antenna_origin = (
             car_dimensions[0] / 2,
             car_dimensions[1] / 2,
-            car_dimensions[2]
-        )
+            car_dimensions[2])
 
         # ID of the car material.
         # Must be defined on base_object_file_name and it is processed by simulation.py.
@@ -439,8 +427,7 @@ class parameters:
                 '--step-length',
                 str(self.sampling_interval),
                 '--seed',
-                '{}'.format(seed)
-            ]
+                '{}'.format(seed)]
 
             # Mapping from SUMO to InSite coordinates.
             # Take only min and max for x and y and put there.
@@ -448,8 +435,7 @@ class parameters:
                 "laneA_0": [[758.5, 460], [744.5, 660]],
                 "laneB_0": [[658.82, 460], [747.5, 358.76]],
                 "laneC_0": [[658.82, 460], [752.5, 675.90]],
-                "laneD_0": [[840.08, 460], [755.5, 660]]
-            }
+                "laneD_0": [[840.08, 460], [755.5, 660]]}
 
         else:
             # Not sure if this is ancient code used for debugging with use_sumo = False.
@@ -463,6 +449,7 @@ class parameters:
             self.line_destination = 645
             self.line_dimension = 1
 
+            #! Verificar como essa função vai ser acessada (def entro de objeto) e se é necessário colocar self ou não
             # Distance between cars
             def car_distances():
                 return np.random.uniform(1.5, 6)
@@ -474,7 +461,6 @@ class parameters:
         self.blensor = self.pipeline.blensor
         self.validation = self.pipeline.validation
         
-
 
 def raymobtime():
     """
@@ -528,5 +514,7 @@ def raymobtime():
 
     # Usual Raymobtime Simulation using WI
     if c.mobility.enabled or c.ray_tracing.enabled:
-        main(c)
-
+        simulation_main(c)
+    
+if __name__ == "__main__":    
+    raymobtime()
