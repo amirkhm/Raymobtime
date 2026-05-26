@@ -19,24 +19,19 @@ from src.modules.postprocessing import (
     sanity_check_up)
 
 def dict_to_namespace(obj):
-    """
-    Converts a dictionary to a SimpleNamespace, allowing access to keys as attributes.
-    """
     if isinstance(obj, dict):
         return SimpleNamespace(**{
             key: dict_to_namespace(value)
             for key, value in obj.items()
         })
-    elif isinstance(obj, list):
+
+    if isinstance(obj, list):
         return [dict_to_namespace(item) for item in obj]
-    else:
-        return obj
+
+    return obj
 
 
 def load_yaml(path):
-    """
-    Loads a YAML file and returns its content as a dictionary.
-    """
     path = Path(path)
 
     if not path.exists():
@@ -49,15 +44,6 @@ def load_yaml(path):
 
 
 def deep_merge(default_dict, user_dict):
-    """
-    Does a deep merge between the default configuration dictionary and the user configuration dictionary.
-
-    Rules:
-    - if the key exists in the user dictionary, use the value from the user dictionary;
-    - if the key does not exist in the user dictionary, keep the value from the default dictionary;
-    - if both values are dictionaries, perform an internal merge.    
-
-    """
     result = default_dict.copy()
 
     for key, user_value in user_dict.items():
@@ -70,28 +56,41 @@ def deep_merge(default_dict, user_dict):
 
     return result
 
+
+def find_project_root():
+    """
+    Find the project root by looking for pyproject.toml.
+    """
+    current = Path(__file__).resolve()
+
+    for parent in current.parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+
+    raise FileNotFoundError("Project root not found. pyproject.toml is missing.")
+
+
 def load_config():
     """
-    Loads default.yaml and config.yaml.
-
-    The default.yaml contains all possible variables.
-    The config.yaml contains only the variables chosen by the user.
+    Load default.yaml and the user config.yaml from the project root.
     """
 
-    default_path = Path("src/configs/default.yaml")
+    project_root = find_project_root()
 
-    user_path = Path("config.yaml")
+    default_path = project_root / "src" / "configs" / "default.yaml"
+
+    user_path = project_root / "config.yaml"
     if not user_path.exists():
-        user_path = Path("config.yml")
+        user_path = project_root / "config.yml"
 
     if not default_path.exists():
         raise FileNotFoundError(
-            "File default.yaml not found in src/configs/default.yaml"
+            f"File default.yaml not found at: {default_path}"
         )
 
     if not user_path.exists():
         raise FileNotFoundError(
-            "File config.yaml or config.yml not found in the project root."
+            f"File config.yaml or config.yml not found at: {project_root}"
         )
 
     default_cfg = load_yaml(default_path)

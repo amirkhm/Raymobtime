@@ -1,7 +1,7 @@
 [project]
 name = "rmt"
 version = "0.1.0"
-description = "Add your description here"
+description = "Raymobtime simulation pipeline"
 readme = "README.md"
 requires-python = "==3.8.20"
 dependencies = [
@@ -9,7 +9,6 @@ dependencies = [
     "cheetah3>=3.2.6.post1",
     "descartes>=1.1.0",
     "h5py>=3.11.0",
-    "lzf>=0.1",
     "matplotlib>=3.7.5",
     "numpy>=1.24.4",
     "opencv-python>=4.13.0.92",
@@ -23,4 +22,19 @@ dependencies = [
     "tqdm>=4.67.3",
     "traci>=1.26.0",
     "typing-extensions>=4.13.2",
+    "pyyaml>=6.0.2"
 ]
+
+[project.scripts]
+raymobtime = "src.scripts.config:raymobtime"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.uv]
+package = true

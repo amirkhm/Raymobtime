@@ -5,16 +5,15 @@ import traci
 
 from src.modules.rt.wi.modeling import (
     errors, 
-    X3dXmlFile, 
     mimo, 
-    objects, 
-    txrx)
+    objects
+    )
+
 import src.scripts.config as c
+
 if c.use_vehicles_template:
     import src.modules.rt.wi.modeling.vehicles_template as vt
 
-
-#def place_by_sumo(antenna, car_material_id, lane_boundary_dict, cars_with_antenna=None):
 def place_by_sumo(antenna, antenna_Tx, car_material_id, lane_boundary_dict, cars_with_antenna, cars_with_Tx = None, use_V2V=False, use_fixed_receivers=False, use_pedestrians=False):
     antenna = copy.deepcopy(antenna)
     antenna.clear()
@@ -68,7 +67,6 @@ def place_by_sumo(antenna, antenna_Tx, car_material_id, lane_boundary_dict, cars
         ]]
 
         x, y = traci.simulation.convertGeo(x, y)
-        #x2, y2 = traci.simulation.convertGeo(lon, lat, fromGeo=True)
 
         #the prism is draw using the first coordinate aligned with x, then y and z. Length is initially along x
         #and later the object will be rotates
@@ -99,7 +97,6 @@ def place_by_sumo(antenna, antenna_Tx, car_material_id, lane_boundary_dict, cars
             c_present = True
             #translate the antenna as the vehicle. Note the antenna is not rotated (we are using isotropic anyways)
             #adding Rx 0.1 above car's height, to ensure that it will not be blocked by the vehicle itself
-            # if drone
             if c.mimo_orientation:
                 with open(c.base_setup_path) as infile:
                     MIMO_setup = mimo.SetupFile.from_file(infile)
@@ -279,37 +276,3 @@ def get_model(str_vehicles,name,x,y,z,angle,height,length=1,width=1):
         str_vehicles += line
 
     return str_vehicles
-
-if __name__ == '__main__':
-    import sys
-    print(sys.path)
-    import config as c
-
-    with open(os.path.join("base_files", "SimpleFunciona", "base.object")) as infile:
-        obj = objects.ObjectFile.from_file(infile)
-
-    x3d_xml = X3dXmlFile(os.path.join("base_files", "SimpleFunciona", "model.Study.xml"))
-
-    with open(os.path.join("base_files", 'SimpleFunciona', 'base.txrx')) as infile:
-        txrxFile = txrx.TxRxFile.from_file(infile)
-    obj.clear()
-
-    car = objects.RectangularPrism(1.76, 4.54, 1.47, material=0)
-    car_structure = objects.Structure(name="car")
-    car_structure.add_sub_structures(car)
-    car_structure.dimensions = car.dimensions
-
-    city_origin = np.array((648, 456, 0.2))
-    antenna_origin = np.array((car.height / 2, car.width / 2, car.height))
-    vertice_list = txrxFile['Rx'].location_list[0]
-
-    structure_group, placed_vertice_list = place_on_line(
-        city_origin, 531, 1, lambda: np.random.uniform(1, 3), car_structure, vertice_list, antenna_origin)
-    obj.add_structure_groups(structure_group)
-    obj.write(os.path.join('base_files', "SimpleFunciona", "random-line.object"))
-
-    x3d_xml.add_vertice_list(placed_vertice_list, c.dst_txrx_xpath)
-    x3d_xml.write(os.path.join("base_files", "SimpleFunciona", 'gen.study.xml'))
-
-    txrxFile['Rx'].location_list[0] = placed_vertice_list
-    txrxFile.write(os.path.join('base_files', 'SimpleFunciona', 'model.txrx'))
