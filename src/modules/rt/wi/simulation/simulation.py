@@ -272,6 +272,7 @@ def main(c):
                 traci.simulationStep()
 
             structure_group, location, location_Tx, str_vehicles = place_by_sumo(
+                c,
                 antenna,
                 antenna_Tx,
                 c.car_material_id,
@@ -368,5 +369,3 @@ def main(c):
         scene_i += 1 #update scene counter
     traci.close()
 
-if __name__ == '__main__':
-    main()

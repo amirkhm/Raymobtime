@@ -9,12 +9,7 @@ from src.modules.rt.wi.modeling import (
     objects
     )
 
-import src.scripts.config as c
-
-if c.use_vehicles_template:
-    import src.modules.rt.wi.modeling.vehicles_template as vt
-
-def place_by_sumo(antenna, antenna_Tx, car_material_id, lane_boundary_dict, cars_with_antenna, cars_with_Tx = None, use_V2V=False, use_fixed_receivers=False, use_pedestrians=False):
+def place_by_sumo(c,antenna, antenna_Tx, car_material_id, lane_boundary_dict, cars_with_antenna, cars_with_Tx = None, use_V2V=False, use_fixed_receivers=False, use_pedestrians=False):
     antenna = copy.deepcopy(antenna)
     antenna.clear()
     if use_V2V:
@@ -53,7 +48,7 @@ def place_by_sumo(antenna, antenna_Tx, car_material_id, lane_boundary_dict, cars
 
             # 1.72 size of a perdestrian
             if c.use_vehicles_template:
-                str_vehicles = get_model(str_vehicles,ped,xinsite-deltaX,yinsite-deltaY,0,90-angle,1.72) 
+                str_vehicles = get_model(c,str_vehicles,ped,xinsite-deltaX,yinsite-deltaY,0,90-angle,1.72) 
 
     for veh_i, veh in enumerate(traci.vehicle.getIDList()):
         (x, y), (x3,y3,z3), angle, lane_id, length, width, height = [f(veh) for f in [
@@ -90,7 +85,7 @@ def place_by_sumo(antenna, antenna_Tx, car_material_id, lane_boundary_dict, cars
         structure_group.add_structures(car_structure)
 
         if c.use_vehicles_template:
-            str_vehicles = get_model(str_vehicles,veh,x-deltaX,y-deltaY,z3,90-angle,height,length,width) 
+            str_vehicles = get_model(c, str_vehicles,veh,x-deltaX,y-deltaY,z3,90-angle,height,length,width) 
 
         #antenna_vertice
         if veh in cars_with_antenna:
@@ -129,9 +124,22 @@ def place_by_sumo(antenna, antenna_Tx, car_material_id, lane_boundary_dict, cars
 
 
     if c.use_vehicles_template:
-        all_vehicles = str(vt.vehicles_template(searchList=[{'a':str_vehicles,'long':c.longitude,'lat':c.latitude}]))
+        from src.modules.rt.wi.modeling import vehicles_template as vt
+
+        all_vehicles = str(
+            vt.vehicles_template(
+                searchList=[
+                    {
+                        "a": str_vehicles,
+                        "long": c.longitude,
+                        "lat": c.latitude,
+                    }
+                ]
+            )
+        )
     else:
-        all_vehicles = ''
+        all_vehicles = ""
+
     if use_fixed_receivers:
         return structure_group, None, None, all_vehicles
 
@@ -230,7 +238,7 @@ def rotate(vertice, angle):
 
     return vertice_array
 
-def get_model(str_vehicles,name,x,y,z,angle,height,length=1,width=1):
+def get_model(c, str_vehicles,name,x,y,z,angle,height,length=1,width=1):
 
     # The height here is utilized as trick to choose which model will be utilized .
     # TODO: Find a new way to classify the models, instead of height.
