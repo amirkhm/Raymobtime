@@ -88,6 +88,11 @@ def copytree_base_files(c):
             raise FileExistsError
     print('Copied folder ',c.base_insite_project_path,'into',c.results_base_model_dir)
 
+def sumo_flux(c):
+    np.random.seed(c.seed)
+    print('Starting SUMO Traci')
+    traci.start(c.sumo_cmd)
+
 def main(c):
 
     if c.ray_tracing_only:
@@ -120,45 +125,45 @@ def main(c):
 
     antenna = txrxFile[c.antenna_points_name].location_list[0]
 
+    
+
     if c.use_sumo:
-        np.random.seed(c.seed)
-        print('Starting SUMO Traci')
-        traci.start(c.sumo_cmd)
+        sumo_flux(c)
 
-    scene_i = None
-    episode_i = None
 
-    if c.n_run[0] > 0:
-        for tmp_var in range(int(c.n_run[0])):
-            if c.use_sumo:
-                # when to start a new episode
-                if scene_i is None or scene_i >= c.time_of_episode:
-                    #first scene of an episode
-                    if episode_i is None:
-                        episode_i = 0
-                    else:
-                        episode_i += 1
-                    scene_i = 0
-                    # step time_between_episodes from the last one
-                    for count in range(c.time_between_episodes):
-                        traci.simulationStep()
+    scene_i = 0
+    episode_i = 0
 
-                    traci_vehicle_IDList = traci.vehicle.getIDList()
-                    # Filter list to have only drones
-                    if c.drone_simulation: 
-                        traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
-                    while len(traci_vehicle_IDList) < c.n_antenna_per_episode:
-                        traci.simulationStep()
-                        traci_vehicle_IDList = traci.vehicle.getIDList()
-                        if c.drone_simulation: 
-                            traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
+    for tmp_var in range(int(c.n_run[0])):
+        # Só na passagem de episódios ou primeira vez
+        if (scene_i ==0 and episode_i ==0) or scene_i == c.time_of_episode:
+            #first scene of an episode
+            if episode_i is None:
+                episode_i = 0
+            else:
+                episode_i += 1
+            scene_i = 0
+            # step time_between_episodes from the last one
+            for count in range(c.time_between_episodes):
+                traci.simulationStep()
 
-                        logging.warning('not enough vehicles at time ' + str(traci.simulation.getCurrentTime()) )
-                    cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
-                else:
-                    traci.simulationStep()
-                scene_i += 1 #update scene counter
-            print('Jump until the step '+ str(c.n_run[0]) + ': '+ str(int((tmp_var/c.n_run[0])* 100))+ '%')
+            traci_vehicle_IDList = traci.vehicle.getIDList()
+            # Filter list to have only drones
+            if c.drone_simulation: 
+                traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
+            # Pula as runs que não tem carros suficientes 
+            while len(traci_vehicle_IDList) < c.n_antenna_per_episode:
+                traci.simulationStep()
+                traci_vehicle_IDList = traci.vehicle.getIDList()
+                if c.drone_simulation: 
+                    traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
+
+                logging.warning('not enough vehicles at time ' + str(traci.simulation.getCurrentTime()) )
+            cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
+        else:
+            traci.simulationStep()
+        print(f'Jump until the step {c.n_run[0]}: {int((tmp_var/c.n_run[0])* 100)}%')
+        scene_i += 1
 
     count_nar = 0 # Number of Runs without cars with antenna while mobile
     for i in c.n_run:
