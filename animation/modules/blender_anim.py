@@ -73,7 +73,7 @@ def create_line_blender(objname, cList, frame_num, frame_step):
     
     # Valores de teste para torná-los GIGANTES.
     curvedata.extrude = 0.5         # Aumentado de 0.005
-    curvedata.bevel_depth = 0.02     # Espessura add JK - alteração do valor de 0.5 para 0.2
+    curvedata.bevel_depth = 0.16     # Espessura add JK - alteração do valor de 0.5 para 0.2
     
     curvedata.fill_mode = 'FULL'        # Garante que seja um tubo sólido
     curvedata.bevel_resolution = 2  # Define a "redondeza"
@@ -183,7 +183,7 @@ def animate_vehicles(vPosition, frame_num, frame_step, step, config, DEBUG_ANIM=
                 obj.name = '_' + obj.name 
 
     # --- Anima objetos atuais ---
-    use_fixed = config.get('dataset_config', {}).get('use_fixed_receivers', False)
+    use_fixed = config.get('dataset_config', {}).get('use_fixed_receivers', False) # add JK
     
     for vid, vinfo in vPosition.items():
         # Se for receptor (isRx corrigido) e a configuração for fixa - add JK
@@ -390,7 +390,21 @@ def posicionar_rx(coords_insite, is_fixed, vPosition, config):
                     carro_obj = bpy.data.objects.get(veh_id)
                     if carro_obj:
                         marcador.parent = carro_obj
-                        marcador.location = (0, 0, 1.6) # Ajuste a altura sobre o carro aqui
+                        # posicionar o Rx.blend conforme a altura do receptor
+                        height = float(info.get('height', 0))
+                        
+                        # Define a altura da antena dinamicamente baseada no tipo de veículo
+                        if abs(height - 3.2) < 1e-3:    # Ônibus
+                            z_antena = 3.3
+                        elif abs(height - 4.3) < 1e-3:  # Caminhão
+                            z_antena = 4.4
+                        elif abs(height - 0.295) < 1e-3:# Drone
+                            z_antena = 0.4
+                        else:                           # Carro padrão
+                            z_antena = 1.6
+                        
+                        # Posiciona a antena exatamente acima do teto de cada modelo
+                        marcador.location = (0, 0, z_antena)
                         break
 
 #add JK
