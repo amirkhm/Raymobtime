@@ -247,10 +247,10 @@ class parameters:
 
         if self.use_fixed_receivers:
             # Number of receivers per episode
-            self.n_antenna_per_episode = 0
+            self.receivers_per_episode = 0
         else:
             # Number of receivers per episode
-            self.n_antenna_per_episode = self.ray_tracing.receivers_per_episode
+            self.receivers_per_episode = self.ray_tracing.receivers_per_episode
 
         self.analysis_area_enabled = self.post_processing.area_of_analyses.enabled
         self.analysis_area = self.post_processing.area_of_analyses.limits
@@ -283,7 +283,7 @@ class parameters:
 
         if self.use_V2V:
             self.n_Tx_per_episode = self.ray_tracing.transmitters_per_episode
-            self.n_antenna_per_episode = self.ray_tracing.receivers_per_episode
+            self.receivers_per_episode = self.ray_tracing.receivers_per_episode
             self.close_vehicles = self.ray_tracing.v2v.close_vehicles
             self.n_of_vehicles = self.ray_tracing.v2v.n_of_vehicles
             if self.ray_tracing.v2v.chose_vehicle:

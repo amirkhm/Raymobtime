@@ -23,10 +23,10 @@ def onlyDronesList(idList):
     return idList
 
 def wireless_insite_simulation(c):
-    if c.use_fixed_receivers and c.n_antenna_per_episode != 0:
+    if c.use_fixed_receivers and c.receivers_per_episode != 0:
         # At fixed receivers, position set on WI is maintained, 
         # that manner it should not change here, default zero.
-        logging.error(f'if flag use_fixed_receivers=True, n_antenna_per_episode must be 0 but it is {c.n_antenna_per_episode}')
+        logging.error(f'if flag use_fixed_receivers=True, receivers_per_episode must be 0 but it is {c.receivers_per_episode}')
         raise Exception()
     if c.isolated_sim and c.use_vehicles_template:
         # isolated sim is intended to be static, no object is placed after modelling.
@@ -154,24 +154,31 @@ def main(c):
         scene_i = 0
         episode_i = 0
 
+        # Jumps to the defined traci start
         for tmp_var in range(int(c.n_run[0])):
-            # Só na passagem de episódios ou primeira vez
+            # Only when switching episodes or for the first time choose vehicles to be receivers
             if scene_i == 0:
-                while True:   
+                while True:
+                    # ensures number of receivers at beginning of episode
                     traci_vehicle_IDList = traci.vehicle.getIDList()
                     # Only drone, remove the non-drone vehicles from the list
                     if c.drone_simulation:
                         traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
-                    if len(traci_vehicle_IDList) < c.n_antenna_per_episode:
+                    if len(traci_vehicle_IDList) < c.receivers_per_episode:
                         traci.simulationStep()
-                        logging.debug('not enough vehicles at time ' + str(traci.simulation.getCurrentTime()))
+                        logging.debug(f'not enough vehicles at time {traci.simulation.getCurrentTime()}')
                     else:
                         break
-                cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
+                cars_with_antenna = np.random.choice(
+                    traci_vehicle_IDList, 
+                    c.receivers_per_episode, 
+                    replace=False)
             else:
-                traci.simulationStep()
+                # step at time scene or episode
                 scene_i += 1
-                if scene_i == c.scenes_per_episode:
+                if scene_i <= c.scenes_per_episode:
+                    traci.simulationStep()
+                else:
                     scene_i = 0
                     episode_i += 1
                     for _ in range(c.time_between_episodes):
@@ -179,52 +186,45 @@ def main(c):
             logging.info(f'Jump until the step {c.n_run[0]}: {int((tmp_var/c.n_run[0])* 100)}%')
     
     
-        
-    count_nar = 0 # Number of Runs without cars with antenna while mobile
-    for i in c.n_run:
-        run_dir = os.path.join(
-            c.results_dir,
-            format_run_name(i - count_nar))
-        objFile.clear()
+        count_nar = 0 # Number of Runs without cars with antenna while mobile
+        for i in c.n_run:
+            run_dir = os.path.join(
+                c.results_dir,
+                format_run_name(i - count_nar))
+            objFile.clear()
 
-        if c.use_sumo:
-            # when to start a new episode
-            if scene_i is None or scene_i >= c.scenes_per_episode:
-                #first scene of an episode
-                if episode_i is None:
-                    episode_i = 0
-                else:
-                    episode_i += 1
+            if scene_i >= c.scenes_per_episode:
+                # Step episode and reset scene
+                episode_i += 1
                 scene_i = 0
-                # step time_between_episodes from the last one
-                for count in range(c.time_between_episodes): #AK-TODO should rename it and avoid calling "time"
+                # step time_between_episodes
+                for count in range(c.time_between_episodes):
                     traci.simulationStep()
                 if c.use_fixed_receivers:
                     cars_with_antenna = []
                     cars_with_Tx = None
                     antenna_Tx = None
                 else:
-                    # ensure that there enough cars to place antennas. If use_fixed_receivers, then wait to have at least
+                    # ensure that there enough cars to place antennas. 
+                    # If use_fixed_receivers, then wait to have at least
                     # one vehicle
                     traci_vehicle_IDList = traci.vehicle.getIDList()
-                    # Filter list to have only drones
                     if c.drone_simulation: 
                         traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
-                    # ensure that there enough cars to Rx antennas
-                    min_cars_per_episode = c.n_antenna_per_episode
+                    min_cars_per_episode = c.receivers_per_episode
                     if c.use_V2V:
                         # ensure that there enough cars to Rx and Tx antennas
-                        min_cars_per_episode = (c.n_antenna_per_episode +c.n_Tx_per_episode)
+                        min_cars_per_episode = (c.receivers_per_episode +c.n_Tx_per_episode)
 
                     while len(traci_vehicle_IDList) < min_cars_per_episode:
                         traci_vehicle_IDList = traci.vehicle.getIDList()
                         if c.drone_simulation: 
                             traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
-                        logging.warning('not enough vehicles at time ' + str(traci.simulation.getCurrentTime()) )
+                        logging.warning(f'not enough vehicles at time {traci.simulation.getCurrentTime()}')
                         traci.simulationStep()
 
                     # chooses the cars with Rx antennas
-                    cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
+                    cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.receivers_per_episode, replace=False)
                     # Chose from the specific area
                     if c.set_area_limit:
                         def check_if_veh_in_area(veh_pos, min_lim, max_lim):
@@ -236,13 +236,13 @@ def main(c):
                         
                         n_veh = 0
 
-                        while n_veh < c.n_antenna_per_episode:
+                        while n_veh < c.receivers_per_episode:
                             traci.simulationStep()
                             # Check if there is veh in the area, if not simulate an step and check again
                             traci_vehicle_IDList = traci.vehicle.getIDList()
-                            veh_in_the_area, n_veh = pick_car_from_area(traci_vehicle_IDList, [c.min_lim, c.max_lim], c.n_antenna_per_episode, return_counts=True)
+                            veh_in_the_area, n_veh = pick_car_from_area(traci_vehicle_IDList, [c.min_lim, c.max_lim], c.receivers_per_episode, return_counts=True)
                         # Choose within the area
-                        cars_with_antenna = np.random.choice(veh_in_the_area, c.n_antenna_per_episode, replace=False)
+                        cars_with_antenna = np.random.choice(veh_in_the_area, c.receivers_per_episode, replace=False)
 
                     if c.use_V2V:
                         # chooses the cars with Tx antennas
@@ -268,7 +268,7 @@ def main(c):
                             all_distances = np.sort(all_distances)[:c.n_of_vehicles]
 
                             traci_vehicle_IDList = [Rx_name[i] for i in all_distances]
-                            cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.n_antenna_per_episode, replace=False)
+                            cars_with_antenna = np.random.choice(traci_vehicle_IDList, c.receivers_per_episode, replace=False)
 
                         antenna_Tx = txrxFile[c.insite_tx_name].location_list[0]
                         # temp_cars = [x for x in traci_vehicle_IDList if x not in cars_with_antenna]
@@ -279,100 +279,115 @@ def main(c):
                         antenna_Tx = None
             else:
                 traci.simulationStep()
-                structure_group, location, location_Tx, str_vehicles = place_by_sumo(
-                    c,
-                    antenna,
-                    antenna_Tx,
-                    c.car_material_id,
-                    lane_boundary_dict=c.lane_boundary_dict,
-                    cars_with_antenna=cars_with_antenna,
-                    cars_with_Tx=cars_with_Tx,
-                    use_V2V=c.use_V2V,
-                    use_fixed_receivers = c.use_fixed_receivers,
-                    use_pedestrians = c.use_pedestrians)
 
-            #if location is None:  #there are not cars with antennas in this episode (all have left)
-            # no vehicles in the environment (not only the ones without antennas, but no vehicles at all)
-            if traci.vehicle.getIDList() is None:
-                logging.warning("No vehicles in scene " + str(scene_i) + " time " + str(traci.simulation.getCurrentTime()))
-                os.makedirs(run_dir + '_novehicles') #create an empty folder to "indicate" the situation
-                #save SUMO information for this scene as text CSV file
-                sumoOutputInfoFileName = os.path.join(run_dir,'sumoOutputInfoFileName_novehicles.txt')
-                writeSUMOInfoIntoFile(sumoOutputInfoFileName, episode_i, scene_i, c.lane_boundary_dict, cars_with_antenna)
-                scene_i += 1 #update scene counter
-                continue
+            structure_group, location, location_Tx, str_vehicles = place_by_sumo(
+                c,
+                antenna,
+                antenna_Tx,
+                c.car_material_id,
+                lane_boundary_dict=c.lane_boundary_dict,
+                cars_with_antenna=cars_with_antenna,
+                cars_with_Tx=cars_with_Tx,
+                use_V2V=c.use_V2V,
+                use_fixed_receivers = c.use_fixed_receivers,
+                use_pedestrians = c.use_pedestrians)
 
-            # check if there are no cars with antenna in this episode (in this case all have left)
-            if (location is None) or (location_Tx is None and c.use_V2V):
-                if not c.use_fixed_receivers:
-                    count_nar = count_nar + 1
-                    #abort, there is not reason to continue given that there will be no receivers along the whole episode
-                    logging.warning("No vehicles with antennas in scene " + str(scene_i) + " time " + str(traci.simulation.getCurrentTime()))
-                    os.makedirs(run_dir + '_noAntennaVehicles') #create an empty folder to "indicate" the situation
-                    scene_i = np.Infinity #update scene counter
+            if c.use_sumo:
+                # when to start a new episode
+                if scene_i >= c.scenes_per_episode:
+                    #first scene of an episode
+                    if episode_i is None:
+                        episode_i = 0
+                    else:
+                        episode_i += 1
+                    scene_i = 0
+                    # step time_between_episodes from the last one
+                    
+                else:
+                    
+
+                #if location is None:  #there are not cars with antennas in this episode (all have left)
+                # no vehicles in the environment (not only the ones without antennas, but no vehicles at all)
+                if traci.vehicle.getIDList() is None:
+                    logging.warning("No vehicles in scene " + str(scene_i) + " time " + str(traci.simulation.getCurrentTime()))
+                    os.makedirs(run_dir + '_novehicles') #create an empty folder to "indicate" the situation
+                    #save SUMO information for this scene as text CSV file
+                    sumoOutputInfoFileName = os.path.join(run_dir,'sumoOutputInfoFileName_novehicles.txt')
+                    writeSUMOInfoIntoFile(sumoOutputInfoFileName, episode_i, scene_i, c.lane_boundary_dict, cars_with_antenna)
+                    scene_i += 1 #update scene counter
                     continue
 
-        # Parsing =====================================================================================
-        # Toda run limpa o objfile
-        objFile.clear()
+                # check if there are no cars with antenna in this episode (in this case all have left)
+                if (location is None) or (location_Tx is None and c.use_V2V):
+                    if not c.use_fixed_receivers:
+                        count_nar = count_nar + 1
+                        #abort, there is not reason to continue given that there will be no receivers along the whole episode
+                        logging.warning("No vehicles with antennas in scene " + str(scene_i) + " time " + str(traci.simulation.getCurrentTime()))
+                        os.makedirs(run_dir + '_noAntennaVehicles') #create an empty folder to "indicate" the situation
+                        scene_i = np.Infinity #update scene counter
+                        continue
 
-        # if use wireless insite copy base ============================================================
-        shutil.copytree(c.base_insite_project_path, run_dir)
-        print('Copied',c.base_insite_project_path,'into',run_dir)
+            # Parsing =====================================================================================
+            # Toda run limpa o objfile
+            objFile.clear()
 
-        # writes at a run
-        objFile.add_structure_groups(structure_group)
-        dst_object_full_path = os.path.join(run_dir, c.dst_object_file_name)
-        objFile.write(dst_object_full_path)
+            # if use wireless insite copy base ============================================================
+            shutil.copytree(c.base_insite_project_path, run_dir)
+            print('Copied',c.base_insite_project_path,'into',run_dir)
 
-        #write new model of vehicles to the final folder
-        if c.use_vehicles_template:
-            dst_new_object_full_path = os.path.join(run_dir, c.insite_vehicles_name_model + '.object')
-            f_dst_new_object = open(dst_new_object_full_path,'w')
-            f_dst_new_object.write(str_vehicles)
-            f_dst_new_object.close()
+            # writes at a run
+            objFile.add_structure_groups(structure_group)
+            dst_object_full_path = os.path.join(run_dir, c.dst_object_file_name)
+            objFile.write(dst_object_full_path)
 
-        #get name of XML
-        xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
-        xml_full_path=xml_full_path.replace(' ', '\ ')
+            #write new model of vehicles to the final folder
+            if c.use_vehicles_template:
+                dst_new_object_full_path = os.path.join(run_dir, c.insite_vehicles_name_model + '.object')
+                f_dst_new_object = open(dst_new_object_full_path,'w')
+                f_dst_new_object.write(str_vehicles)
+                f_dst_new_object.close()
 
-        if not c.use_fixed_receivers:
-            x3d_xml_file.add_vertice_list(location, c.dst_x3d_txrx_xpath)
-            if c.use_V2V:
-                x3d_xml_file.add_vertice_list(location_Tx, c.dst_x3d_txrx_xpath_to_tx)
-            x3d_xml_file.write(xml_full_path)
+            #get name of XML
+            xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
+            xml_full_path=xml_full_path.replace(' ', '\ ')
 
-            # add vertices from receivers to the txrx file
-            txrxFile[c.antenna_points_name].location_list[0] = location
-            if c.use_V2V:
-                txrxFile[c.insite_tx_name].location_list[0] = location_Tx # add vertices from transmitters to the txrx file
-            # txrx modified in the RWI project
-            dst_txrx_full_path = os.path.join(run_dir, c.dst_txrx_file_name)
-            txrxFile.write(dst_txrx_full_path)
+            if not c.use_fixed_receivers:
+                x3d_xml_file.add_vertice_list(location, c.dst_x3d_txrx_xpath)
+                if c.use_V2V:
+                    x3d_xml_file.add_vertice_list(location_Tx, c.dst_x3d_txrx_xpath_to_tx)
+                x3d_xml_file.write(xml_full_path)
 
-        with open(os.path.join(run_dir, c.simulation_info_file_name), 'w') as infofile:
-            if c.use_V2V:
-                info_dict = dict(
-                    cars_with_antenna=list(cars_with_antenna),
-                    cars_with_Tx=list(cars_with_Tx),
-                    scene_i=scene_i)
-            else:
-                info_dict = dict(
-                    cars_with_antenna=list(cars_with_antenna),
-                    scene_i=scene_i)
-            json.dump(info_dict, infofile)
+                # add vertices from receivers to the txrx file
+                txrxFile[c.antenna_points_name].location_list[0] = location
+                if c.use_V2V:
+                    txrxFile[c.insite_tx_name].location_list[0] = location_Tx # add vertices from transmitters to the txrx file
+                # txrx modified in the RWI project
+                dst_txrx_full_path = os.path.join(run_dir, c.dst_txrx_file_name)
+                txrxFile.write(dst_txrx_full_path)
 
-        #save SUMO information for this scene as text CSV file
-        sumoOutputInfoFileName = os.path.join(run_dir,'sumoOutputInfoFileName.txt')
-        writeSUMOInfoIntoFile(
-            sumoOutputInfoFileName, 
-            episode_i, scene_i, 
-            c.lane_boundary_dict, 
-            cars_with_antenna, 
-            cars_with_Tx, 
-            c.use_fixed_receivers, 
-            c.use_pedestrians)
+            with open(os.path.join(run_dir, c.simulation_info_file_name), 'w') as infofile:
+                if c.use_V2V:
+                    info_dict = dict(
+                        cars_with_antenna=list(cars_with_antenna),
+                        cars_with_Tx=list(cars_with_Tx),
+                        scene_i=scene_i)
+                else:
+                    info_dict = dict(
+                        cars_with_antenna=list(cars_with_antenna),
+                        scene_i=scene_i)
+                json.dump(info_dict, infofile)
 
-        scene_i += 1 #update scene counter
-    traci.close()
+            #save SUMO information for this scene as text CSV file
+            sumoOutputInfoFileName = os.path.join(run_dir,'sumoOutputInfoFileName.txt')
+            writeSUMOInfoIntoFile(
+                sumoOutputInfoFileName, 
+                episode_i, scene_i, 
+                c.lane_boundary_dict, 
+                cars_with_antenna, 
+                cars_with_Tx, 
+                c.use_fixed_receivers, 
+                c.use_pedestrians)
+
+            scene_i += 1 #update scene counter
+        traci.close()
 

@@ -122,7 +122,7 @@ def gen_lidar_matrix(c):
 
     tmpdir = './tmp/scans'
     scenes_in_ep, RX_in_ep, Tx_in_ep = episodes_dict(fileToRead,tmpdir)
-    number_of_receivers = c.n_antenna_per_episode
+    number_of_receivers = c.receivers_per_episode
     if type_data == '3D':
         dtheta = np.arange(QPsph['ThetaMin'],QPsph['ThetaMax'],QPsph['Thetap'])
         #Assumes 10 Tx/Rx pairs per scene

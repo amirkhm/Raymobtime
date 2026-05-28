@@ -41,7 +41,7 @@ def gen_rays_dataset(c):
         os.makedirs(database_folder)
     database_path = os.path.join(database_folder, f'{c.sim_name}.db')
 
-    numTxRxPairsPerScene = c.n_antenna_per_episode
+    numTxRxPairsPerScene = c.receivers_per_episode
     numVariablePerRay = 8 #has the ray phase now
     numRaysPerTxRxPair = 100
 
