@@ -46,9 +46,10 @@ def get_2d_position(scene, camera, obj, occupied_slots, use_occlusion=True):
     pixel_y = int((1.0 - coords_2d.y) * res_y) + header_h
 
     # --- 4. TRAVA DE BORDA COM MARGEM DO HEADER ---
+    # Use label_w = 80  e label_h = 20 para label com coordenadas
     margin = 10
-    label_w = 80
-    label_h = 20
+    label_w = 45    #Largura do label
+    label_h = 10    #Altura do label
 
     pixel_x = max(margin, min(pixel_x, res_x - label_w - margin))
     

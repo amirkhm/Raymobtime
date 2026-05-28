@@ -93,8 +93,8 @@ def add_rx_label(image_path, text, x, y):
         '-strokewidth', '1',
         '-draw', "circle {},{} {},{}".format(x, y, x + r, y), # BOLINHA
         '-font', 'DejaVu-Sans-Bold',
-        '-pointsize', '16',
-        '-draw', "text {},{} '  {}'".format(x + 5, y + 5, text), # TEXTO com recuo
+        '-pointsize', '13',
+        '-draw', "text {},{} '  {}'".format(x + 2, y + 2, text), # TEXTO com recuo
         image_path
     ]
     subprocess.run(command)
@@ -104,13 +104,13 @@ def add_tx_label(image_path, text, x, y):
     r = 5
     command = [
         'convert', image_path,
-        '-fill', '#00FF00',           # Verde brilhante
+        '-fill', '#00FF00',           # Verde
         '-stroke', 'black',
         '-strokewidth', '0.6',
         '-draw', "circle {},{} {},{}".format(x, y, x + r, y), # BOLINHA
         '-font', 'DejaVu-Sans-Bold',
-        '-pointsize', '14',
-        '-draw', "text {},{} '  {}'".format(x + 6, y + 5, text), # TEXTO com recuo
+        '-pointsize', '13',
+        '-draw', "text {},{} '  {}'".format(x + 2, y + 2, text), # TEXTO com recuo
         image_path
     ]
     subprocess.run(command)
