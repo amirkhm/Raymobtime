@@ -7,16 +7,13 @@ import os
 import json
 import numpy as np
 import csv
+from src.scripts.helpers import format_run_name
 from src.modules.rt.wi.modeling import objects
 from src.modules.rt.wi.parsing import P2mPaths
 from src.modules.postprocessing import (
     save5gmdata as fgdb,
     save5gmdata_IsolatedSim as fgdbIS,
     sumoOutputFile)
-
-def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
-    """returns the `run_dir` for run `i`"""
-    return "run{:05d}".format(i)
 
 def set_angle_range(angle,range=[180,-180]):
     if angle<=-180:
@@ -131,7 +128,7 @@ def gen_database(c):
     else:
         while True:
         #for run_i in range(100): # use the number of examples in config.py
-            run_dir = os.path.join(results_dir, base_run_dir_fn(run_i))
+            run_dir = os.path.join(results_dir, format_run_name(run_i))
             object_file_name = os.path.join(run_dir, dst_object_file_nameBaseName)
             #rays information but phase
             abs_paths_file_name = os.path.join(run_dir, project_output_dirBaseName, paths_file_name)

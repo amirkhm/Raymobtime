@@ -8,10 +8,8 @@ from bpy import context as C
 from mathutils import *
 from math import *
 from datetime import datetime
+from src.scripts.helpers import format_run_name
 
-def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
-    """returns the `run_dir` for run `i`"""
-    return "run{:05d}".format(i)
 
 def main():
     startTime = datetime.now()
@@ -46,7 +44,7 @@ def main():
         print("Current Episode: ",current_ep)
         print('Current Scene: ', current_scn)
         time_elapsed = datetime.now() - startTime
-        scene_path = os.path.join(folder_scanned_name,base_run_dir_fn(run)) 
+        scene_path = os.path.join(folder_scanned_name,format_run_name(run)) 
         if not os.path.exists(scene_path):
             print('\nWarning: could not find file ', scene_path , ' Stopping...')
             break
@@ -93,7 +91,7 @@ def getPhoto360(file_path,current_ep,current_scn,run):
         cam.location = veh.location
         cam.location[2] = veh.dimensions[2] + 3
         cam.rotation_euler = (radians(90), 0, veh.rotation_euler[2])
-        D.scenes['Scene'].render.filepath = 'D:\Lasse\jamelly\imagesPano\\'+base_run_dir_fn(run)+'\\'+vehicle
+        D.scenes['Scene'].render.filepath = 'D:\Lasse\jamelly\imagesPano\\'+format_run_name(run)+'\\'+vehicle
         print('Taking photo of vehicle ', veh.name)
         bpy.ops.render.render(write_still=True)
         print('Done, continuing...')

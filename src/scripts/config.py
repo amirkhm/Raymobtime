@@ -5,7 +5,6 @@ from pathlib import Path
 from types import SimpleNamespace
 import logging
 logging.basicConfig(level=logging.DEBUG)
-
 # simulators
 from src.modules.blensor.blensor_src import blensor_simulation
 from src.modules.rt.wi.simulation.simulation import main as simulation_main
@@ -134,17 +133,6 @@ def get_insite_version(base_insite_project_path):
             model_file.close()
             return insite_version
 
-def base_run_dir_fn(i):
-    """
-    Returns the run_dir for run i.
-
-    The folders will be:
-        run00001
-        run00002
-        ...
-    """
-    return "run{:05d}".format(i)
-
 class parameters:
     def __init__(self):
         self.cfg = load_config()
@@ -237,8 +225,9 @@ class parameters:
                 self.working_directory,
                 'data',
                 self.base_config.scenario,
+                'base',
                 'sumo',
-                '{}.sumocfg'.format(self.sumo.cfg))
+                f'{self.sumo.cfg}.sumocfg')
 
             # Iterator that determines maximum number of RT simulations
             self.n_run = range(
@@ -249,7 +238,7 @@ class parameters:
             self.sampling_interval = float(self.rmt.sampling_parameters[2])
 
             # Number of scenes of each episode
-            self.time_of_episode = int(self.rmt.scenes_per_episode)
+            self.scenes_per_episode = int(self.rmt.scenes_per_episode)
 
             # Time among episodes, in steps
             # If you specify x/Ts, then x is in seconds
@@ -286,8 +275,8 @@ class parameters:
         self.path_to_vehicles_blend = self.blensor_options.path_to_vehicles_blend  
 
         self.CoordSystem = self.post_processing.cartesian_lidar_matrix.coordinate_system
-        self.QP = self.cartesian_lidar_matrix.post_processing.QP
-        self.QPsph = self.cartesian_lidar_matrix.post_processing.QPsph
+        self.QP = self.post_processing.cartesian_lidar_matrix.QP
+        self.QPsph = self.post_processing.cartesian_lidar_matrix.QPsph
         self.Tx_position = self.post_processing.cartesian_lidar_matrix.Tx_position
         self.max_dist_LIDAR = self.post_processing.cartesian_lidar_matrix.max_dist_LIDAR
         self.type_data = self.post_processing.cartesian_lidar_matrix.type_data
@@ -396,19 +385,19 @@ class parameters:
 
         self.tool = self.pipeline.mobility.tool
         if self.isolated_sim:
-            use_sumo = False
+            self.use_sumo = False
         else:
-            use_sumo = True
+            self.use_sumo = True
 
         # Dimensions of the Mobile Objects, MOBJS, which will be placed on dst_object_file_name
         # car_dimensions = (1.76, 4.54, 1.47)
-        car_dimensions = (2, 6, 1.47)
+        self.car_dimensions = (2, 6, 1.47)
 
         # Antenna to be placed above the cars
         self.antenna_origin = (
-            car_dimensions[0] / 2,
-            car_dimensions[1] / 2,
-            car_dimensions[2])
+            self.car_dimensions[0] / 2,
+            self.car_dimensions[1] / 2,
+            self.car_dimensions[2])
 
         # ID of the car material.
         # Must be defined on base_object_file_name and it is processed by simulation.py.
@@ -419,14 +408,14 @@ class parameters:
         self.antenna_points_name = self.insite_rx_name
 
 
-        if use_sumo:
+        if self.use_sumo:
             seed = self.sumo.seed
             np.random.seed(seed)
 
             self.sumo_cmd = [
                 self.sumo.bin,
                 '-c',
-                self.sumo.cfg,
+                self.sumo_cfg,
                 '--step-length',
                 str(self.sampling_interval),
                 '--seed',

@@ -2,14 +2,22 @@ import copy
 import os
 import numpy as np
 import traci
-
 from src.modules.rt.wi.modeling import (
     errors, 
     mimo, 
-    objects
-    )
+    objects)
 
-def place_by_sumo(c,antenna, antenna_Tx, car_material_id, lane_boundary_dict, cars_with_antenna, cars_with_Tx = None, use_V2V=False, use_fixed_receivers=False, use_pedestrians=False):
+def place_by_sumo(
+        c,antenna, 
+        antenna_Tx, 
+        car_material_id, 
+        lane_boundary_dict, 
+        cars_with_antenna, 
+        cars_with_Tx = None, 
+        use_V2V=False, 
+        use_fixed_receivers=False, 
+        use_pedestrians=False):
+    
     antenna = copy.deepcopy(antenna)
     antenna.clear()
     if use_V2V:
@@ -154,8 +162,14 @@ def place_by_sumo(c,antenna, antenna_Tx, car_material_id, lane_boundary_dict, ca
 
     return structure_group, antenna, antenna_Tx, all_vehicles
 
-def place_on_line(origin_array, destination_list, dim_list, space, object,
-                  antenna=None, antenna_origin=None):
+def place_on_line(
+        origin_array, 
+        destination_list, 
+        dim_list, 
+        space, 
+        object,
+        antenna=None, 
+        antenna_origin=None):
     """ Place object in a line separated by space
 
     :param origin_array: (x, y, z) or ((x, y, z),)
@@ -163,7 +177,7 @@ def place_on_line(origin_array, destination_list, dim_list, space, object,
     :param dim_list: 0, 1, 2 for x, y or z (one or list of)
     :param space: function that return the space between `object`
     :param object: a RWI Structure with "origin" in (0, 0, 0) (must have a valid dimension)
-    :param antanna_origin: (x, y, z) normally "inside" the object
+    :param antenna_origin: (x, y, z) normally "inside" the object
     :param antenna: VerticeList
     :return: a structure group
     """

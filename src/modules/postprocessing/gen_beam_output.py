@@ -1,6 +1,7 @@
 import numpy as np
 import h5py
 import os
+from src.scripts.helpers import format_run_name
 from src.modules.postprocessing.mimo_channels import (
     getNarrowBandUPAMIMOChannel, 
     getCodebookOperatedChannel,
@@ -64,7 +65,7 @@ def process_ep(path, c):
             if c.isolated_sim:
                 hmatrix_folder =  os.path.join(c.results_dir,c.insite_study_area_name,'HMatrixCategory')
             else:
-                run = c.base_run_dir_fn(s)
+                run = format_run_name(s)
                 hmatrix_folder =  os.path.join(c.results_dir,run,c.insite_study_area_name,'HMatrixCategory')
 
             if not os.path.exists(hmatrix_folder):
@@ -141,7 +142,7 @@ def gen_beam_output_file(c):
         episodes=1
         
         if not c.isolated_sim:
-            episodes = int((max_runs+1)/c.time_of_episode)
+            episodes = int((max_runs+1)/c.scenes_per_episode)
         
         for ep in range(episodes):
             print("Episode # ", ep)

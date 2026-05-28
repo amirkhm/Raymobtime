@@ -2,14 +2,11 @@ import os
 import csv
 import shutil
 import numpy as np
-import scipy.spatial.distance as dist
-from src.modules.postprocessing.pypcd import pypcd
-from datetime import datetime
 import zipfile
-
-def base_run_dir_fn(i):  # the folders will be run00001, run00002, etc.
-    """returns the `run_dir` for run `i`"""
-    return "scans_run{:05d}".format(i)
+import scipy.spatial.distance as dist
+from datetime import datetime
+from src.modules.postprocessing.pypcd import pypcd
+from src.scripts.helpers import format_run_name
 
 def base_vehicle_pcd(flow):  # the folders will be run00001, run00002, etc.
     V_id = flow.split("flow")
@@ -110,7 +107,7 @@ def gen_lidar_matrix(c):
     dphi = np.arange(QPsph['PhiMin'],QPsph['PhiMax'],QPsph['Phip'])
     
     #initializing variables
-    numScenesPerEpisode = c.time_of_episode #number of scenes per episode
+    numScenesPerEpisode = c.scenes_per_episode #number of scenes per episode
     scans_path = os.path.join(main_folder, 'scans')
     
     runs = c.n_run
@@ -146,7 +143,7 @@ def gen_lidar_matrix(c):
             print(f'Processing Episode: {episodeID} and Scene: {s}')
             if not os.path.exists(tmpdir):
                 os.makedirs(tmpdir)
-            scans_dir = os.path.join(scans_path, base_run_dir_fn(total_num_scenes) + '.zip')
+            scans_dir = os.path.join(scans_path, format_run_name(total_num_scenes) + '.zip')
             key_dict = str(episodeID) + ',' + str(s)
             try:
                 RxFlow = RX_in_ep[key_dict]

@@ -11,10 +11,7 @@ from bpy import context as C
 from mathutils import *
 from math import *
 from datetime import datetime
-
-def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
-    """returns the `run_dir` for run `i`"""
-    return "run{:05d}".format(i)
+from src.scripts.helpers import format_run_name
 
 def simulator():
     startTime = datetime.now()
@@ -45,7 +42,7 @@ def simulator():
     while run<end_run:
         print('Processing run' + str(run) + ' ...') 
         time_elapsed = datetime.now() - startTime
-        scene_path = os.path.join(folder_scanned_name,base_run_dir_fn(run)) 
+        scene_path = os.path.join(folder_scanned_name,format_run_name(run)) 
         if not os.path.exists(scene_path):
             print('\nWarning: could not find file ', scene_path , ' Stopping...')
             break
@@ -54,7 +51,7 @@ def simulator():
         vPosition = getInfoVehicles(sumo_info_file)
         Position = vPosition
         animateVehiclesBlender(Position, vehicles_blend_path) 
-        doScan(Position,'scans_'+base_run_dir_fn(run), folder_scans_dataset)
+        doScan(Position,'scans_'+format_run_name(run), folder_scans_dataset)
         for obj in D.objects:
             if obj.name.startswith('flow') or obj.name.startswith('_flow'):
                 obj.select = True

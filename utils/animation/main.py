@@ -4,6 +4,17 @@ import bpy
 import shutil
 import json
 from datetime import datetime
+from src.scripts.helpers import format_run_name
+from utils.animation.modules.blensor_scan import run_scan
+from utils.animation.modules.video_export import create_video
+from utils.animation.modules.helpers import setup_directories
+from utils.animation.modules.sumo_utils import get_sumo_data
+from utils.animation.modules.paths_utils import get_path_data
+from utils.animation.modules.blender_anim import (
+    animate_vehicles, 
+    animate_rays, 
+    end_ray_animation
+)
 
 # --- Configuração Inicial do Path ---
 # Adiciona o diretório raiz ao sys.path para que o Blender
@@ -11,18 +22,6 @@ from datetime import datetime
 project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.append(project_root)
-
-# --- Importações dos Módulos do Projeto ---
-from raymobtime.src.modules.animation.modules.helpers import base_run_dir_fn, setup_directories
-from raymobtime.src.modules.animation.modules.sumo_utils import get_sumo_data
-from raymobtime.src.modules.animation.modules.paths_utils import get_path_data
-from raymobtime.src.modules.animation.modules.blender_anim import (
-    animate_vehicles, 
-    animate_rays, 
-    end_ray_animation
-)
-from raymobtime.src.modules.animation.modules.blensor_scan import run_scan
-from raymobtime.src.modules.animation.modules.video_export import create_video
 
 def main():
     startTime = datetime.now()
@@ -126,7 +125,7 @@ def main():
 
     for run in range(cfg_sim['start_run'], cfg_sim['end_run']):
         print(f"\n🌀 Processando run {run} ...")
-        scene_path = os.path.join(folder_scanned_name, base_run_dir_fn(run))
+        scene_path = os.path.join(folder_scanned_name, format_run_name(run))
         if not os.path.exists(scene_path):
             print(f"⚠️ Pasta {scene_path} não encontrada. Pulando run {run}.")
             continue
@@ -163,7 +162,7 @@ def main():
         
         # --- Varredura (Opcional) ---
         if use_scan:
-            scan_output_dir = os.path.join(saida_dir, base_run_dir_fn(run))
+            scan_output_dir = os.path.join(saida_dir, format_run_name(run))
             run_scan(position_data, scan_output_dir, zip_results)
 
         frame_num += frame_step

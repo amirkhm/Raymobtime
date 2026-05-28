@@ -4,10 +4,6 @@ import zipfile
 import time
 from math import ceil
 
-def base_run_dir_fn(i):
-    """Retorna o nome do diretório para a run 'i' (ex: 'run00001')"""
-    return "run{:05d}".format(i)
-
 def setup_directories(frame_dir, output_dir):
     """Limpa e (re)cria diretórios temporários e de saída."""
     if os.path.exists(frame_dir):

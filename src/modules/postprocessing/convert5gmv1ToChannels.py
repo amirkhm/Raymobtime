@@ -51,7 +51,7 @@ def gen_rays_dataset(c):
     else:
         session = fgdb.open_database(database_path)
         totalNumEpisodes = session.query(fgdb.Episode).count()
-        numScenesPerEpisode = c.time_of_episode
+        numScenesPerEpisode = c.scenes_per_episode
         
     # just to report time
     start = datetime.datetime.today()
