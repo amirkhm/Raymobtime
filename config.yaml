@@ -1,6 +1,6 @@
 base_config:     
   output_name: "sim_a"                        # Simulation identifier name
-  scenario: "scenario_x"                      # scenario name
+  scenario: "rosslyn"                      # scenario name
   resume: true                                # skip steps already concluded (not implemented, necessary logging of concluded steps)
   clean_previous: false                       # remove result folders before running
 
@@ -15,7 +15,7 @@ pipeline:
       ##end_ep_for_no_veh: true #nop
   
   ray_tracing:                                # parsing automático
-    enabled: true 
+    enabled: false 
     #tool: "wireless_insite"                  # wireless_insite | none
     jump: true   
   
@@ -26,7 +26,7 @@ pipeline:
       - "image"
 
   post_processing:
-    enabled: true  
+    enabled: false  
     which: "all"                              # all | selected
     outputs:                                  # ["db", "coord", "rays", "beams", "image", "lidar"]
       - "db"                                  # database (sqlite/postgres/hdf5)
@@ -80,7 +80,7 @@ blensor_options:
   path_blensor_image: ~/Blensor-x64.AppImage
   image_options:
     BS_camera: false
-    UE_camera: true
+    UE_camera: false
     n_camera_BS: 3
 
 post_processing:

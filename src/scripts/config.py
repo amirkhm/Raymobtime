@@ -9,14 +9,14 @@ logging.basicConfig(level=logging.DEBUG)
 # simulators
 from src.modules.blensor.blensor_src import blensor_simulation
 from src.modules.rt.wi.simulation.simulation import main as simulation_main
-from src.modules.postprocessing import (
-    gen_database,
-    gen_csv_file, 
-    gen_rays_dataset, 
-    gen_beam_output_file,
-    gen_lidar_matrix, 
-    image_refinement,
-    sanity_check_up)
+#from src.modules.postprocessing import (
+#    gen_database,
+#    gen_csv_file, 
+#    gen_rays_dataset, 
+#    gen_beam_output_file,
+#   gen_lidar_matrix,
+#   image_refinement,
+#   sanity_check_up)
 
 def dict_to_namespace(obj):
     if isinstance(obj, dict):
@@ -160,7 +160,8 @@ class parameters:
         self.setparameters()
 
     def setparameters(self):
-        self.working_directory = os.path.dirname(os.path.realpath(__file__))
+        self.working_directory = find_project_root()
+        #os.path.dirname(os.path.realpath(__file__))
 
         self.use_fixed_receivers = self.rmt.features.use_fixed_receivers
         self.use_vehicles_template = self.rmt.features.use_vehicles_template
@@ -174,6 +175,7 @@ class parameters:
             self.working_directory,
             "data",                                
             self.base_config.scenario,
+            "base",
             "wi" #It's possible differents base InSite projects, add in yaml
         ) 
 
@@ -212,21 +214,22 @@ class parameters:
         # InSite env variable
         self.locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 '
 
+        print(self.ray_tracing.wireless_insite.LICENSE_FILE)
         if self.insite_version == '3.3':
             self.wibatch_bin = (
                 self.locale
-                + '{} '.format(self.ray_racing.wireless_insite.software_paths.LICENSE_FILE)
+                + '{} '.format(self.ray_tracing.wireless_insite.LICENSE_FILE)
                 + 'LD_LIBRARY_PATH={}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ '.format(
-                    self.ray_racing.wireless_insite.software_paths)
+                    self.ray_tracing.wireless_insite.software_path)
                 + '{}/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/wibatch'.format(
-                    self.ray_racing.wireless_insite.software_paths))
+                    self.ray_tracing.wireless_insite.software_path))
 
         elif self.insite_version == '3.2':
             self.wibatch_bin = (
                 self.locale
-                + f"{self.ray_racing.wireless_insite.software_paths.LICENSE_FILE} "
-                + f"LD_LIBRARY_PATH={self.ray_racing.wireless_insite.software_paths}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ "
-                + f"{self.ray_racing.wireless_insite.software_paths}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch")
+                + f"{self.ray_tracing.wireless_insite.LICENSE_FILE} "
+                + f"LD_LIBRARY_PATH={self.ray_tracing.wireless_insite.software_path}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ "
+                + f"{self.ray_tracing.wireless_insite.software_path}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch")
 
         if not self.isolated_sim:
             self.sumo_bin = self.sumo.bin
@@ -475,42 +478,43 @@ def raymobtime():
     checks, or process auxiliary sensor data.
     """
 
-    postprocessing_modules = {
-        "db": gen_database,
-        "coord": gen_csv_file,
-        "rays": gen_rays_dataset,
-        "beams": gen_beam_output_file,
-        "lidar": gen_lidar_matrix,
-        "image": image_refinement,
-    }
+    #postprocessing_modules = {
+    #    "db": gen_database,
+    #    "coord": gen_csv_file,
+    #    "rays": gen_rays_dataset,
+    #    "beams": gen_beam_output_file,
+    #    "lidar": gen_lidar_matrix,
+    #    "image": image_refinement,
+    #}
 
     c = parameters()
 
-    if c.post_processing.enabled: 
-        if c.post_processing.which == "all":
-            for func in [gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file]:
-                func(c)
+    #if c.post_processing.enabled: 
+    #    print("Starting post-processing...")
+    #    if c.post_processing.which == "all":
+    #        for func in [gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file]:
+    #            func(c)
 
-        elif c.post_processing.outputs in postprocessing_modules:
-            func = postprocessing_modules[c.post_processing.outputs]
-            func(c)
+    #    elif c.post_processing.outputs in postprocessing_modules:
+    #        func = postprocessing_modules[c.post_processing.outputs]
+    #        func(c)
 
-    if c.validation.run_checkup:
-        sanity_check_up(c)
+    #if c.validation.run_checkup:
+    #    sanity_check_up(c)
 
     # Simulation using blensor for image/lidar database
     if (c.blensor.enabled):
         blensor_simulation(c)
         
     # Saving the blensor simulation from pcd files to matrix type data
-    CoordSystem = c.CoordSystem
-    if "lidar" in c.post_processing.outputs:
-        if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'sph':
-            gen_lidar_matrix(c)
-        else:
-            raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.json')
-    elif "image" in c.post_processing.outputs:
-        image_refinement(c)
+    #CoordSystem = c.CoordSystem
+    #if "lidar" in c.post_processing.outputs:
+    #    if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'sph':
+    #        gen_lidar_matrix(c)
+    #    else:
+    #        raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.json')
+    #elif "image" in c.post_processing.outputs:
+    #    image_refinement(c)
 
     # Usual Raymobtime Simulation using WI
     if c.mobility.enabled or c.ray_tracing.enabled:
