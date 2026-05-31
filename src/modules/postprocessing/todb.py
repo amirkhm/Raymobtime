@@ -69,7 +69,6 @@ def gen_database(c):
     sc_i = 0
     ep_i = -1 #it's summed to 1 and we need to start by 0
     episode = None
-    #n_run = 100000
     run_i = 0
 
     if c.isolated_sim:
@@ -191,7 +190,7 @@ def gen_database(c):
                 raise ValueError(f'From file {object_file_name}')
 
             if simulation_info['scene_i'] != episode.number_of_scenes:
-                raise ValueError(f'Expecting {len(episode.number_of_scenes)} found {simulation_info['scene_i']}')
+                raise ValueError(f'Expecting {len(episode.number_of_scenes)} found {simulation_info["scene_i"]}')
                 
 
             with open(object_file_name) as infile:

@@ -302,9 +302,6 @@ def main(c):
                         episode_i += 1
                     scene_i = 0
                     # step time_between_episodes from the last one
-                    
-                else:
-                    
 
                 #if location is None:  #there are not cars with antennas in this episode (all have left)
                 # no vehicles in the environment (not only the ones without antennas, but no vehicles at all)

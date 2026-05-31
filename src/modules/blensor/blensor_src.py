@@ -26,6 +26,8 @@ def blensor_simulation(c):
     RED = '\033[91m'
     RESET = '\033[0m'
 
+    ####GERAR UM YAML TEMP PARA SERREPASSADO NO CMD
+
     for i in range(min(c.n_run),max(c.n_run)+1):
         print('Running command...')
         for blend_runpy in main_simulator_python_file:

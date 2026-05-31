@@ -8,14 +8,14 @@ logging.basicConfig(level=logging.DEBUG)
 # simulators
 from src.modules.blensor.blensor_src import blensor_simulation
 from src.modules.rt.wi.simulation.simulation import main as simulation_main
-#from src.modules.postprocessing import (
-#    gen_database,
-#    gen_csv_file, 
-#    gen_rays_dataset, 
-#    gen_beam_output_file,
-#   gen_lidar_matrix,
-#   image_refinement,
-#   sanity_check_up)
+from src.modules.postprocessing import (
+    gen_database,
+    gen_csv_file, 
+    gen_rays_dataset, 
+    gen_beam_output_file,
+   gen_lidar_matrix,
+   image_refinement,
+   sanity_check_up)
 
 def dict_to_namespace(obj):
     if isinstance(obj, dict):
@@ -361,7 +361,7 @@ class parameters:
             + self.insite_study_area_name
             + '.xml')
 
-        # The mysterious information below is added in simulation.py into an XML file
+        # The information below is added in simulation.py into an XML file
         if self.insite_version == '3.3':
             self.dst_x3d_txrx_xpath = (
                 "./remcom__rxapi__Job/Scene/remcom__rxapi__Scene/TxRxSetList/"
@@ -390,7 +390,6 @@ class parameters:
             self.use_sumo = True
 
         # Dimensions of the Mobile Objects, MOBJS, which will be placed on dst_object_file_name
-        # car_dimensions = (1.76, 4.54, 1.47)
         self.car_dimensions = (2, 6, 1.47)
 
         # Antenna to be placed above the cars
@@ -467,43 +466,43 @@ def raymobtime():
     checks, or process auxiliary sensor data.
     """
 
-    #postprocessing_modules = {
-    #    "db": gen_database,
-    #    "coord": gen_csv_file,
-    #    "rays": gen_rays_dataset,
-    #    "beams": gen_beam_output_file,
-    #    "lidar": gen_lidar_matrix,
-    #    "image": image_refinement,
-    #}
+    postprocessing_modules = {
+       "db": gen_database,
+       "coord": gen_csv_file,
+       "rays": gen_rays_dataset,
+       "beams": gen_beam_output_file,
+       "lidar": gen_lidar_matrix,
+       "image": image_refinement,
+    }
 
     c = parameters()
 
-    #if c.post_processing.enabled: 
-    #    print("Starting post-processing...")
-    #    if c.post_processing.which == "all":
-    #        for func in [gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file]:
-    #            func(c)
+    if c.post_processing.enabled: 
+       print("Starting post-processing...")
+       if c.post_processing.which == "all":
+           for func in [gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file]:
+               func(c)
 
-    #    elif c.post_processing.outputs in postprocessing_modules:
-    #        func = postprocessing_modules[c.post_processing.outputs]
-    #        func(c)
+       elif c.post_processing.outputs in postprocessing_modules:
+           func = postprocessing_modules[c.post_processing.outputs]
+           func(c)
 
-    #if c.validation.run_checkup:
-    #    sanity_check_up(c)
+    if c.validation.run_checkup:
+       sanity_check_up(c)
 
     # Simulation using blensor for image/lidar database
     if (c.blensor.enabled):
         blensor_simulation(c)
         
     # Saving the blensor simulation from pcd files to matrix type data
-    #CoordSystem = c.CoordSystem
-    #if "lidar" in c.post_processing.outputs:
-    #    if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'sph':
-    #        gen_lidar_matrix(c)
-    #    else:
-    #        raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.json')
-    #elif "image" in c.post_processing.outputs:
-    #    image_refinement(c)
+    CoordSystem = c.CoordSystem
+    if "lidar" in c.post_processing.outputs:
+       if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'sph':
+           gen_lidar_matrix(c)
+       else:
+           raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.json')
+    elif "image" in c.post_processing.outputs:
+       image_refinement(c)
 
     # Usual Raymobtime Simulation using WI
     if c.mobility.enabled or c.ray_tracing.enabled:
