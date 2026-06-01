@@ -13,20 +13,50 @@ from math import *
 from datetime import datetime
 from src.scripts.helpers import format_run_name
 
+def load_runtime_config():
+    """
+    Load the runtime configuration passed by blensor_src.py.
+
+    Expected command format:
+        blender scenario.blend --background -P script.py -- run_id config_path
+
+    Example:
+        -- 5 /tmp/raymobtime_blensor_run_00005.json
+    """
+    args = sys.argv
+
+    if "--" not in args:
+        raise RuntimeError(
+            "Missing '--' in Blender command arguments. "
+            "Expected: -- run_id config_path"
+        )
+
+    user_args = args[args.index("--") + 1:]
+
+    if len(user_args) < 2:
+        raise RuntimeError(
+            "Expected arguments after '--': run_id config_path"
+        )
+
+    run_id = int(user_args[0])
+    config_path = user_args[1]
+
+    with open(config_path, "r", encoding="utf-8") as file:
+        cfg = json.load(file)
+
+    return run_id, cfg
+
 def simulator():
     startTime = datetime.now()
     # Get infos from the args
-    args = sys.argv
+    run_id, cfg = load_runtime_config()
 
-    with open('config.json', 'r') as file:
-        cfg = json.load(file)
+    folder_scanned_name = cfg["paths"]["rt_simulations_dir"]
+    folder_scans_dataset = cfg["paths"]["scans_dir"]
+    vehicles_blend_path = cfg["paths"]["vehicles_blend_path"]
 
-    cur_dir = os.curdir
-    folder_scanned_name = os.path.join(cur_dir, 'simulations', cfg['simulation_paths']['results_dir_path'])
-    folder_scans_dataset = os.path.join(cur_dir, 'sim_data', cfg['simulation_paths']['results_dir_path'], 'scans')
-    vehicles_blend_path = cfg['blensor_options']['path_to_vehicles']
-    start_run = cfg['simulation_parameters']['n_init_run']
-    end_run = cfg['simulation_parameters']['n_end_run']
+    start_run = run_id
+    end_run = run_id + 1
 
     if not os.path.exists(folder_scans_dataset):
         os.makedirs(folder_scans_dataset)

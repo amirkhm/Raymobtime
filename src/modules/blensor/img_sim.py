@@ -1,3 +1,4 @@
+import sys
 import os
 import json
 import bpy
@@ -10,28 +11,59 @@ from math import *
 from datetime import datetime
 from src.scripts.helpers import format_run_name
 
+def load_runtime_config():
+    """
+    Load the runtime configuration passed by blensor_src.py.
+
+    Expected command format:
+        blender scenario.blend --background -P script.py -- run_id config_path
+
+    Example:
+        -- 5 /tmp/raymobtime_blensor_run_00005.json
+    """
+    args = sys.argv
+
+    if "--" not in args:
+        raise RuntimeError(
+            "Missing '--' in Blender command arguments. "
+            "Expected: -- run_id config_path"
+        )
+
+    user_args = args[args.index("--") + 1:]
+
+    if len(user_args) < 2:
+        raise RuntimeError(
+            "Expected arguments after '--': run_id config_path"
+        )
+
+    run_id = int(user_args[0])
+    config_path = user_args[1]
+
+    with open(config_path, "r", encoding="utf-8") as file:
+        cfg = json.load(file)
+
+    return run_id, cfg
 
 def main():
     startTime = datetime.now()
     frame_num = 0
 
-    with open('config.json', 'r') as file:
-        cfg = json.load(file)
+    run_id, cfg = load_runtime_config()
 
-    cur_dir = os.curdir
-    folder_scanned_name = os.path.join(cur_dir, 'simulations', cfg['simulation_paths']['results_dir_path'])
-    folder_img_dataset = os.path.join(cur_dir, 'sim_data', cfg['simulation_paths']['results_dir_path'], 'images')
-    vehicles_blend_path = cfg['blensor_options']['path_to_vehicles']
-    start_run = cfg['simulation_parameters']['n_init_run']
-    end_run = cfg['simulation_parameters']['n_end_run']
-    n_scenes_of_each_episode = cfg['simulation_parameters']['n_scenes_of_each_episode']
+    folder_scanned_name = cfg["paths"]["rt_simulations_dir"]
+    folder_img_dataset = cfg["paths"]["images_dir"]
+    vehicles_blend_path = cfg["paths"]["vehicles_blend_path"]
+
+    start_run = run_id
+    end_run = run_id + 1
+    n_scenes_of_each_episode = cfg["simulation"]["scenes_per_episode"]
 
     if not os.path.exists(folder_img_dataset):
         os.makedirs(folder_img_dataset)
 
     current_scn = 0
     current_ep = 0
-    listValidsInvalids = os.path.join(cur_dir, 'sim_data', cfg['simulation_paths']['results_dir_path'], 'CoordVehicleTxRx.csv')
+    listValidsInvalids = cfg["paths"]["coord_vehicle_txrx"]    
     run = start_run
     C.scene.frame_set(frame_num)     
     if bpy.data.objects.get("Camera") is None:

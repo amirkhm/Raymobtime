@@ -4,7 +4,8 @@ import yaml
 from pathlib import Path
 from types import SimpleNamespace
 import logging
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
+
 # simulators
 from src.modules.blensor.blensor_src import blensor_simulation
 from src.modules.rt.wi.simulation.simulation import main as simulation_main
@@ -497,10 +498,10 @@ def raymobtime():
     # Saving the blensor simulation from pcd files to matrix type data
     CoordSystem = c.CoordSystem
     if (c.post_processing.enabled) and ("lidar" in c.post_processing.outputs):
-       if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'sph':
+       if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'cartesian':
            gen_lidar_matrix(c)
        else:
-           raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.json')
+           raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.yaml')
     elif (c.post_processing.enabled) and ("image" in c.post_processing.outputs):
        image_refinement(c)
 

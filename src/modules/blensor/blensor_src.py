@@ -5,71 +5,206 @@ import psutil
 import os
 import signal
 from multiprocessing import Process
+import json
+import tempfile
+from pathlib import Path
+from types import SimpleNamespace
+
+def to_jsonable(obj):
+    """
+    Convert objects from config.py into JSON-compatible values.
+    """
+    if isinstance(obj, SimpleNamespace):
+        return {
+            key: to_jsonable(value)
+            for key, value in vars(obj).items()
+        }
+
+    if isinstance(obj, dict):
+        return {
+            key: to_jsonable(value)
+            for key, value in obj.items()
+        }
+
+    if isinstance(obj, list):
+        return [to_jsonable(value) for value in obj]
+
+    if isinstance(obj, tuple):
+        return [to_jsonable(value) for value in obj]
+
+    if isinstance(obj, range):
+        return list(obj)
+
+    if isinstance(obj, Path):
+        return str(obj)
+
+    return obj
+
+def export_blensor_runtime_config(c, run_id):
+    """
+    Create a temporary JSON configuration file for Blender/Blensor scripts.
+    """
+
+    project_root = str(c.working_directory)
+
+    cfg = {
+        "run_id": int(run_id),
+
+        "project_root": project_root,
+
+        "paths": {
+            "rt_simulations_dir": str(c.results_dir),
+            "processed_data_dir": str(c.results_dir_postprocessed),
+
+            "images_dir": os.path.join(
+                project_root,
+                "data",
+                c.base_config.scenario,
+                "out",
+                c.base_config.output_name,
+                "images"
+            ),
+
+            "scans_dir": os.path.join(
+                project_root,
+                "data",
+                c.base_config.scenario,
+                "out",
+                c.base_config.output_name,
+                "scans"
+            ),
+
+            "vehicles_blend_path": str(c.path_to_vehicles_blend),
+            
+            "coord_vehicle_txrx": os.path.join(
+                project_root,
+                "data",
+                c.base_config.scenario,
+                "out",
+                c.base_config.output_name,
+                "processed_data",
+                "CoordVehicleTxRx.csv"
+            ),
+        },
+
+        "blensor": {
+            "outputs": c.blensor.outputs,
+            "sim_BS_img": c.sim_BS_img,
+            "sim_UE_img": c.sim_UE_img,
+            "n_camera_BS": c.n_cameras_blensor_scenario,
+        },
+
+        "simulation": {
+            "run_id": int(run_id),
+            "scenes_per_episode": c.scenes_per_episode,
+        },
+
+        "raw_config": to_jsonable(c.cfg),
+    }
+
+    config_path = os.path.join(
+        tempfile.gettempdir(),
+        f"raymobtime_blensor_run_{int(run_id):05d}.json"
+    )
+
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=4)
+
+    return config_path
 
 def blensor_simulation(c):
-    # Will simulate blensor multiple times
-    # Get paths from config file
     blensor_scenario_path = c.blensor_scenario_path
     blensor_runfile = c.blensor_runfile_path
-    
-    if c.blensor.outputs == 'lidar':
-        main_simulator_python_file = ['blensor/lidar_sim.py']
-    elif c.blensor.outputs == 'image':
+
+    if c.blensor.outputs == "lidar":
+        main_simulator_python_file = ["blensor/lidar_sim.py"]
+
+    elif c.blensor.outputs == "image":
         main_simulator_python_file = []
+
         if c.sim_BS_img:
-            main_simulator_python_file.append('blensor/img_bs_sim.py')
+            main_simulator_python_file.append("blensor/img_bs_sim.py")
+
         if c.sim_UE_img:
-            main_simulator_python_file.append('blensor/img_sim.py')
-        
+            main_simulator_python_file.append("blensor/img_sim.py")
 
-    # Customize color in the terminal
-    RED = '\033[91m'
-    RESET = '\033[0m'
+    else:
+        raise ValueError(f"Invalid Blensor output type: {c.blensor.outputs}")
 
-    ####GERAR UM YAML TEMP PARA SERREPASSADO NO CMD
+    RED = "\033[91m"
+    RESET = "\033[0m"
 
-    for i in range(min(c.n_run),max(c.n_run)+1):
-        print('Running command...')
+    for i in range(min(c.n_run), max(c.n_run) + 1):
+        print("Running command...")
+
+        runtime_config_path = export_blensor_runtime_config(c, i)
+
         for blend_runpy in main_simulator_python_file:
-            cmd = [blensor_runfile, blensor_scenario_path, '--background', '-P', blend_runpy, '--', f'{i}']
-            
-            print(cmd)
-            print(RED + f'Simulation n° {i}' + RESET)
+            cmd = [
+                blensor_runfile,
+                blensor_scenario_path,
+                "--background",
+                "-P",
+                blend_runpy,
+                "--",
+                str(i),
+                runtime_config_path,
+            ]
 
-            p = Process(target=run_blensor_safely, args=(cmd,))
+            print(cmd)
+            print(RED + f"Simulation n° {i}" + RESET)
+
+            p = Process(
+                target=run_blensor_safely,
+                args=(cmd, str(c.working_directory))
+            )
+
             p.start()
-            p.join(timeout=3700)  # Slightly longer than subprocess timeout
+            p.join(timeout=3700)
+
             if p.is_alive():
                 p.terminate()
-            
-            print(RED + f'Memory after: {psutil.virtual_memory().used/1024/1024:.2f} MB' + RESET)
-            
+
+            print(
+                RED
+                + f"Memory after: {psutil.virtual_memory().used / 1024 / 1024:.2f} MB"
+                + RESET
+            )
+
         gc.collect()
 
-def run_blensor_safely(cmd):
-    """Run Blensor in a fully isolated process"""
-    # Create new process group for complete cleanup
-    os.setpgrp()
-    
+def run_blensor_safely(cmd, cwd=None):
+    """
+    Run Blensor in an isolated process group on Linux.
+    If Blensor hangs or fails, the whole process group can be killed.
+    """
+    proc = None
+
     try:
-        # Run with fresh environment
         env = os.environ.copy()
-        env['BLENDER_USER_SCRIPTS'] = '/tmp'  # Isolate configs
-        
+        env["BLENDER_USER_SCRIPTS"] = "/tmp"
+
         proc = subprocess.Popen(
             cmd,
             env=env,
-            preexec_fn=os.setsid  # New session
+            cwd=cwd,
+            preexec_fn=os.setsid
         )
-        proc.wait(timeout=3600)  # Timeout after 1 hour
-        
-    finally:
-        # Kill entire process tree
-        try:
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-        except ProcessLookupError:
-            pass
 
+        proc.wait(timeout=3600)
+
+    except subprocess.TimeoutExpired:
+        print("Blensor timed out. Killing process group...")
+
+        if proc is not None:
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+
+    finally:
+        if proc is not None and proc.poll() is None:
+            try:
+                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            except ProcessLookupError:
+                pass
 
 def export_cam_info(c):
     """
