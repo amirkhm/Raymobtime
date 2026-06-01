@@ -202,7 +202,6 @@ class parameters:
         # InSite env variable
         self.locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 '
 
-        print(self.ray_tracing.wireless_insite.LICENSE_FILE)
         if self.insite_version == '3.3':
             self.wibatch_bin = (
                 self.locale
@@ -466,6 +465,16 @@ def raymobtime():
     checks, or process auxiliary sensor data.
     """
 
+    c = parameters()
+
+    # Usual Raymobtime Simulation using WI
+    if c.mobility.enabled or c.ray_tracing.enabled:
+        simulation_main(c)
+
+    # Simulation using blensor for image/lidar database
+    if (c.blensor.enabled):
+        blensor_simulation(c)
+
     postprocessing_modules = {
        "db": gen_database,
        "coord": gen_csv_file,
@@ -474,8 +483,6 @@ def raymobtime():
        "lidar": gen_lidar_matrix,
        "image": image_refinement,
     }
-
-    c = parameters()
 
     if c.post_processing.enabled: 
        print("Starting post-processing...")
@@ -486,27 +493,19 @@ def raymobtime():
        elif c.post_processing.outputs in postprocessing_modules:
            func = postprocessing_modules[c.post_processing.outputs]
            func(c)
+        
+    # Saving the blensor simulation from pcd files to matrix type data
+    CoordSystem = c.CoordSystem
+    if (c.post_processing.enabled) and ("lidar" in c.post_processing.outputs):
+       if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'sph':
+           gen_lidar_matrix(c)
+       else:
+           raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.json')
+    elif (c.post_processing.enabled) and ("image" in c.post_processing.outputs):
+       image_refinement(c)
 
     if c.validation.run_checkup:
        sanity_check_up(c)
-
-    # Simulation using blensor for image/lidar database
-    if (c.blensor.enabled):
-        blensor_simulation(c)
-        
-        # Saving the blensor simulation from pcd files to matrix type data
-        CoordSystem = c.CoordSystem
-        if "lidar" in c.post_processing.outputs:
-            if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'cartesian':
-                gen_lidar_matrix(c)
-            else:
-                raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.xml')
-        elif "image" in c.post_processing.outputs:
-            image_refinement(c)
-
-    # Usual Raymobtime Simulation using WI
-    if c.mobility.enabled or c.ray_tracing.enabled:
-        simulation_main(c)
     
 if __name__ == "__main__":    
     raymobtime()
