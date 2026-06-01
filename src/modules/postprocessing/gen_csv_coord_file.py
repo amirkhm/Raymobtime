@@ -10,10 +10,10 @@ from shapely import geometry
 from src.modules.postprocessing import save5gmdata as fgdb
 
 def gen_csv_file(c):
-    main_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
+    main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
-    database_path = os.path.join(main_folder, f'{c.sim_name}.db')
+    database_path = os.path.join(main_folder, f'{c.base_config.output_name}.db')
     session = fgdb.open_database(database_path)
     
     analysis_polygon = geometry.Polygon([(c.analysis_area[0], c.analysis_area[1]),

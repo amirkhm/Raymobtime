@@ -9,11 +9,11 @@ from src.modules.postprocessing import (
     
 def obstruction_flag(c):
 
-    main_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
+    main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
     if not os.path.exists(main_folder):
         raise FileNotFoundError(f"ERROR: folder {main_folder} not found")
 
-    database_path = os.path.join(main_folder, f'{c.sim_name}.db')
+    database_path = os.path.join(main_folder, f'{c.base_config.output_name}.db')
     session = fgdb.open_database(database_path)
     objcs = session.query(fgdb.InsiteObject)
 

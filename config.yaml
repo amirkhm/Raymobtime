@@ -1,7 +1,7 @@
 base_config:     
   output_name: "sim_a"                        # Simulation identifier name
-  scenario: "rosslyn"                      # scenario name
-  resume: true                                # skip steps already concluded (not implemented, necessary logging of concluded steps)
+  scenario: "rosslyn_60GHz"                      # scenario name
+  resume: false                                # skip steps already concluded (not implemented, necessary logging of concluded steps)
   clean_previous: true                       # remove result folders before running
 
 pipeline:

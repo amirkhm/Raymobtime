@@ -10,10 +10,7 @@ from src.scripts.helpers import format_run_name
 
 def base_vehicle_pcd(flow):  # the folders will be run00001, run00002, etc.
     V_id = flow.split("flow")
-    # V_id = float(flow.replace('flow',''))
-    # return '{}flow{:.6f}'.format(V_id[0],float(V_id[-1]))
     return '{}flow{}00000'.format(V_id[0],float(V_id[-1]))#erro de merda arrumar em algum momento o codigo que escreve
-    # return 'flow{}00000'.format(V_id)
 
 def find_vehicle(flow,tmp_dir):
     flow_list = os.listdir(tmp_dir)
@@ -41,17 +38,14 @@ def episodes_dict(csv_path,tmp_dir):
             Valid_Scene = int(row['SceneID'])
             Valid_Rx = row["VehicleName"]
 
-            # Valid_Rx = find_vehicle(row["VehicleName"],tmp_dir)
             Valid_Rx = base_vehicle_pcd(str(row['VehicleName']))
             key_dict = str(Valid_episode) + ',' + str(Valid_Scene)
-            #key_dict = [Valid_episode, Valid_Scene]
             if EpisodeInMemory != Valid_episode:
                 episodesDict[Valid_episode]  = []
                 usersDict[key_dict]  = []
                 txDict[key_dict]  = []
                 EpisodeInMemory = Valid_episode
                 SceneInMemory = -1
-            #csv_output = Valid_Scene + ',' + Valid_Rx
             if SceneInMemory != Valid_Scene:
                 episodesDict[Valid_episode]  = []
                 SceneInMemory = Valid_Scene
@@ -71,8 +65,8 @@ def gen_lidar_matrix(c):
     startTime = datetime.now()
 
     print('Check Quantization parameters and Tx position before run!')
-    
-    main_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
+
+    main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
         
@@ -88,11 +82,12 @@ def gen_lidar_matrix(c):
     # Quantization parameters
     QP = c.QP
     Tx = c.Tx_position
+
     max_dist_LIDAR = c.max_dist_LIDAR
 
     # analysis_area = (743, 416, 771, 626) #Rosslyn
-    dx = np.arange(QP['Xmin'],QP['Xmax'],QP['Xp'])
-    dy = np.arange(QP['Ymin'],QP['Ymax'],QP['Yp'])
+    dx = np.arange(QP.min[0], QP.max[0], QP.step[0])
+    dy = np.arange(QP.min[1], QP.max[1], QP.step[1])
     
     #initializing variables
     numScenesPerEpisode = c.scenes_per_episode #number of scenes per episode
@@ -112,7 +107,7 @@ def gen_lidar_matrix(c):
     scenes_in_ep, RX_in_ep, Tx_in_ep = episodes_dict(fileToRead,tmpdir)
     number_of_receivers = c.receivers_per_episode
     if type_data == '3D':
-        dz = np.arange(QP['Zmin'],QP['Zmax'],QP['Zp'])
+        dz = np.arange(QP.min[2], QP.max[2], QP.step[2])
         #Assumes 10 Tx/Rx pairs per scene
         #TO-DO: Support for episodes with more than 1 scene
         zeros_array = np.zeros((numScenesPerEpisode,number_of_receivers, np.size(dx), np.size(dy), np.size(dz)), int)

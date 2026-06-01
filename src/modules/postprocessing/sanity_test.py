@@ -70,7 +70,7 @@ def beam_check(main_folder, df_val):
     print("###### Beams Files Check up Finished ######")
 
 def sanity_check_up(c):
-    main_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
+    main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
     df, df_val = csv_check(main_folder)

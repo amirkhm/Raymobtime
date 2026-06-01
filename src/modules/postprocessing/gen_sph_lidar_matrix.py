@@ -83,7 +83,8 @@ def gen_lidar_matrix(c):
 
     print('Check Quantization parameters and Tx position before run!')
     
-    main_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
+    main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
+
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
         

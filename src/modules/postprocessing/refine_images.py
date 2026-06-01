@@ -108,7 +108,7 @@ def obj_in_cam_view(pixel, window_size):
     
 def image_refinement(c):
 
-    main_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
+    main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
     if not os.path.exists(main_folder):
         raise FileNotFoundError(f"ERROR: folder {main_folder} not found")
     
@@ -121,7 +121,7 @@ def image_refinement(c):
     if not os.path.exists(refined_img_path):
         os.makedirs(refined_img_path)
 
-    database_path = os.path.join(main_folder, f'{c.sim_name}.db')
+    database_path = os.path.join(main_folder, f'{c.base_config.output_name}.db')
     session = fgdb.open_database(database_path)
     objcs = session.query(fgdb.InsiteObject)
 

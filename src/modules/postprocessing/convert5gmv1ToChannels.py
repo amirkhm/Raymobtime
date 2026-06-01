@@ -36,10 +36,10 @@ def gen_rays_dataset(c):
         (c.analysis_area[2], c.analysis_area[3]),
         (c.analysis_area[0], c.analysis_area[3])])
     
-    database_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
+    database_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
     if not os.path.exists(database_folder):
         os.makedirs(database_folder)
-    database_path = os.path.join(database_folder, f'{c.sim_name}.db')
+    database_path = os.path.join(database_folder, f'{c.base_config.output_name}.db')
 
     numTxRxPairsPerScene = c.receivers_per_episode
     numVariablePerRay = 8 #has the ray phase now

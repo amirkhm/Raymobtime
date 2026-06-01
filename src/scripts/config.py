@@ -494,15 +494,15 @@ def raymobtime():
     if (c.blensor.enabled):
         blensor_simulation(c)
         
-    # Saving the blensor simulation from pcd files to matrix type data
-    CoordSystem = c.CoordSystem
-    if "lidar" in c.post_processing.outputs:
-       if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'sph':
-           gen_lidar_matrix(c)
-       else:
-           raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.json')
-    elif "image" in c.post_processing.outputs:
-       image_refinement(c)
+        # Saving the blensor simulation from pcd files to matrix type data
+        CoordSystem = c.CoordSystem
+        if "lidar" in c.post_processing.outputs:
+            if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'cartesian':
+                gen_lidar_matrix(c)
+            else:
+                raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.xml')
+        elif "image" in c.post_processing.outputs:
+            image_refinement(c)
 
     # Usual Raymobtime Simulation using WI
     if c.mobility.enabled or c.ray_tracing.enabled:

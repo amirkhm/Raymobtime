@@ -35,10 +35,10 @@ def count_model_paths(dir):
 def gen_database(c):
     last_simulation_info = None
     simulation_info = None
-    database_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name)
+    database_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
     if not os.path.exists(database_folder):
         os.makedirs(database_folder)
-    database_path = os.path.join(database_folder, f'{c.sim_name}.db')
+    database_path = os.path.join(database_folder, f'{c.base_config.output_name}.db')
     if not c.isolated_sim:  
         session = fgdb.create_database(database_path)
     else:

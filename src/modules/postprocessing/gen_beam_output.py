@@ -129,7 +129,7 @@ def process_ep(path, c):
     return hmatrix, beamIndexOutputs, channelOutputs
 
 def gen_beam_output_file(c):
-    output_beam_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name, 'beams')
+    output_beam_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name, 'beams')
     if not os.path.exists(output_beam_folder):
         os.makedirs(output_beam_folder)
     output_beam_list = []
@@ -137,7 +137,7 @@ def gen_beam_output_file(c):
     output_hmatrix_list = []            
     
     if not c.import_hmatrix:
-        database_folder = os.path.join(c.working_directory, 'sim_data', c.sim_name, 'rays')
+        database_folder = os.path.join(c.working_directory, 'sim_data', c.outputS_name, 'rays')
         max_runs = np.max(c.n_run)
         episodes=1
         
