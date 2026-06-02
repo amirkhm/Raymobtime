@@ -9,13 +9,42 @@ from src.modules.postprocessing.pypcd import pypcd
 from src.scripts.helpers import format_run_name
 
 def base_vehicle_pcd(flow):  # the folders will be run00001, run00002, etc.
-    V_id = flow.split("flow")
-    # V_id = float(flow.replace('flow',''))
-    # return '{}flow{:.6f}'.format(V_id[0],float(V_id[-1]))
-    return '{}flow{}00000'.format(V_id[0],float(V_id[-1]))#erro de merda arrumar em algum momento o codigo que escreve
-    # return 'flow{}00000'.format(V_id)
+    """
+    Convert a vehicle flow identifier into the expected PCD filename prefix.
 
-def find_vehicle(flow,tmp_dir):
+    This helper formats a SUMO vehicle flow name into the base identifier used
+    to match generated Blensor point cloud files.
+
+    Args:
+        flow: Vehicle or flow identifier, usually containing the substring
+            ``"flow"``.
+
+    Returns:
+        Formatted vehicle identifier used to match PCD files.
+    """
+    V_id = flow.split("flow")
+    return '{}flow{}00000'.format(V_id[0],float(V_id[-1])) 
+
+def find_vehicle(flow, tmp_dir):
+    """
+    Find the point cloud file associated with a vehicle flow.
+
+    This function searches a temporary scan directory for a file whose name
+    starts with the given vehicle flow identifier and excludes noisy point cloud
+    files.
+
+    Args:
+        flow: Vehicle flow identifier used as the filename prefix.
+        tmp_dir: Directory where extracted point cloud files are stored.
+
+    Returns:
+        Full path to the matching point cloud file.
+
+    Raises:
+        FileNotFoundError: If the temporary scan directory does not exist.
+        UnboundLocalError: If no matching point cloud file is found.
+    """
+
     flow_list = os.listdir(tmp_dir)
     for tmp_cars in  flow_list:
         if tmp_cars.startswith(flow) and "noisy" not in tmp_cars:
@@ -25,17 +54,57 @@ def find_vehicle(flow,tmp_dir):
 
 def car2sph(x, y, z):
     """
-    Switches cartesian coordinates to spherical coordinates
-    r is the radial distance,
-    theta is the polar angle (inclination) in radians,
-    phi is the azimuthal angle in radians.
+    Convert Cartesian coordinates to spherical coordinates.
+
+    This function converts x, y, and z Cartesian coordinates into spherical
+    coordinates using the radial distance, azimuth angle, and polar angle.
+
+    Args:
+        x: Cartesian x coordinate or array of x coordinates.
+        y: Cartesian y coordinate or array of y coordinates.
+        z: Cartesian z coordinate or array of z coordinates.
+
+    Returns:
+        A tuple containing:
+            - r: Radial distance.
+            - phi: Azimuth angle in radians.
+            - theta: Polar angle in radians.
     """
     r = np.sqrt(x**2 + y**2 + z**2)
     theta = np.arccos(z / r) if r != 0 else 0  # Avoid division by zero
     phi = np.arctan2(y, x)
     return r, phi, theta
 
-def episodes_dict(csv_path,tmp_dir):
+def episodes_dict(csv_path, tmp_dir):
+    """
+    Build episode, receiver, and transmitter dictionaries from a coordinate CSV file.
+
+    This function reads the CoordVehicleTxRx CSV file and groups valid receiver
+    and transmitter entries by episode and scene. Invalid rows are skipped. The
+    vehicle names are converted to the corresponding PCD filename convention
+    before being stored.
+
+    Args:
+        csv_path: Path to the CSV file containing episode, scene, receiver,
+            transmitter, and vehicle position information.
+        tmp_dir: Temporary directory containing extracted scan files. This
+            argument is currently not used directly by the function.
+
+    Returns:
+        A tuple containing:
+            - episodesDict: Dictionary mapping each episode ID to its scene IDs.
+            - usersDict: Dictionary mapping ``"episode,scene"`` keys to receiver
+              vehicle information.
+            - txDict: Dictionary mapping ``"episode,scene"`` keys to transmitter
+              vehicle information.
+
+    Raises:
+        FileNotFoundError: If the CSV file does not exist.
+        KeyError: If required CSV columns are missing.
+        ValueError: If episode, scene, position, or ID fields cannot be converted
+            to the expected numeric types.
+    """
+
     with open(csv_path) as csvfile:
         reader = csv.DictReader(csvfile)
         EpisodeInMemory = -1
@@ -45,24 +114,20 @@ def episodes_dict(csv_path,tmp_dir):
         txDict = {}
         positionsDict = {}
         for row in reader:
-            #positions = []
             if str(row['Val']) == 'I':
                 continue
             Valid_episode = int(row['EpisodeID'])
             Valid_Scene = int(row['SceneID'])
             Valid_Rx = row["VehicleName"]
 
-            # Valid_Rx = find_vehicle(row["VehicleName"],tmp_dir)
             Valid_Rx = base_vehicle_pcd(str(row['VehicleName']))
             key_dict = str(Valid_episode) + ',' + str(Valid_Scene)
-            #key_dict = [Valid_episode, Valid_Scene]
             if EpisodeInMemory != Valid_episode:
                 episodesDict[Valid_episode]  = []
                 usersDict[key_dict]  = []
                 txDict[key_dict]  = []
                 EpisodeInMemory = Valid_episode
                 SceneInMemory = -1
-            #csv_output = Valid_Scene + ',' + Valid_Rx
             if SceneInMemory != Valid_Scene:
                 episodesDict[Valid_episode]  = []
                 SceneInMemory = Valid_Scene
@@ -79,6 +144,37 @@ def episodes_dict(csv_path,tmp_dir):
     return episodesDict, usersDict, txDict
 
 def gen_lidar_matrix(c):
+    """
+    Generate spherical LiDAR occupancy matrices from Blensor point cloud scans.
+
+    This function reads receiver and transmitter metadata from CoordVehicleTxRx,
+    extracts point cloud scans for each configured simulation scene, filters the
+    point cloud by floor height and maximum LiDAR distance, centers the points
+    around the receiver vehicle, converts them from Cartesian to spherical
+    coordinates, and quantizes them into a 2D or 3D occupancy grid.
+
+    The generated matrix uses positive values to represent obstacle occupancy
+    and ``-1`` to mark the transmitter position. One compressed ``.npz`` file
+    is saved per processed episode.
+
+    Args:
+        c: Runtime configuration object containing simulation paths, run range,
+            spherical LiDAR quantization parameters, transmitter position,
+            maximum LiDAR range, receiver count, scene/episode settings, and
+            data type selection.
+
+    Returns:
+        None. The generated LiDAR matrices are saved to disk as compressed
+        NumPy ``.npz`` files.
+
+    Raises:
+        FileNotFoundError: If required scan ZIP files or coordinate CSV files are
+            missing.
+        KeyError: If required configuration fields or CSV columns are missing.
+        ValueError: If point cloud, coordinate, or quantization values cannot be
+            converted to the expected numeric format.
+    """
+
     startTime = datetime.now()
 
     print('Check Quantization parameters and Tx position before run!')
@@ -163,7 +259,6 @@ def gen_lidar_matrix(c):
                 zip_ref.extractall(tmpdir)
             for vehicle in RxFlow:
                 pcd_path = find_vehicle(vehicle[0],tmpdir)
-                # pcd_path = tmpdir + '/' + vehicle[0] + '.pcd'
                 pc = pypcd.PointCloud.from_path(pcd_path)
 
                 vehicle_position = [[vehicle[1],vehicle[2],vehicle[3]]]
@@ -189,8 +284,6 @@ def gen_lidar_matrix(c):
                 indphi = quantizeJ(phi, dphi)
                 indphi = [int(i) for i in indphi]
                 
-                # Rx_q_indx = quantizeJ([vehicle[1]],dx)
-                # Rx_q_indy = quantizeJ([vehicle[2]],dy)
                 
                 if c.V2V:
                     #Only works for 1 Transmitter Vehicle
@@ -206,7 +299,6 @@ def gen_lidar_matrix(c):
                 if type_data == '3D':
                     indtheta = quantizeJ(theta,dtheta)
                     indtheta = [int(i) for i in indtheta]
-                    # Rx_q_indz = quantizeJ([vehicle[3]],dz)
                     Tx_q_indz = quantizeJ([Tx[2]],dtheta)
                     MD = np.zeros((np.size(dr),np.size(dphi),np.size(dtheta)), dtype=int)
                 else:
@@ -222,15 +314,12 @@ def gen_lidar_matrix(c):
                 # Tx -1 Rx -2
                 if type_data == '3D':         
                     MD[int(Tx_q_indx[0]),int(Tx_q_indy[0]),int(Tx_q_indz[0])] = -1
-                    # MD[int(Rx_q_indx[0]),int(Rx_q_indy[0]),int(Rx_q_indz[0])] = -2
                 else:
                     MD[int(Tx_q_indx[0]),int(Tx_q_indy[0])] = -1
-                    # MD[int(Rx_q_indx[0]),int(Rx_q_indy[0])] = -2
                 
                 obstacles_matrix_array[s,int(vehicle[4]), :] = MD
                 time_elapsed = datetime.now() - startTime
-                #print("Time elapsed: " + str(time_elapsed))
-            
+              
             total_num_scenes += 1
             shutil.rmtree(tmpdir)
 
@@ -243,8 +332,23 @@ def gen_lidar_matrix(c):
         print("Total time elapsed: " + str(time_elapsed))
         episodeID += 1
 
-
 def quantizeJ(signal, partitions):
+    """
+    Quantize numeric values according to a set of partition levels.
+
+    This function maps each input value to the closest index in the provided
+    quantization partition vector. Values outside the partition range are clipped
+    to the nearest valid index.
+
+    Args:
+        signal: Numeric scalar or array-like object containing values to be
+            quantized.
+        partitions: Ordered array-like object defining the quantization levels.
+
+    Returns:
+        A list of integer quantization indices corresponding to the input signal.
+    """
+    
     xmin = min(signal)
     xmax = max(signal)
     M = len(partitions)

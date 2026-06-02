@@ -4,6 +4,28 @@ import numpy as np
 import h5py
 
 def csv_check(main_folder):
+    """
+    Check the coordinate CSV file for valid and invalid channel entries.
+
+    This function loads the ``CoordVehicleTxRx.csv`` file from the given
+    simulation data folder, counts valid and invalid channel entries, reports
+    episodes containing invalid entries, and prints a summary of the expected
+    and observed number of channels.
+
+    Args:
+        main_folder: Path to the main simulation data folder containing the
+            ``CoordVehicleTxRx.csv`` file.
+
+    Returns:
+        A tuple containing:
+            - df_coord: Full coordinate dataframe.
+            - df_val: Dataframe containing only valid channel entries.
+
+    Raises:
+        FileNotFoundError: If the coordinate CSV file does not exist.
+        KeyError: If required columns such as ``Val``, ``EpisodeID``,
+            ``SceneID``, ``RxID``, or ``TxID`` are missing.
+    """
     csv_file = os.path.join(main_folder, 'CoordVehicleTxRx.csv')
     df_coord = pd.read_csv(csv_file)
     valid_channels = df_coord['Val'].value_counts()['V']
@@ -29,6 +51,28 @@ def csv_check(main_folder):
     return df_coord, df_val
 
 def ray_check(main_folder, df_val):
+    """
+    Check ray-tracing HDF5 files for invalid values in valid channels.
+
+    This function verifies whether channels marked as valid in the coordinate
+    dataframe contain NaN values in the corresponding ray-tracing HDF5 files.
+    If a valid episode, scene, and receiver combination contains NaN values,
+    an error message is printed.
+
+    Args:
+        main_folder: Path to the main simulation data folder containing the
+            ``rays`` directory.
+        df_val: Dataframe containing only valid channel entries from
+            ``CoordVehicleTxRx.csv``.
+
+    Returns:
+        None. The function prints the validation results to the terminal.
+
+    Raises:
+        FileNotFoundError: If an expected ray HDF5 file does not exist.
+        KeyError: If required dataframe columns are missing.
+        OSError: If an HDF5 file cannot be opened.
+    """
     print("###### Ray Files Check up ######")
     eps = np.unique(df_val['EpisodeID'].values)
     valid = list(zip(df_val['EpisodeID'], df_val['SceneID'], df_val['RxID']))
@@ -43,6 +87,29 @@ def ray_check(main_folder, df_val):
     print("###### Ray Files Check up Finished ######")
 
 def beam_check(main_folder, df_val):
+    """
+    Check beam-selection output files for invalid values in valid channels.
+
+    This function loads the beam index and channel magnitude output files,
+    checks for NaN values, and reports cases where valid episode, scene, and
+    receiver combinations contain invalid beam or channel data. It also prints
+    the total number of valid and invalid entries found in the beam outputs.
+
+    Args:
+        main_folder: Path to the main simulation data folder containing the
+            ``beams`` directory.
+        df_val: Dataframe containing only valid channel entries from
+            ``CoordVehicleTxRx.csv``.
+
+    Returns:
+        None. The function prints the validation results to the terminal.
+
+    Raises:
+        FileNotFoundError: If the beam or channel output files do not exist.
+        KeyError: If expected arrays are missing from the ``.npz`` files.
+        ValueError: If the loaded arrays have unexpected shapes.
+    """
+
     print("###### Beams Files Check up ######")
     valid = list(zip(df_val['EpisodeID'], df_val['SceneID'], df_val['RxID']))
 
@@ -70,11 +137,30 @@ def beam_check(main_folder, df_val):
     print("###### Beams Files Check up Finished ######")
 
 def sanity_check_up(c):
+    """
+    Run sanity checks over coordinate, ray, and beam output files.
+
+    This function builds the main simulation data folder path from the runtime
+    configuration, ensures the folder exists, and sequentially runs coordinate
+    CSV checks, ray file checks, and beam output checks.
+
+    Args:
+        c: Runtime configuration object containing the working directory and
+            output name used to locate the generated simulation data.
+
+    Returns:
+        None. The function prints check-up results to the terminal.
+
+    Raises:
+        FileNotFoundError: If required coordinate, ray, or beam output files are
+            missing.
+        KeyError: If required configuration fields or dataframe columns are
+            missing.
+    """
+    
     main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
     df, df_val = csv_check(main_folder)
     ray_check(main_folder, df_val)
     beam_check(main_folder, df_val)
-    
-    

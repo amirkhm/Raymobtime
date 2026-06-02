@@ -7,20 +7,34 @@ import pandas as pd
 from src.modules.blensor.blensor_src import export_cam_info
 from src.modules.postprocessing import save5gmdata as fgdb
 
-def global2pixels(Pob,Pcam,yaw,roll,pitch,K):
+def global2pixels(Pob, Pcam, yaw, roll, pitch, K):
     """
-    Convert a global coordinate to camera POV coordinate
-    Using XYZ Euler rotation, that blender uses
-    Inputs
-    Pob: (x,y,z) global from object (X=front, Y=left, Z=up)
-    Pcam: (x.y.z) global from camera
-    yaw: Z rotation
-    roll: X rotation
-    pitch: Y rotation
-    K: camera parameters
-    Output
-    p_img: (pixels) x,y from image pixel
-    p_c: (x,y,z) coordinate from camera POV
+    Project a 3D global point into image pixel coordinates.
+
+    This function converts a point from the global coordinate system to the
+    camera coordinate system using the camera position and Euler rotations.
+    The transformed point is then projected into the image plane using the
+    intrinsic camera matrix.
+
+    Args:
+        Pob: Object position in global coordinates as an array-like object
+            ``[x, y, z]``.
+        Pcam: Camera position in global coordinates as an array-like object
+            ``[x, y, z]``.
+        yaw: Camera rotation around the global z-axis, in radians.
+        roll: Camera rotation around the global x-axis, in radians.
+        pitch: Camera rotation around the global y-axis, in radians.
+        K: Camera intrinsic matrix.
+
+    Returns:
+        A tuple containing:
+            - p_img: Pixel coordinates ``[u, v]`` if the object is in front of
+              the camera, otherwise ``None``.
+            - p_c: Object coordinates in the camera reference frame.
+
+    Notes:
+        If the projected point is behind the camera, the function returns
+        ``None`` for the image pixel coordinates.
     """
 
     rel_pos = Pob - Pcam
@@ -70,6 +84,24 @@ def global2pixels(Pob,Pcam,yaw,roll,pitch,K):
     return p_img[:2], np.array([x_c, y_c, z_c])
 
 def gen_K(cam_info):
+    """
+    Generate intrinsic camera matrices from camera metadata.
+
+    This function computes the intrinsic matrix ``K`` for each camera using its
+    focal length, sensor size, and image resolution. The resulting matrix is
+    added to each camera entry in the input dictionary.
+
+    Args:
+        cam_info: Dictionary containing camera metadata. Each camera entry must
+            include focal length, pixel resolution, and sensor size.
+
+    Returns:
+        The updated camera information dictionary with an added ``K`` matrix for
+        each camera.
+
+    Raises:
+        KeyError: If required camera metadata fields are missing.
+    """
     for cam_name in cam_info:
         cam = cam_info[cam_name]
         fx = cam["focal_length_mm"]*cam["pixel_resolution"]["width"]/cam["sensor_size_mm"]["width"]
@@ -83,6 +115,26 @@ def gen_K(cam_info):
     return cam_info
 
 def csv_to_df(csv_file, range_runs):
+    """
+    Load and filter receiver coordinate data from a CSV file.
+
+    This function reads a coordinate CSV file, computes the run index from the
+    episode and scene identifiers, keeps only valid entries, and filters the
+    dataframe to the requested run range.
+
+    Args:
+        csv_file: Path to the coordinate CSV file.
+        range_runs: Iterable containing the run indices that should be kept.
+
+    Returns:
+        A pandas DataFrame containing only valid rows within the selected run
+        range. A new ``Run`` column is added to the dataframe.
+
+    Raises:
+        FileNotFoundError: If the CSV file does not exist.
+        KeyError: If required columns such as ``EpisodeID``, ``SceneID``, or
+            ``Val`` are missing.
+    """
     df = pd.read_csv(csv_file)
     episodes = df["EpisodeID"].values
     scenes = df["SceneID"].values
@@ -107,6 +159,35 @@ def obj_in_cam_view(pixel, window_size):
     return (0 <= pixel[0] < window_size[0]) and (0 <= pixel[1] < window_size[1])
     
 def image_refinement(c):
+    """
+    Refine generated images by marking receiver positions and bounding boxes.
+
+    This function processes raw Blensor images and receiver metadata to generate
+    refined image datasets. For each valid receiver in the selected simulation
+    runs, the receiver position is projected into each configured Base Station
+    camera view. If the receiver is visible, the function saves a marked image
+    with the projected receiver point and another image with a bounding box
+    around the corresponding vehicle object.
+
+    The function also stores receiver positions in the camera coordinate system
+    as a NumPy ``.npz`` file.
+
+    Args:
+        c: Runtime configuration object containing simulation paths, output
+            name, run range, camera options, and Blensor image settings.
+
+    Returns:
+        None. Refined images and receiver camera-frame positions are saved to
+        disk.
+
+    Raises:
+        FileNotFoundError: If the main simulation folder or coordinate CSV file
+            does not exist.
+        KeyError: If required camera metadata, CSV columns, or database fields
+            are missing.
+        ValueError: If vehicle vertices cannot be projected or converted into a
+            valid bounding box.
+    """
 
     main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
     if not os.path.exists(main_folder):
@@ -211,7 +292,3 @@ def image_refinement(c):
     
     if c.sim_BS_img:
         np.savez(os.path.join(bs_rf_path, 'RxPosCamraPOV.npz'), position=bs_veh_positions)
-                    
-                
-
-                    

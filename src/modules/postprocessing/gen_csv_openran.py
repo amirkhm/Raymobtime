@@ -1,7 +1,27 @@
 import os
-import csv
 
 def main():
+    """
+    Generate a receiver coordinate CSV file from SUMO output files.
+
+    This function iterates over a fixed number of Raymobtime simulation runs,
+    reads the corresponding SUMO output file for each run, extracts receiver
+    vehicle information, and writes the selected fields to a consolidated CSV
+    file named ``CoordVehicleTxRx.csv``.
+
+    The generated CSV contains one row per valid vehicle entry and includes
+    episode ID, scene ID, receiver ID, vehicle name, vehicle type, position,
+    and orientation angle.
+
+    Returns:
+        None. The extracted data is written directly to the output CSV file.
+
+    Raises:
+        FileNotFoundError: If one of the expected SUMO output files does not
+            exist.
+        IndexError: If a SUMO output row does not contain the expected number
+            of comma-separated fields.
+    """
     SIMULATION = "simulations/s004"
     RUNS = 2000
     FILE_NAME = 'CoordVehicleTxRx.csv'

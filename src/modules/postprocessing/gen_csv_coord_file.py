@@ -1,15 +1,17 @@
-'''
-Reads the database (e.g. episode.db) and then
-generates a CSV with some basic information, which is later complemented
-with ak_generateInSitePlusSumoList.py
-Look at save5gmdata.py to understand the information stored in the database.
-'''
+
 import os
 import numpy as np
 from shapely import geometry
 from src.modules.postprocessing import save5gmdata as fgdb
 
 def gen_csv_file(c):
+    '''
+    Reads the database (e.g. episode.db) and then
+    generates a CSV with some basic information, which is later complemented
+    with ak_generateInSitePlusSumoList.py
+    Look at save5gmdata.py to understand the information stored in the database.
+    '''
+    
     main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)

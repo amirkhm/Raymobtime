@@ -2,8 +2,31 @@ import numpy as np
 import pandas as pd
 import math
 
-def arrayFactorGivenAngleForULA(numAntennaElements, theta, normalizedAntDistance=0.5, angleWithArrayNormal=0):
+def arrayFactorGivenAngleForULA(
+    numAntennaElements,
+    theta,
+    normalizedAntDistance=0.5,
+    angleWithArrayNormal=0
+):
+    """
+    Compute the normalized array response vector for a Uniform Linear Array.
 
+    This function calculates the steering vector of a ULA for a given incident
+    or departure angle. The angle can be interpreted either with respect to the
+    array normal or using the default cosine-based convention.
+
+    Args:
+        numAntennaElements: Number of antenna elements in the ULA.
+        theta: Angle in radians used to compute the array response.
+        normalizedAntDistance: Antenna spacing normalized by the wavelength.
+            Defaults to 0.5.
+        angleWithArrayNormal: If set to 1, the angle is interpreted with
+            respect to the array normal using ``sin(theta)``. Otherwise,
+            ``cos(theta)`` is used. Defaults to 0.
+
+    Returns:
+        A normalized complex array response vector with unit norm.
+    """
     indices = np.arange(numAntennaElements)
     if (angleWithArrayNormal == 1):
         arrayFactor = np.exp(-1j * 2 * np.pi * normalizedAntDistance * indices * np.sin(theta))
@@ -11,8 +34,41 @@ def arrayFactorGivenAngleForULA(numAntennaElements, theta, normalizedAntDistance
         arrayFactor = np.exp(-1j * 2 * np.pi * normalizedAntDistance * indices * np.cos(theta))
     return arrayFactor / np.sqrt(numAntennaElements)  # normalize to have unitary norm
 
-def getNarrowBandULAMIMOChannel(azimuths_tx, azimuths_rx, p_gainsdB, number_Tx_antennas, number_Rx_antennas,
-                                normalizedAntDistance=0.5, angleWithArrayNormal=0, pathPhases=None):
+def getNarrowBandULAMIMOChannel(
+    azimuths_tx,
+    azimuths_rx,
+    p_gainsdB,
+    number_Tx_antennas,
+    number_Rx_antennas,
+    normalizedAntDistance=0.5,
+    angleWithArrayNormal=0,
+    pathPhases=None
+):
+    """
+    Compute a narrowband MIMO channel matrix using ULA arrays at TX and RX.
+
+    This function builds the narrowband channel matrix by summing the
+    contribution of all propagation rays. Each ray is represented by its
+    transmit azimuth, receive azimuth, path gain, and phase. If path phases are
+    not provided, random phases are generated.
+
+    Args:
+        azimuths_tx: Transmit azimuth angles in degrees for each propagation ray.
+        azimuths_rx: Receive azimuth angles in degrees for each propagation ray.
+        p_gainsdB: Path gains in dB for each propagation ray.
+        number_Tx_antennas: Number of transmit antenna elements.
+        number_Rx_antennas: Number of receive antenna elements.
+        normalizedAntDistance: Antenna spacing normalized by the wavelength.
+            Defaults to 0.5.
+        angleWithArrayNormal: Angle convention flag passed to
+            ``arrayFactorGivenAngleForULA``. Defaults to 0.
+        pathPhases: Optional path phases in degrees. If ``None``, random phases
+            are generated.
+
+    Returns:
+        Complex narrowband MIMO channel matrix with shape
+        ``(number_Rx_antennas, number_Tx_antennas)``.
+    """
     
     azimuths_tx = np.deg2rad(azimuths_tx)
     azimuths_rx = np.deg2rad(azimuths_rx)
@@ -50,28 +106,82 @@ def getNarrowBandULAMIMOChannel(azimuths_tx, azimuths_rx, p_gainsdB, number_Tx_a
     return H
 
 def watts_to_dbm(power_watts):
+    """
+    Convert power from watts to dBm.
+
+    Args:
+        power_watts: Power value in watts.
+
+    Returns:
+        Power value converted to dBm.
+    """
     dbm = 10 * math.log10(power_watts * 1000)
     return dbm
 
 def dbm_to_watts(dbm):
+    """
+    Convert power from dBm to watts.
+
+    Args:
+        dbm: Power value in dBm.
+
+    Returns:
+        Power value converted to watts.
+    """
     return 10 ** (dbm / 10)
 
 def degrees_to_radians(degrees):
+    """
+    Convert angles from degrees to radians.
+
+    Args:
+        degrees: Angle in degrees.
+
+    Returns:
+        Angle in radians.
+    """
     return np.radians(degrees)
 
 def dft_codebook(dim):
+    """
+    Generate a Discrete Fourier Transform codebook matrix.
+
+    This function creates a square DFT matrix of size ``dim x dim``. The matrix
+    can be used as a beamforming or combining codebook.
+
+    Args:
+        dim: Number of antenna elements or codebook dimension.
+
+    Returns:
+        A complex DFT codebook matrix.
+    """
+
     seq = np.matrix(np.arange(dim))
     mat = seq.conj().T * seq
     w = np.exp(-1j * 2 * np.pi * mat / dim)
     return w
 
 def getDFTOperatedChannel(H, number_Tx_antennas, number_Rx_antennas):
+    """
+    Apply DFT precoding and combining to a MIMO channel matrix.
+
+    This function generates DFT codebooks for the transmitter and receiver and
+    applies them to the channel matrix to obtain the equivalent beamspace
+    channel.
+
+    Args:
+        H: MIMO channel matrix.
+        number_Tx_antennas: Number of transmit antenna elements.
+        number_Rx_antennas: Number of receive antenna elements.
+
+    Returns:
+        Equivalent channel after DFT precoding and combining.
+    """
     wt = dft_codebook(number_Tx_antennas)
     wr = dft_codebook(number_Rx_antennas)
     dictionaryOperatedChannel = wr.conj().T * H * wt
-    # dictionaryOperatedChannel2 = wr.T * H * wt.conj()
-    return dictionaryOperatedChannel  # return equivalent channel after precoding and combining
 
+    return dictionaryOperatedChannel  # return equivalent channel after precoding and combining
 
 '''def deep_mimo_array_response(Dod, DoA, M_TX, M_RX, fc, c=3e8):
      # TX Array Response - BS
@@ -87,6 +197,21 @@ def getDFTOperatedChannel(H, number_Tx_antennas, number_Rx_antennas):
     array_response_RX = np.exp(M_RX_ind @ gamma_RX)'''
 
 def dft_codebook_upa(rows, cols):
+    """
+    Generate a DFT codebook for a Uniform Planar Array.
+
+    This function creates a 2D UPA codebook by computing the Kronecker product
+    of two 1D DFT codebooks, one for the row dimension and one for the column
+    dimension.
+
+    Args:
+        rows: Number of antenna elements along the row dimension.
+        cols: Number of antenna elements along the column dimension.
+
+    Returns:
+        Complex DFT codebook matrix for a UPA with ``rows * cols`` elements.
+    """
+    
     # DFT matrices for rows and columns
     w_row = dft_codebook(rows)
     w_col = dft_codebook(cols)
@@ -95,7 +220,22 @@ def dft_codebook_upa(rows, cols):
     upa_codebook = np.kron(w_row, w_col)  # Kronecker product to create 2D beams
     return upa_codebook
 
-def calc_omega(elevationAngles, azimuthAngles, normalizedAntDistance = 0.5):
+def calc_omega(elevationAngles, azimuthAngles, normalizedAntDistance=0.5):
+    """
+    Compute spatial frequency components for UPA array responses.
+
+    This function calculates the x and y spatial frequency terms associated
+    with the given elevation and azimuth angles.
+
+    Args:
+        elevationAngles: Elevation angles in radians.
+        azimuthAngles: Azimuth angles in radians.
+        normalizedAntDistance: Antenna spacing normalized by the wavelength.
+            Defaults to 0.5.
+
+    Returns:
+        A 2-row matrix containing the x and y spatial frequency components.
+    """
     sinElevations = np.sin(elevationAngles)
     omegax = 2 * np.pi * normalizedAntDistance * sinElevations * np.cos(azimuthAngles)  #x
     omegay = 2 * np.pi * normalizedAntDistance * sinElevations * np.sin(azimuthAngles)  #y
@@ -103,17 +243,63 @@ def calc_omega(elevationAngles, azimuthAngles, normalizedAntDistance = 0.5):
     return np.matrix((omegax, omegay))
 
 def calc_vec_i(i, omega, antenna_range):
+    """
+    Compute the Kronecker array response vector for one propagation ray.
+
+    Args:
+        i: Index of the propagation ray.
+        omega: Matrix containing spatial frequency components.
+        antenna_range: Array of antenna element indices.
+
+    Returns:
+        Complex array response vector for the selected ray.
+    """
     print('a ', omega[:, i])
     print('b ', omega[:, i].shape)
     vec = np.exp(1j * omega[:, i] * antenna_range)
     print('c ', np.matrix(np.kron(vec[1], vec[0])).shape)
     return np.matrix(np.kron(vec[1], vec[0]))
 
-def getNarrowBandUPAMIMOChannel(departureElevation,departureAzimuth,arrivalElevation,arrivalAzimuth, p_gainsdB,
-                                pathPhases, number_Tx_antennasX, number_Tx_antennasY, number_Rx_antennasX,
-                                number_Rx_antennasY, normalizedAntDistance=0.5):
-    """Uses UPAs at both TX and RX.
-    Will assume that all 4 normalized distances (Tx and Rx, x and y) are the same.
+def getNarrowBandUPAMIMOChannel(
+    departureElevation,
+    departureAzimuth,
+    arrivalElevation,
+    arrivalAzimuth,
+    p_gainsdB,
+    pathPhases,
+    number_Tx_antennasX,
+    number_Tx_antennasY,
+    number_Rx_antennasX,
+    number_Rx_antennasY,
+    normalizedAntDistance=0.5
+):
+    """
+    Compute a narrowband MIMO channel matrix using UPA arrays at TX and RX.
+
+    This function builds the MIMO channel matrix by summing the contribution of
+    each propagation ray. Each ray is defined by departure and arrival elevation
+    and azimuth angles, path gain, and phase. Uniform Planar Arrays are assumed
+    at both transmitter and receiver.
+
+    Args:
+        departureElevation: Departure elevation angles in degrees.
+        departureAzimuth: Departure azimuth angles in degrees.
+        arrivalElevation: Arrival elevation angles in degrees.
+        arrivalAzimuth: Arrival azimuth angles in degrees.
+        p_gainsdB: Path gains in dB for each propagation ray.
+        pathPhases: Path phases in degrees. If ``None``, random phases are
+            generated.
+        number_Tx_antennasX: Number of transmit antenna elements along x.
+        number_Tx_antennasY: Number of transmit antenna elements along y.
+        number_Rx_antennasX: Number of receive antenna elements along x.
+        number_Rx_antennasY: Number of receive antenna elements along y.
+        normalizedAntDistance: Antenna spacing normalized by the wavelength.
+            Defaults to 0.5.
+
+    Returns:
+        Complex narrowband MIMO channel matrix with shape
+        ``(number_Rx_antennasX * number_Rx_antennasY,
+        number_Tx_antennasX * number_Tx_antennasY)``.
     """
     number_Tx_antennas = number_Tx_antennasX * number_Tx_antennasY
     number_Rx_antennas = number_Rx_antennasX * number_Rx_antennasY
@@ -172,6 +358,23 @@ def getNarrowBandUPAMIMOChannel(departureElevation,departureAzimuth,arrivalEleva
     return H
 
 def getCodebookOperatedChannel(H, Wt, Wr):
+    """
+    Apply transmit and receive codebooks to a MIMO channel matrix.
+
+    This function computes the equivalent beamspace channel after precoding and
+    combining. It also supports single-antenna cases where either the transmit
+    or receive codebook is ``None``.
+
+    Args:
+        H: MIMO channel matrix.
+        Wt: Transmit precoding codebook. If ``None``, no transmit precoding is
+            applied.
+        Wr: Receive combining codebook. If ``None``, no receive combining is
+            applied.
+
+    Returns:
+        Equivalent channel after applying the available codebooks.
+    """
     if Wr is None: #only 1 antenna at Rx, and Wr was passed as None
         return H * Wt
     if Wt is None: #only 1 antenna at Tx
@@ -183,6 +386,25 @@ def getCodebookOperatedChannel(H, Wt, Wr):
     return result # return equivalent channel after precoding and combining
 
 def rotate_vectors(azimuths, zeniths, alpha, beta, gamma):
+    """
+    Rotate spherical direction vectors and return the rotated angles.
+
+    This function converts azimuth and zenith angles to Cartesian unit vectors,
+    applies rotations around the z, y, and x axes, and converts the rotated
+    vectors back to spherical angles.
+
+    Args:
+        azimuths: Azimuth angles in degrees.
+        zeniths: Zenith angles in degrees.
+        alpha: Rotation angle around the z axis in degrees.
+        beta: Rotation angle around the y axis in degrees.
+        gamma: Rotation angle around the x axis in degrees.
+
+    Returns:
+        A tuple containing:
+            - rotated_azimuths: Rotated azimuth angles in degrees.
+            - rotated_zeniths: Rotated zenith angles in degrees.
+    """
     # Convert list to arrays numpy
     azimuths = np.array(azimuths)
     zeniths = np.array(zeniths)
@@ -233,6 +455,25 @@ def rotate_vectors(azimuths, zeniths, alpha, beta, gamma):
     return rotated_azimuths.tolist(), rotated_zeniths.tolist()
     
 def import_mimo_channel(H_csv):
+    """
+    Import a complex MIMO channel matrix from a Wireless InSite CSV file.
+
+    This function reads an H-matrix CSV file exported by Wireless InSite,
+    identifies the number of receiver and transmitter elements, and reconstructs
+    the complex channel matrix from real and imaginary columns.
+
+    Args:
+        H_csv: Path to the Wireless InSite H-matrix CSV file.
+
+    Returns:
+        Complex MIMO channel matrix with shape ``(num_rx, num_tx)``.
+
+    Raises:
+        FileNotFoundError: If the CSV file does not exist.
+        KeyError: If the expected ``<Rx Element>`` column is missing.
+        ValueError: If real or imaginary entries cannot be converted to complex
+            values.
+    """
     # Load CSV ignoring comment lines
     # csvName is a string
     df = pd.read_csv(H_csv, header=3)#comment="#", header=0 

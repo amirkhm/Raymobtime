@@ -1,21 +1,3 @@
-'''
-Will parse all database and create numpy arrays that represent all channels in the database.
-Specificities: some episodes do not have all scenes. And some scenes do not have all receivers.
-Assuming Ne episodes, with Ns scenes each, and Nr receivers (given there was only one transmitter),
-there are Ne x Ns x Nr channel matrices and each must represent L=25 rays.
-With Ne=119, Ns=50, Nr=10, we have 59500 matrices with 25 rays. It is better to save
-each episode in one file, with the matrix given by
-scene 1:Ns x Tx_index x Rx_index x numberRays and 7 numbers, the following for each ray
-         path_gain
-         timeOfArrival
-         departure_elevation
-         departure_azimuth
-         arrival_elevation
-         arrival_azimuth
-         isLOS
-to simplify we assume that all episodes have the same number of scenes (e.g. 50) and receivers (e.g. 10).
-Episodes, scenes, etc, start counting from 0 (not 1).
-'''
 import datetime
 import numpy as np
 from shapely import geometry
@@ -30,6 +12,24 @@ from src.modules.postprocessing import (
 )
 
 def gen_rays_dataset(c):
+    '''
+    Will parse all database and create numpy arrays that represent all channels in the database.
+    Specificities: some episodes do not have all scenes. And some scenes do not have all receivers.
+    Assuming Ne episodes, with Ns scenes each, and Nr receivers (given there was only one transmitter),
+    there are Ne x Ns x Nr channel matrices and each must represent L=25 rays.
+    With Ne=119, Ns=50, Nr=10, we have 59500 matrices with 25 rays. It is better to save
+    each episode in one file, with the matrix given by
+    scene 1:Ns x Tx_index x Rx_index x numberRays and 7 numbers, the following for each ray
+            path_gain
+            timeOfArrival
+            departure_elevation
+            departure_azimuth
+            arrival_elevation
+            arrival_azimuth
+            isLOS
+    to simplify we assume that all episodes have the same number of scenes (e.g. 50) and receivers (e.g. 10).
+    Episodes, scenes, etc, start counting from 0 (not 1).
+    '''
     analysis_polygon = geometry.Polygon(
         [(c.analysis_area[0], c.analysis_area[1]),
         (c.analysis_area[2], c.analysis_area[1]),
@@ -63,7 +63,6 @@ def gen_rays_dataset(c):
     use_npz = False
 
     #if needed, manually create the output folder
-    # fileNamePrefix = './t001/tx2/rosslyn_custom_flow_28GHz_ts0.2ms_e' #prefix of output files
     dataset_folder = os.path.join(database_folder, 'rays')
     if not os.path.exists(dataset_folder):
         os.makedirs(dataset_folder)
@@ -71,7 +70,6 @@ def gen_rays_dataset(c):
     pythonExtension = '.npz'
     matlabExtension = '.hdf5'
 
-    #plt.ion()
     numEpisode = 0
     numLOS = 0
     numNLOS = 0
@@ -88,7 +86,6 @@ def gen_rays_dataset(c):
             ray_i = 0
             isLOSChannel = 0
             for ray in islice(rec.rays, numRaysPerTxRxPair): # Iterate over a minimum number of rays for each receiver
-                #print(ray)
                 #gather all info
                 thisRayInfo = np.zeros(numVariablePerRay)
                 thisRayInfo[0] = ray.path_gain
@@ -108,7 +105,6 @@ def gen_rays_dataset(c):
                 ray_i += 1
                 if thisRayInfo[6] == 1:
                     isLOSChannel = True #if one ray is LOS, the channel is
-            #print('AK:',sc_i, rec_array_idx)
             if isLOSChannel == True:
                 numLOS += 1
             else:
@@ -125,10 +121,6 @@ def gen_rays_dataset(c):
     else:
         for ep in session.query(fgdb.Episode): #go over all episodes
             outputFileName = fileNamePrefix + str(numEpisode) + matlabExtension
-            # if os.path.exists(outputFileName):
-            #     print(f'file {outputFileName} found, skipping...')
-            #     numEpisode += 1
-            #     continue
             print('Processing ', ep.number_of_scenes, ' scenes in episode ', ep.insite_pah,)
             print('Start time = ', ep.simulation_time_begin, ' and sampling period = ', ep.sampling_time, ' seconds')
             print('Episode: ' + str(numEpisode) + ' out of ' + str(totalNumEpisodes))
@@ -146,7 +138,6 @@ def gen_rays_dataset(c):
             #process each scene in this episode
             #count # of ep.scenes
             for sc_i, sc in enumerate(ep.scenes):
-                #print('Processing scene # ', sc_i)
                 polygon_list = []
                 polygon_z = []
                 polygons_of_interest_idx_list = []
@@ -175,13 +166,10 @@ def gen_rays_dataset(c):
                                     thisRayInfo[5] = ray.arrival_azimuth
                                     thisRayInfo[6] = ray.is_los
                                     thisRayInfo[7] = ray.phaseInDegrees
-                                    #allEpisodeData = np.zeros((numScenesPerEpisode, numTxRxPairsPerScene,
-                                    # numRaysPerTxRxPair, numVariablePerRay), np.float32)
                                     allEpisodeData[sc_i][rec_array_idx][ray_i]=thisRayInfo
                                     ray_i += 1
                                     if ray.is_los == 1:
                                         isLOSChannel = True #if one ray is LOS, the channel is
-                                #print('AK:',sc_i, rec_array_idx)
                                 if isLOSChannel == True:
                                     numLOS += 1
                                 else:
@@ -204,13 +192,10 @@ def gen_rays_dataset(c):
                                     thisRayInfo[5] = ray.arrival_azimuth
                                     thisRayInfo[6] = ray.is_los
                                     thisRayInfo[7] = ray.phaseInDegrees
-                                    #allEpisodeData = np.zeros((numScenesPerEpisode, numTxRxPairsPerScene,
-                                    # numRaysPerTxRxPair, numVariablePerRay), np.float32)
                                     allEpisodeData[sc_i][rec_array_idx][ray_i]=thisRayInfo
                                     ray_i += 1
                                     if ray.is_los == 1:
                                         isLOSChannel = True #if one ray is LOS, the channel is
-                                #print('AK:',sc_i, rec_array_idx)
                                 if isLOSChannel == True:
                                     numLOS += 1
                                 else:
