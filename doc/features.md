@@ -1,8 +1,9 @@
-base_config:     
-  output_name: "sim_a"                        
-  % Description: Simulation identifier name
-  % Status: working
-
+### base_config:     
+  - output_name: "sim_a"                        
+  ```
+  Description: Simulation identifier name
+  Status: working
+  ```
   scenario: "rosslyn"                      
   % Description: scenario name
   % Status: working
