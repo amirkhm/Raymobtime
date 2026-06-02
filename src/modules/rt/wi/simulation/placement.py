@@ -4,23 +4,23 @@ import numpy as np
 import traci
 from src.modules.rt.wi.modeling import (
     errors, 
-    mimo, 
     objects)
 
 def place_by_sumo(
-        c,antenna, 
+        c,
+        antenna, 
         antenna_Tx, 
         car_material_id, 
         lane_boundary_dict, 
-        cars_with_antenna, 
-        cars_with_Tx = None, 
-        use_V2V=False, 
-        use_fixed_receivers=False, 
+        veh_with_antenna, 
+        Tx_veh = None, 
+        V2V=False, 
+        fixed_receivers=False, 
         use_pedestrians=False):
     
     antenna = copy.deepcopy(antenna)
     antenna.clear()
-    if use_V2V:
+    if V2V:
         antenna_Tx = copy.deepcopy(antenna_Tx)
         antenna_Tx.clear()
 
@@ -55,7 +55,7 @@ def place_by_sumo(
             structure_group.add_structures(pedestrian_structure)
 
             # 1.72 size of a perdestrian
-            if c.use_vehicles_template:
+            if c.vehicles_template:
                 str_vehicles = get_model(c,str_vehicles,ped,xinsite-deltaX,yinsite-deltaY,0,90-angle,1.72) 
 
     for veh_i, veh in enumerate(traci.vehicle.getIDList()):
@@ -92,38 +92,18 @@ def place_by_sumo(
         car_structure.add_sub_structures(car)
         structure_group.add_structures(car_structure)
 
-        if c.use_vehicles_template:
+        if c.vehicles_template:
             str_vehicles = get_model(c, str_vehicles,veh,x-deltaX,y-deltaY,z3,90-angle,height,length,width) 
 
         #antenna_vertice
-        if veh in cars_with_antenna:
+        if veh in veh_with_antenna:
             c_present = True
-            #translate the antenna as the vehicle. Note the antenna is not rotated (we are using isotropic anyways)
-            #adding Rx 0.1 above car's height, to ensure that it will not be blocked by the vehicle itself
-            if c.mimo_orientation:
-                with open(c.base_setup_path) as infile:
-                    MIMO_setup = mimo.SetupFile.from_file(infile)
-                    mimo_angle = np.radians(90-angle)
-                    delta_y = np.sin(mimo_angle)
-                    delta_x = np.cos(mimo_angle)
-                    offset = 0.02
-                    for child in MIMO_setup._child_list:
-                        x = 0
-                        y = 0
-                        Xoffset = round((delta_x*offset),5)
-                        Yoffset = round((delta_y*offset),5)
-                        for mimo_element in child._child_list:
-                            position = '{} {} {}'.format(x,y,0)
-                            mimo_element.position=position
-                            x = round((x + Xoffset),5)
-                            y = round((y + Yoffset),5)
-                    MIMO_setup.write(c.setup_path)
             if ( veh.startswith('dflow') ):
                 antenna.add_vertice((x-deltaX, y-deltaY, z3 - 0.1))
             else:
                 antenna.add_vertice((x-deltaX, y-deltaY, z3 + height + 0.1))
-        if use_V2V:     
-            if veh in cars_with_Tx:
+        if V2V:     
+            if veh in Tx_veh:
                 c_tx_present = True
                 if ( veh.startswith('dflow') ):
                     antenna_Tx.add_vertice((x-deltaX, y-deltaY, z3 - 0.1))
@@ -131,7 +111,7 @@ def place_by_sumo(
                     antenna_Tx.add_vertice((x-deltaX, y-deltaY, z3 + height + 0.1))
 
 
-    if c.use_vehicles_template:
+    if c.vehicles_template:
         from src.modules.rt.wi.modeling import vehicles_template as vt
 
         all_vehicles = str(
@@ -148,13 +128,13 @@ def place_by_sumo(
     else:
         all_vehicles = ""
 
-    if use_fixed_receivers:
+    if fixed_receivers:
         return structure_group, None, None, all_vehicles
 
     if not c_present: #there are no vehicles with antennas
         return None, None, None, None
 
-    if not c_tx_present and use_V2V: #there are no vehicles with antennas
+    if not c_tx_present and V2V: #there are no vehicles with antennas
         return None, None, None, None
 
     if veh_i is None: #there are no vehicles in the scene according to SUMO (traci)
@@ -257,15 +237,15 @@ def get_model(c, str_vehicles,name,x,y,z,angle,height,length=1,width=1):
     # The height here is utilized as trick to choose which model will be utilized .
     # TODO: Find a new way to classify the models, instead of height.
     if (height == 4.3):
-        model_object = open(os.path.join(c.working_directory,'base_files/objects/truck.object'), 'r')
+        model_object = open(os.path.join(c.working_directory,'assets/wi_objects/truck.object'), 'r')
     elif (height == 3.2):               
-        model_object = open(os.path.join(c.working_directory,'./base_files/objects/bus.object'), 'r')
+        model_object = open(os.path.join(c.working_directory,'assets/wi_objects/bus.object'), 'r')
     elif (height == 1.59):              
-        model_object = open(os.path.join(c.working_directory,'./base_files/objects/car.object'), 'r')
+        model_object = open(os.path.join(c.working_directory,'assets/wi_objects/car.object'), 'r')
     elif (height == 1.72):              
-        model_object = open(os.path.join(c.working_directory,'./base_files/objects/pedestrian.object'), 'r')
+        model_object = open(os.path.join(c.working_directory,'assets/wi_objects/pedestrian.object'), 'r')
     elif (height == 0.295): 
-        model_object = open(os.path.join(c.working_directory,'./base_files/objects/drone.object'), 'r')
+        model_object = open(os.path.join(c.working_directory,'assets/wi_objects/drone.object'), 'r')
     else:
         print('There is no model object ready for this object')
         exit(1)

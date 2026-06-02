@@ -1,21 +1,32 @@
 base_config:     
-  output_name: "sim_b"                        # Simulation identifier name
-  scenario: "rosslyn_60GHz"                      # scenario name
-  resume: false                                # skip steps already concluded (not implemented, necessary logging of concluded steps)
-  clean_previous: true                       # remove result folders before running
+  output_name: "sim_a"                        
+  % Description: Simulation identifier name
+  % Status: working
+
+  scenario: "rosslyn"                      
+  % Description: scenario name
+  % Status: working
+  resume: true                                
+  Description: skip steps already concluded (not implemented, necessary logging of concluded steps)
+  % status
+  clean_previous: true                       
+  % Description: remove result folders before running
+  % Status: working
 
 pipeline:
   mobility:
     enabled: true 
+    % Status: working
     tool: "sumo"                              # null | none
     placement_limits: 
-      enabled: false   
+      enabled: false
       max_lim: [843, 523]                     # [x, y] study area limits for placement of Tx and Rx
       min_lim: [660, 334]                     # [x, y] study area limits for placement of Tx and Rx
       ##end_ep_for_no_veh: true #nop
   
   ray_tracing:                                # parsing automático
     enabled: true 
+    % Status: working
     #tool: "wireless_insite"                  # wireless_insite | none
     jump: true   
   
@@ -41,23 +52,33 @@ pipeline:
 
 rmt:
   enabled: true                               # false for isolated simulation
+  % Status: working
   scenes_per_episode: 2 
+  % Status: working
   time_between_episodes: 35                   # This time needs to be multiple of scene time step
+  % Status: working
   sampling_parameters: [0, 6, 0.5]          # start, end, step
+  % Status: working
   features:
     fixed_receivers: false  
     vehicles_template: true 
+    % Status: working
 
 sumo:
   seed: 10  
+  % Status: working
   bin: /usr/bin/sumo 
+  % Status: working
   cfg: seasonal 
+  % Status: working
 
 ray_tracing:
   use_pedestrians: false
   use_drone: false
   receivers_per_episode: 1
+  % Status: working
   transmitters_per_episode: 1
+  % Status: working
   v2v:
     enabled: false
     close_vehicles: true
@@ -66,13 +87,20 @@ ray_tracing:
     chosen_vehicle: Truck
   wireless_insite:
     software_path: /home/gabriel/softwares/wireless-insite/remcom
+    % Status: working
     LICENSE_FILE: REMCOMINC_LICENSE_FILE=2501@10.10.80.6
+    % Status: working
     base_files_names:
       study_area_name: study
+      % Status: working
       tx_name: Tx
+      % Status: working
       rx_name: Rx
+      % Status: working
       setup_name: model
+      % Status: working
       vehicles_name: random-line
+      % Status: working
   
 blensor_options:
   path_to_scenario_blend: /home/gabrielferreiravieira/Documents/repositories/r2/raymobtime/base_files/B-pnm-SP/Blender/B-pnm-SP.blend

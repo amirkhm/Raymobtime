@@ -168,7 +168,7 @@ def gen_lidar_matrix(c):
                 Rx_q_indx = quantizeJ([vehicle[1]],dx)
                 Rx_q_indy = quantizeJ([vehicle[2]],dy)
                 
-                if c.use_V2V:
+                if c.V2V:
                     Tx_vehicle = Tx_in_ep[key_dict][0] #Only works for 1 Transmitter Vehicle
                     Tx_q_indx = quantizeJ([Tx_vehicle[1]],dx)
                     Tx_q_indy = quantizeJ([Tx_vehicle[2]],dy)
@@ -181,7 +181,7 @@ def gen_lidar_matrix(c):
                     indz = quantizeJ(fffCloud['z'],dz)
                     indz = [int(i) for i in indz]
                     Rx_q_indz = quantizeJ([vehicle[3]],dz)
-                    if c.use_V2V:
+                    if c.V2V:
                         Tx_q_indz = quantizeJ([Tx_vehicle[3]],dz)
                     else:
                         Tx_q_indz = quantizeJ([Tx[2]],dz)

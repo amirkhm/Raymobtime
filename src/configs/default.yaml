@@ -36,8 +36,8 @@ rmt:
   scenes_per_episode: null
   time_between_episodes: null
   features:
-    use_fixed_receivers: null
-    use_vehicles_template: null
+    fixed_receivers: null
+    vehicles_template: null
 
 sumo:
   bin: null

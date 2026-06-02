@@ -192,7 +192,7 @@ def gen_lidar_matrix(c):
                 # Rx_q_indx = quantizeJ([vehicle[1]],dx)
                 # Rx_q_indy = quantizeJ([vehicle[2]],dy)
                 
-                if c.use_V2V:
+                if c.V2V:
                     #Only works for 1 Transmitter Vehicle
                     # [0] to get the first Tx
                     # [1:3] to get the positions x, y and z

@@ -49,7 +49,7 @@ def gen_database(c):
     results_dir = c.results_dir
 
     #if use 3d detaileds models instead of boxes models
-    use_template = c.use_vehicles_template
+    use_template = c.vehicles_template
 
     #The infos below typically does not change
     if use_template:
@@ -244,7 +244,7 @@ def gen_database(c):
                                     # Fix azimuth considering veh angle
                                     arrival[1] = arrival[1] - sumo_info[structure.name.rstrip()]['angle']
                                     arrival[1] = set_angle_range(arrival[1])
-                                    if c.use_V2V:
+                                    if c.V2V:
                                         departure[1] = departure[1] - angleTx
                                         departure[1] = set_angle_range(departure[1])
                                     ray.departure_elevation, ray.departure_azimuth = departure
@@ -263,7 +263,7 @@ def gen_database(c):
 
                             object.receivers.append(receiver)
                             rec_i += 1
-                        if c.use_V2V:
+                        if c.V2V:
                             if structure.name.rstrip() in simulation_info['cars_with_Tx']:
                                 transmitter = fgdb.InsiteTransmitter()
                                 transmitter.position = object.position

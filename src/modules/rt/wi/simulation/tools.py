@@ -4,7 +4,7 @@ import csv
 import os
 import platform
 
-def pick_car_from_area(veh_list, area_lim, n_veh, return_counts=False):
+def pick_veh_from_area(veh_list, area_lim, n_veh, return_counts=False):
     """
     veh_list: id name from sumo of all cars
     area_lim: ((xmin, ymin), (xmax, ymax))
@@ -145,6 +145,7 @@ def _write_fixed_receivers_rows(
 
 
 def _write_vehicle_rows(
+    c,
     writer,
     episode_i,
     scene_i,
@@ -177,7 +178,7 @@ def _write_vehicle_rows(
         if not fixedReceivers:
             receiver_index = receiver_index_by_vehicle.get(veh, -1)
 
-        if c.use_V2V:
+        if c.V2V:
             transmitter_index = transmitter_index_by_vehicle.get(veh, -1)
 
         veh_output_index = veh_i + num_fixed_receivers if fixedReceivers else veh_i
@@ -252,12 +253,13 @@ def _write_pedestrian_rows(
 
 
 def writeSUMOInfoIntoFile(
+    c,
     sumoOutputInfoFileName,
     episode_i,
     scene_i,
     lane_boundary_dict,
-    cars_with_antenna,
-    cars_with_Tx,
+    veh_with_antenna,
+    Tx_veh,
     fixedReceivers,
     use_pedestrians,
 ):
@@ -272,14 +274,14 @@ def writeSUMOInfoIntoFile(
         - pedestrian
         - fixed_receiver
 
-    The original order of `cars_with_antenna` and `cars_with_Tx` is preserved
+    The original order of `veh_with_antenna` and `Tx_veh` is preserved
     when assigning receiver and transmitter indices.
     """
 
     newline = _get_csv_newline()
 
-    receiver_index_by_vehicle = _as_ordered_index_dict(cars_with_antenna)
-    transmitter_index_by_vehicle = _as_ordered_index_dict(cars_with_Tx)
+    receiver_index_by_vehicle = _as_ordered_index_dict(veh_with_antenna)
+    transmitter_index_by_vehicle = _as_ordered_index_dict(Tx_veh)
 
     header = [
         "episode_i",
@@ -323,6 +325,7 @@ def writeSUMOInfoIntoFile(
             )
 
         _write_vehicle_rows(
+            c,
             writer=writer,
             episode_i=episode_i,
             scene_i=scene_i,

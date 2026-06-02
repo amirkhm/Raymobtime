@@ -152,13 +152,13 @@ class parameters:
         self.working_directory = find_project_root()
         #os.path.dirname(os.path.realpath(__file__))
 
-        self.use_fixed_receivers = self.rmt.features.use_fixed_receivers
-        self.use_vehicles_template = self.rmt.features.use_vehicles_template
+        self.fixed_receivers = self.rmt.features.fixed_receivers
+        self.vehicles_template = self.rmt.features.vehicles_template
         self.isolated_sim = not self.rmt.enabled
         
         self.use_pedestrians = self.ray_tracing.use_pedestrians
         self.drone_simulation = self.ray_tracing.use_drone
-        self.use_V2V = self.ray_tracing.v2v.enable
+        self.V2V = self.ray_tracing.v2v.enable
         
         self.base_insite_project_path = os.path.join(
             self.working_directory,
@@ -245,7 +245,7 @@ class parameters:
             self.time_between_episodes = int(
                 float(self.rmt.time_between_episodes) / self.sampling_interval)
 
-        if self.use_fixed_receivers:
+        if self.fixed_receivers:
             # Number of receivers per episode
             self.receivers_per_episode = 0
         else:
@@ -281,7 +281,7 @@ class parameters:
         self.max_dist_LIDAR = self.post_processing.cartesian_lidar_matrix.max_dist_LIDAR
         self.type_data = self.post_processing.cartesian_lidar_matrix.type_data
 
-        if self.use_V2V:
+        if self.V2V:
             self.n_Tx_per_episode = self.ray_tracing.transmitters_per_episode
             self.receivers_per_episode = self.ray_tracing.receivers_per_episode
             self.close_vehicles = self.ray_tracing.v2v.close_vehicles
@@ -304,7 +304,7 @@ class parameters:
         self.insite_setup_name = self.ray_tracing.wireless_insite.base_files_names.setup_name
         self.insite_vehicles_name = self.ray_tracing.wireless_insite.base_files_names.vehicles_name
 
-        if self.use_vehicles_template:
+        if self.vehicles_template:
             self.latitude, self.longitude = get_lat_long(self.base_insite_project_path)
             self.insite_vehicles_name_model = self.insite_vehicles_name
             self.insite_vehicles_name = self.insite_vehicles_name + '_'
@@ -404,7 +404,7 @@ class parameters:
         self.car_structure_name = 'car'
 
         # Name of the antenna points in base_txrx_file_name
-        self.antenna_points_name = self.insite_rx_name
+        self.insite_rx_name = self.insite_rx_name
 
 
         if self.use_sumo:
