@@ -72,10 +72,9 @@ def process_ep(path, c):
     import_combining = c.import_combining
     expansion = c.expansion
     rotation = c.rotation
-
     normalizedAntDistance = c.normalized_antenna_distance #0.5
     numOfInvalidChannels = 0
-    
+
     if c.isolated_sim:
         numScenes = 1
 
@@ -95,16 +94,16 @@ def process_ep(path, c):
     # eg import_precoding = '~/phi_50.npy'
     if import_precoding == False:
         precoding = dft_codebook_upa(
-            expansion['Tx'][0], # x
-            expansion['Tx'][1]) # y
+            expansion.Tx[0], # x
+            expansion.Tx[1]) # y
     else:
         precoding = np.load(import_precoding)
     
     # if false use dft codebook else use path given to .npy
     if import_combining == False:
         combining = dft_codebook_upa(
-            expansion['Rx'][0], # x
-            expansion['Rx'][1]) # y
+            expansion.Rx[0], # x
+            expansion.Rx[1]) # y
     else:
         combining = np.load(import_combining)
         
@@ -183,14 +182,14 @@ def process_ep(path, c):
                 pathPhases = insiteData[:, 7] #or None
                 
                 # Negative used to define standard rotation positive counterclockwise on UPA
-                AoD_az, AoD_el = rotate_vectors(AoD_az, AoD_el, -rotation['Tx'][0], -rotation['Tx'][1], -rotation['Tx'][2])
-                AoA_az, AoA_el = rotate_vectors(AoA_az, AoA_el, -rotation['Rx'][0], -rotation['Rx'][1], -rotation['Rx'][2])
+                AoD_az, AoD_el = rotate_vectors(AoD_az, AoD_el, -rotation.Tx[0], -rotation.Tx[1], -rotation.Tx[2])
+                AoA_az, AoA_el = rotate_vectors(AoA_az, AoA_el, -rotation.Rx[0], -rotation.Rx[1], -rotation.Rx[2])
                 
                 mimoChannel = getNarrowBandUPAMIMOChannel(
                     AoD_el,AoD_az,AoA_el,AoA_az,
                     gain_in_dB,pathPhases,
-                    expansion['Tx'][0], expansion['Tx'][1],
-                    expansion['Rx'][0], expansion['Rx'][1],
+                    expansion.Tx[0], expansion.Tx[1],
+                    expansion.Rx[0], expansion.Rx[1],
                     normalizedAntDistance)
                 equivalentChannel = getCodebookOperatedChannel(
                     mimoChannel, 
@@ -206,9 +205,8 @@ def process_ep(path, c):
 
 def gen_beam_output_file(c):
     output_beam_folder = os.path.join(
-        c.working_directory, 
-        'sim_data', 
-        c.base_config.output_name, 'beams')
+        c.results_dir_postprocessed, 
+        'beams')
     if not os.path.exists(output_beam_folder):
         os.makedirs(output_beam_folder)
     output_beam_list = []
@@ -216,7 +214,9 @@ def gen_beam_output_file(c):
     output_hmatrix_list = []            
     
     if not c.import_hmatrix:
-        database_folder = os.path.join(c.working_directory, 'sim_data', c.output_name, 'rays')
+        database_folder = os.path.join(
+            c.results_dir_postprocessed, 
+            'rays')
         max_runs = np.max(c.n_run)
         episodes=1
         

@@ -1,4 +1,3 @@
-
 def format_run_name(i):
     """
     Format runs folder names.

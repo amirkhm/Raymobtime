@@ -491,9 +491,10 @@ def raymobtime():
            for func in [gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file]:
                func(c)
 
-       elif c.post_processing.outputs in postprocessing_modules:
-           func = postprocessing_modules[c.post_processing.outputs]
-           func(c)
+       for output in c.post_processing.outputs:
+           if output in postprocessing_modules:
+               func = postprocessing_modules[output]
+               func(c)
         
     # Saving the blensor simulation from pcd files to matrix type data
     CoordSystem = c.CoordSystem

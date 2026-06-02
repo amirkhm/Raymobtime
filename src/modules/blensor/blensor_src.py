@@ -135,17 +135,17 @@ def blensor_simulation(c):
     blensor_scenario_path = c.blensor_scenario_path
     blensor_runfile = c.blensor_runfile_path
 
-    if c.blensor.outputs == "lidar":
-        main_simulator_python_file = ["blensor/lidar_sim.py"]
+    if "lidar" in c.blensor.outputs:
+        main_simulator_python_file = ["src/modules/blensor/lidar_sim.py"]
 
-    elif c.blensor.outputs == "image":
+    elif "image" in c.blensor.outputs:
         main_simulator_python_file = []
 
         if c.sim_BS_img:
-            main_simulator_python_file.append("blensor/img_bs_sim.py")
+            main_simulator_python_file.append("src/modules/blensor/img_bs_sim.py")
 
         if c.sim_UE_img:
-            main_simulator_python_file.append("blensor/img_sim.py")
+            main_simulator_python_file.append("src/modules/blensor/img_sim.py")
 
     else:
         raise ValueError(f"Invalid Blensor output type: {c.blensor.outputs}")
@@ -232,5 +232,5 @@ def export_cam_info(c):
     blensor_scenario_path = c.blensor_scenario_path
     blensor_runfile = c.blensor_runfile_path
 
-    cmd = (f'{blensor_runfile} {blensor_scenario_path} --background -P blensor/data_extractor.py')
+    cmd = (f'{blensor_runfile} {blensor_scenario_path} --background -P src/modules/blensor/data_extractor.py')
     os.system(cmd)

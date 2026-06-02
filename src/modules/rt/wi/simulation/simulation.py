@@ -85,8 +85,10 @@ def copytree_base_files(c):
             print('Removed folder',c.results_dir)
             shutil.copytree(c.base_insite_project_path, c.results_base_model_dir, )
         else:
-            print('### ERROR: folder / file exists:',c.results_base_model_dir)
-            raise FileExistsError
+            if c.mobility.enabled:
+                print('### ERROR: folder / file exists:',c.results_base_model_dir)
+                raise FileExistsError
+            return
     print('Copied folder ',c.base_insite_project_path,'into',c.results_base_model_dir)
 
 def mobility_sumo(c):
@@ -132,7 +134,7 @@ def mobility_sumo(c):
         traci.start(c.sumo_cmd)
 
         scene_i = 0
-        episode_i = 0
+        episode_i = -1
 
         #======================================================================================
         # Jumps to the defined traci start
@@ -177,7 +179,7 @@ def mobility_sumo(c):
                 format_run_name(i - n_scenes_without_channels))
             objFile.clear()
 
-            if scene_i >= c.scenes_per_episode or (episode_i == 0 and scene_i == 0):
+            if scene_i >= c.scenes_per_episode or (episode_i == -1):
                 # Step episode and reset scene
                 episode_i += 1
                 scene_i = 0
