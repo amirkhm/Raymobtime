@@ -3,7 +3,7 @@ import os
 import bpy
 import csv
 import sqlite3
-import raymobtime.src.modules.blensor as blensor
+import src.modules.blensor as blensor
 import shutil
 import copy
 import numpy as np
@@ -93,8 +93,7 @@ def main():
 def classifyRays(pathInfoList,  numCl=2):
     raysCl = {}
     cleanPathInfo = {}
-
-    # Get Info part
+    
     for rays in pathInfoList.items():
         RxLocation = copy.deepcopy( rays[1][len(rays[1])-1] )
         dbRx = RxLocation[3]
@@ -113,17 +112,6 @@ def classifyRays(pathInfoList,  numCl=2):
             
     return cleanPathInfo
     
-    # Classify/Clean part
-    # For each Rx only a certain number of Rays.
-    #for rays in pathInfoList.items():
-    #    if (typeCl == 'Best'):
-    #        
-    #    elif (typeCl == 'Worst')
-
-
-    #print(raysCl)
-    #exit(1)
-    #return raysCl
 
 def getInfoPath(path_info_file):
     with open(path_info_file) as pathfile:
@@ -379,26 +367,7 @@ def animateVehiclesBlender(vPosition,frame_num,frame_step,step):
         veh.keyframe_insert(data_path="hide", index=-1)
         veh.keyframe_insert(data_path="location", index=-1)
         veh.keyframe_insert(data_path="rotation_euler", index=-1)
-
-
-# Escolhe o angulo para rotacionar que tem a menor diferença de angulo com o angulo anterior
-def chooseAngleToRotate(previousAngle, nextAngle):
-    cw = nextAngle - previousAngle 
-    ccw = - cw 
-    cw360 = convert360(cw)
-    ccw360 = convert360(ccw)
-    if ( cw360 < ccw360 ) :
-        return previousAngle + cw360
-    else:
-        return previousAngle - ccw360
     
-
-def convert360(x):
-    if ( x < 0 ) :
-        n = ceil(-x / 360)
-        x = x + n*360
-
-    return x % 360
 
 def buildVehiclesBlender(vPosition):
     # global veh
@@ -478,7 +447,6 @@ def doScan(vPosition,pathdir):
             '''doClean(myfile)'''
     doZip(pathdir)
         
-# Perform Scan
 def doZipPython(filepath):
     with ZipFile(filepath+'Zipped.zip', 'w') as zipped:
         for folderName, subfolders, filenames in os.walk(filepath):
@@ -487,13 +455,6 @@ def doZipPython(filepath):
                 zipped.write(filePath)
                 print('Write '+filePath)
     shutil.rmtree(filepath)
-
-def doClean(myfile):
-## If file exists, delete it ##
-    if os.path.isfile(myfile):
-        os.remove(myfile)
-    else:    ## Show an error ##
-        print("Error: %s file not found" % myfile)
 
 if __name__ == '__main__':
     main()

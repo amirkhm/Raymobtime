@@ -3,16 +3,42 @@ import os
 import bpy
 import csv
 import src.modules.blensor as blensor
-import shutil
 import numpy as np
 from bpy import data as D
-from bpy import context as C
 from mathutils import *
 from math import *
 from datetime import datetime
 from src.scripts.helpers import format_run_name
+from src.modules.blensor.utils import *
 
 def simulator():
+    """
+    Run the Blensor LiDAR simulation over a range of Raymobtime runs.
+
+    This function reads simulation paths and run limits from command-line
+    arguments, iterates over the selected simulation runs, loads vehicle
+    positions from the SUMO output file, updates the Blender scene with the
+    corresponding vehicle models, and performs LiDAR scans for receiver
+    vehicles.
+
+    The function also removes temporary vehicle objects and Blensor scan data
+    after each run, hides remaining animated objects at the end of the process,
+    reports the total execution time, and closes Blender.
+
+    Expected command-line arguments:
+        --simulation: Path to the folder containing ray-tracing simulation runs.
+        --veh_path: Path to the Blender vehicle model file or directory.
+        --from_run: First run index to process.
+        --to: Final run index limit. The loop processes runs in the interval
+            [from_run, to).
+
+    Raises:
+        ValueError: If run indices cannot be converted to integers.
+        FileNotFoundError: If a required simulation run folder or SUMO output
+            file is missing.
+        KeyError: If required command-line arguments are not provided.
+    """
+
     startTime = datetime.now()
     # Get infos from the args
     args = sys.argv
@@ -20,7 +46,6 @@ def simulator():
     vehicles_blend_path = args[args.index('--veh_path')+1]
     start_run = int(args[args.index('--from_run')+1])
     end_run = int(args[args.index('--to')+1])
-    #for key,scene_path in scenes_path.items():
     frame_num = 0
     frame_step = 1
     run = start_run
@@ -37,7 +62,6 @@ def simulator():
             print('\nWarning: could not find file ', scene_path , ' Stopping...')
             break
         sumo_info_file = os.path.join(scene_path,'sumoOutputInfoFileName.txt')
-        #path_info_file = os.path.join(scene_path,'study/model.paths.t001_01.r002.p2m')
         vPosition = getInfoVehicles(sumo_info_file)
         Position = vPosition
         animateVehiclesBlender(Position, vehicles_blend_path) 
@@ -55,37 +79,31 @@ def simulator():
     print("Total time elapsed: " + str(time_elapsed))
     bpy.ops.wm.quit_blender()
 
-def getInfoPath(path_info_file):
-    with open(path_info_file) as pathfile:
-        count = 0
-        npoints = False
-        pathInfoList = {}
-        previousLine = ''
-        raysInfoLine = ''
-        for line in pathfile:
-            if(line.startswith('Tx')):
-                tmp = line.split('-')
-                npoints = len(tmp)
-                ray_number = '%05d' % count
-                pathInfoList[count]  = []
-                raysInfoLine = previousLine
-                count += 1
-            else:
-                if npoints:
-                   tmp = line.split(' ')
-                   tmp[0] = float(tmp[0])
-                   tmp[1] = float(tmp[1])
-                   tmp[2] = float(tmp[2])
-                   tmp2 = raysInfoLine.split(' ')
-                   tmp.append(float(tmp2[2]))
-                   pathInfoList[count-1].append(tmp)
-                   npoints -=1
-            previousLine = line
-                    
-    return pathInfoList
-
-
 def getInfoVehicles(sumo_info_file):
+    """
+    Read vehicle position information from a SUMO output CSV file.
+
+    This function parses vehicle position, orientation, height, and receiver
+    status from a SUMO-generated CSV file. The reported position is corrected
+    from the vehicle front reference point to the approximate vehicle center
+    used in the Blender scene. A height offset is added because fixed simulations
+    may not store the final height value directly.
+
+    Args:
+        sumo_info_file: Path to the SUMO output CSV file containing vehicle
+            information for a simulation scene.
+
+    Returns:
+        A dictionary indexed by vehicle ID. Each entry contains the adjusted
+        InSite x and y coordinates, vehicle height, angle, receiver status,
+        and z coordinate.
+
+    Raises:
+        FileNotFoundError: If the SUMO output file does not exist.
+        ValueError: If numeric fields such as position, length, height, or angle
+            cannot be converted to floats.
+    """
+
     #first rotate and then translate
     with open(sumo_info_file) as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',', quotechar='`')
@@ -104,105 +122,31 @@ def getInfoVehicles(sumo_info_file):
 
     return vPosition
 
-def endAnimation(frame_num):
-    bpy.context.scene.frame_set(frame_num)
-    for x in range(0, len(bpy.context.scene.objects)):
-        obj_name = bpy.context.scene.objects[x].name
-        if obj_name.startswith('flow'): # Add to list
-            #objects_in_scene.append(obj_name)
-            #bpy.data.objects[obj_name].select = True
-            bpy.data.objects[obj_name].hide_render = True
-            bpy.data.objects[obj_name].hide = True
-            bpy.data.objects[obj_name].keyframe_insert(data_path="hide_render", index=-1)
-            bpy.data.objects[obj_name].keyframe_insert(data_path="hide", index=-1)
+def doScan(vPosition, pathdir):
+    """
+    Perform LiDAR scans for receiver vehicles in the Blender scene.
 
-# se n existir, cria
-# se existir, movimenta
-# se existia e n existe mais retirar
-def animateVehiclesBlender(vPosition, vehicles_blend_path):
+    This function iterates over the vehicle position dictionary and performs
+    a Blensor LiDAR scan only for vehicles marked as receivers. For each receiver,
+    the scanner is positioned above the vehicle, configured for a 360-degree scan,
+    and the generated point cloud is saved as a PCD file. The scan directory is
+    then compressed and removed.
 
-    bpy.context.scene.frame_set(0)
-    # Pre processamento dos que estao na cena
-    objects_in_scene = []
-    for x in range(0, len(bpy.context.scene.objects)):
-        obj_name = bpy.context.scene.objects[x].name
-        if obj_name.startswith('flow') or obj_name.startswith('dflow') or obj_name.startswith('ped'): # Add to list
-            #objects_in_scene.append(obj_name)
-            #if not obj_name in vPosition:
-            if not obj_name in vPosition:
-                #print("Hiding",obj_name,"in Frame number:",frame_num)
-                #bpy.data.objects[obj_name].select = True
-                bpy.data.objects[obj_name].hide_render = True
-                bpy.data.objects[obj_name].hide = True
-                bpy.data.objects[obj_name].keyframe_insert(data_path="hide_render", index=-1)
-                bpy.data.objects[obj_name].keyframe_insert(data_path="hide", index=-1)
-                bpy.data.objects[obj_name].name = '_'+bpy.data.objects[obj_name].name
-    for vehicles in vPosition.items():
-        if bpy.data.objects.get(vehicles[0]) is not None: # Existe, code to move
-            #print("found object")
-            veh = bpy.data.objects[vehicles[0]]
-        else:
-            if (float(vehicles[1]['height']) == 1.59): # Car
-                bpy.ops.wm.append(directory=vehicles_blend_path.replace('/','//') + "/Object/", filepath="vehicles.blend", filename="Car")
-                veh = bpy.data.objects["Car"]
-            elif (float(vehicles[1]['height']) == 3.2): # Bus
-                bpy.ops.wm.append(directory=vehicles_blend_path.replace('/','//') + "/Object/", filepath="vehicles.blend", filename="Bus")
-                veh = bpy.data.objects["Bus"]
-            elif (float(vehicles[1]['height']) == 4.3): # Truck
-                bpy.ops.wm.append(directory= vehicles_blend_path.replace('/','//') + "/Object/", filepath="vehicles.blend", filename="Truck")
-                veh = bpy.data.objects["Truck"]
-            elif (float(vehicles[1]['height']) == 0.295): # Drone
-                bpy.ops.wm.append(directory= vehicles_blend_path.replace('/','//') + "/Object/", filepath="vehicles.blend", filename="Drone")
-                veh = bpy.data.objects["Drone"]
-            else:
-                continue
-            
-            veh.name = vehicles[0]
+    Args:
+        vPosition: Dictionary containing vehicle position data and receiver
+            status. Each entry must include adjusted x and y coordinates, height,
+            receiver flag, and z coordinate.
+        pathdir: Temporary directory where the generated scan files will be saved.
 
-        veh.hide = False
-        veh.hide_render = False
-        ax,ay,az = veh.rotation_euler
-        angle_to_rotate = 90-float(vehicles[1]['angle'])
-        angle_to_rotate = chooseAngleToRotate(degrees(az),angle_to_rotate)
-        veh.rotation_euler = (radians(0), radians(0), radians(angle_to_rotate))
-        veh.location.xyz = float(vehicles[1]['xinsite']),float(vehicles[1]['yinsite']),float(vehicles[1]['z3'])#float(vehicles[1]['height'])/2 # X,Y,Z
-        veh.keyframe_insert(data_path="hide_render", index=-1)
-        veh.keyframe_insert(data_path="hide", index=-1)
-        veh.keyframe_insert(data_path="location", index=-1)
-        veh.keyframe_insert(data_path="rotation_euler", index=-1)
+    Raises:
+        KeyError: If required vehicle fields are missing.
+        ValueError: If position or height values cannot be converted to floats.
+        FileNotFoundError: If expected scan output files are missing during cleanup.
+    """
 
-
-# Escolhe o angulo para rotacionar que tem a menor diferença de angulo com o angulo anterior
-def chooseAngleToRotate(previousAngle, nextAngle):
-    cw = nextAngle - previousAngle 
-    ccw = - cw 
-    cw360 = convert360(cw)
-    ccw360 = convert360(ccw)
-    if ( cw360 < ccw360 ) :
-        return previousAngle + cw360
-    else:
-        return previousAngle - ccw360
-    
-
-def convert360(x):
-    if ( x < 0 ) :
-        n = ceil(-x / 360)
-        x = x + n*360
-
-    return x % 360
-
-def doZip(pathdir):
-    os.system('zip -r -j %s%s.zip %s'%('scans/',pathdir, pathdir))
-    print('zip -r -j %s%s.zip %s'%('scans/',pathdir, pathdir))
-    shutil.rmtree(pathdir)
-# Perform Scan
-def doScan(vPosition,pathdir):
     for camera in vPosition.items():
         if camera[1]['isRx']:
             os.mkdir(pathdir)
-            # car_to_hide = bpy.data.objects[camera[0]]
-            # car_to_hide.hide_render = True
-            # car_to_hide.keyframe_insert(data_path="hide_render", index=-1)
             height = float(camera[1]['height']) + 1; # one meter above the car
             scanner = bpy.data.objects["Camera"]
             scanner.location.xyz = float(camera[1]['xinsite']),float(camera[1]['yinsite']),height # X,Y,Z
@@ -215,20 +159,11 @@ def doScan(vPosition,pathdir):
                                 end_angle = 360.0, evd_last_scan=True, 
                                 add_blender_mesh = False, 
                                 add_noisy_blender_mesh = False, world_transformation=scanner.matrix_world)
-            # car_to_hide.hide_render = False
             os.remove(pathdir+'/'+camera[0])
             doZip(pathdir)
             myfile = pathdir+'/'+camera[0]
             '''doClean(myfile)'''
-    #doZip(pathdir)
-        
-# Perform Scan
-def doClean(myfile):
-## If file exists, delete it ##
-    if os.path.isfile(myfile):
-        os.remove(myfile)
-    else:    ## Show an error ##
-        print("Error: %s file not found" % myfile)
+
 
 if __name__ == "__main__":
     simulator()

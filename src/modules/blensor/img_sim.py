@@ -1,6 +1,4 @@
-import sys
 import os
-import json
 import bpy
 import csv
 import numpy as np
@@ -10,41 +8,32 @@ from mathutils import *
 from math import *
 from datetime import datetime
 from src.scripts.helpers import format_run_name
-
-def load_runtime_config():
-    """
-    Load the runtime configuration passed by blensor_src.py.
-
-    Expected command format:
-        blender scenario.blend --background -P script.py -- run_id config_path
-
-    Example:
-        -- 5 /tmp/raymobtime_blensor_run_00005.json
-    """
-    args = sys.argv
-
-    if "--" not in args:
-        raise RuntimeError(
-            "Missing '--' in Blender command arguments. "
-            "Expected: -- run_id config_path"
-        )
-
-    user_args = args[args.index("--") + 1:]
-
-    if len(user_args) < 2:
-        raise RuntimeError(
-            "Expected arguments after '--': run_id config_path"
-        )
-
-    run_id = int(user_args[0])
-    config_path = user_args[1]
-
-    with open(config_path, "r", encoding="utf-8") as file:
-        cfg = json.load(file)
-
-    return run_id, cfg
+from src.modules.blensor.utils import *
 
 def main():
+    """
+    Run the User Equipment image simulation for a single Raymobtime run.
+
+    This function loads the runtime configuration passed by the Blensor launcher,
+    retrieves the required ray-tracing output paths, image output paths, vehicle
+    model path, and scene metadata, then renders images from the perspective of
+    receiver vehicles.
+
+    The function processes one simulation run per execution. It reads vehicle
+    positions from the SUMO output file, loads ray-tracing path information,
+    updates the vehicle objects in the Blender scene, and captures multiple
+    images around each valid receiver vehicle using ``get4Photos``.
+
+    The current episode and scene counters are updated according to the number
+    of scenes per episode provided in the runtime configuration.
+
+    Raises:
+        RuntimeError: If the runtime configuration arguments are missing or
+            invalid.
+        FileNotFoundError: If required input files, such as the SUMO output file,
+            ray-tracing path file, or CoordVehicleTxRx CSV file, are missing.
+    """
+
     startTime = datetime.now()
     frame_num = 0
 
@@ -100,7 +89,27 @@ def main():
     time_elapsed = datetime.now() - startTime
     print("Total time elapsed: " + str(time_elapsed))
 
-def getPhoto360(file_path,current_ep,current_scn,run):
+def getPhoto360(file_path, current_ep, current_scn, run):
+    """
+    Capture panoramic 360-degree images from receiver vehicles in the Blender scene.
+
+    This function configures the active camera as an equirectangular panoramic
+    camera, reads the list of valid receiver vehicles from a CSV file, positions
+    the camera above each selected vehicle, and renders a panoramic image for
+    the specified simulation run.
+
+    Args:
+        file_path: Path to the CSV file containing valid vehicle, episode, and
+            scene information.
+        current_ep: Current episode index used to filter valid vehicles.
+        current_scn: Current scene index used to filter valid vehicles.
+        run: Simulation run identifier used to organize the output image path.
+
+    Raises:
+        KeyError: If a selected vehicle is not found in the Blender scene.
+        FileNotFoundError: If the CSV file specified by ``file_path`` does not exist.
+    """
+
     bpy.context.scene.render.resolution_x = 2000
     bpy.context.scene.render.resolution_y = 1000
     C.scene.render.engine = 'CYCLES'
@@ -128,7 +137,28 @@ def getPhoto360(file_path,current_ep,current_scn,run):
         bpy.ops.render.render(write_still=True)
         print('Done, continuing...')
 
-def get4Photos(file_path,dataset_path,current_ep,current_scn,run):
+def get4Photos(file_path, dataset_path, current_ep, current_scn, run):
+    """
+    Capture four directional images around each valid receiver vehicle.
+
+    This function reads the list of valid vehicles from a CSV file, places the
+    active camera above each selected vehicle, and renders four images by
+    rotating the camera in 90-degree increments. The images are saved in the
+    User Equipment image output directory for the corresponding simulation run.
+
+    Args:
+        file_path: Path to the CSV file containing valid vehicle, episode, and
+            scene information.
+        dataset_path: Base directory where the rendered images will be saved.
+        current_ep: Current episode index used to filter valid vehicles.
+        current_scn: Current scene index used to filter valid vehicles.
+        run: Simulation run identifier used to organize the output image path.
+
+    Raises:
+        KeyError: If a selected vehicle is not found in the Blender scene.
+        FileNotFoundError: If the CSV file specified by ``file_path`` does not exist.
+    """
+
     scan_vehicles = []
     cam = D.objects['Camera']
     D.cameras['Camera'].clip_end = 300
@@ -151,14 +181,39 @@ def get4Photos(file_path,dataset_path,current_ep,current_scn,run):
         cam.location[2] = veh.dimensions[2] + 3
         cam.rotation_euler = (radians(90), 0, veh.rotation_euler[2])
         while angle < 4:
-            D.scenes['Scene'].render.filepath = os.path.join(dataset_path, 'UE', f'run{run}', f'Camera_{vehicle}', f'{angle}')
+            D.scenes['Scene'].render.filepath = os.path.join(dataset_path, 'UE',
+                                                            f'run{run}', f'Camera_{vehicle}',
+                                                            f'{angle}')
             bpy.ops.render.render(write_still=True)
             cam.rotation_euler[2] += radians(90)
             angle+=1
 
+def getInfoPath(path_info_file, Rx_number=0):
+    """
+    Parse Wireless InSite path information for a specific receiver.
 
+    This function reads a Wireless InSite path output file and extracts the
+    sequence of points associated with each propagation ray. When ``Rx_number``
+    is greater than zero, only rays associated with the selected receiver are
+    kept. Each point is converted to numerical coordinates and receives the
+    corresponding ray metric extracted from the path information line.
 
-def getInfoPath(path_info_file, Rx_number = 0):
+    Args:
+        path_info_file: Path to the Wireless InSite path output file.
+        Rx_number: Receiver index used to filter the extracted rays. If set to
+            0, rays from all receivers are included. Defaults to 0.
+
+    Returns:
+        A dictionary where each key is a ray index and each value is a list of
+        path points. Each point contains x, y, and z coordinates followed by the
+        associated ray metric.
+
+    Raises:
+        FileNotFoundError: If the path information file does not exist.
+        ValueError: If the path file contains values that cannot be converted
+            to the expected numeric format.
+    """
+
     with open(path_info_file) as pathfile:
         count = 0
         npoints = False
@@ -213,8 +268,30 @@ def getInfoPath(path_info_file, Rx_number = 0):
                     
     return pathInfoList
 
-
 def getInfoVehicles(sumo_info_file):
+    """
+    Read vehicle position information from a SUMO output CSV file.
+
+    This function parses vehicle position, orientation, dimensions, and receiver
+    status from a SUMO-generated CSV file. The reported position is adjusted
+    from the vehicle front reference point to the approximate vehicle center
+    used by the Blender/InSite scene.
+
+    Args:
+        sumo_info_file: Path to the SUMO output CSV file containing vehicle
+            information for a simulation scene.
+
+    Returns:
+        A dictionary indexed by vehicle ID. Each entry contains the adjusted
+        InSite x and y coordinates, vehicle height, angle, receiver status,
+        and z coordinate.
+
+    Raises:
+        FileNotFoundError: If the SUMO output file does not exist.
+        ValueError: If numeric fields such as position, length, or angle cannot
+            be converted to floats.
+    """
+    
     #first rotate and then translate
     with open(sumo_info_file) as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',', quotechar='`')
@@ -226,11 +303,25 @@ def getInfoVehicles(sumo_info_file):
             thisAngleInRad = np.radians(float(row['angle'])) #*np.pi/180
             deltaX = (float(row['length'])/2.0) * np.sin(thisAngleInRad)
             deltaY = (float(row['length'])/2.0) * np.cos(thisAngleInRad)
-            vPosition[row['veh']] = {'xinsite':str(float(row['xinsite']) - deltaX),'yinsite':str(float(row['yinsite']) - deltaY),'height':row[' height'],'angle':row['angle'],'isRx':row['isRx'], 'z3':row['z3']}
+            vPosition[row['veh']] = {'xinsite':str(float(row['xinsite']) - deltaX),
+                                     'yinsite':str(float(row['yinsite']) - deltaY),
+                                     'height':row[' height'],'angle':row['angle'],
+                                     'isRx':row['isRx'], 'z3':row['z3']}
         
     return vPosition
 
 def endAnimation(frame_num):
+    """
+    Hide animated vehicle objects at the end of the animation.
+
+    This function iterates over the Blender scene and hides all objects whose
+    names start with ``flow``. Visibility keyframes are inserted so that the
+    final hidden state is stored in the animation timeline.
+
+    Args:
+        frame_num: Frame number associated with the final animation state.
+    """
+
     for x in range(0, len(bpy.context.scene.objects)):
         obj_name = bpy.context.scene.objects[x].name
         if obj_name.startswith('flow'): # Add to list
@@ -239,13 +330,31 @@ def endAnimation(frame_num):
             bpy.data.objects[obj_name].keyframe_insert(data_path="hide_render", index=-1)
             bpy.data.objects[obj_name].keyframe_insert(data_path="hide", index=-1)
 
-# se n existir, cria
-# se existir, movimenta
-# se existia e n existe mais retirar
 def animateVehiclesBlender(vPosition, vehicles_blend_path):
+    """
+    Add, update, and animate vehicles in the Blender scene.
+
+    This function synchronizes the Blender scene with the vehicle positions
+    provided in ``vPosition``. Existing vehicle objects are moved and rotated,
+    missing objects are imported from the vehicle Blender model file, and
+    objects no longer present in the current scene are hidden.
+
+    Args:
+        vPosition: Dictionary containing vehicle or pedestrian position data.
+            Each entry must include adjusted x and y coordinates, height,
+            angle, and z coordinate.
+        vehicles_blend_path: Path to the Blender vehicle model file or directory
+            used to append car, bus, truck, drone, or pedestrian objects.
+
+    Raises:
+        KeyError: If an expected field is missing from a vehicle entry.
+        ValueError: If position, height, or angle values cannot be converted to
+            floats.
+    """
+    
     for x in range(0, len(bpy.context.scene.objects)):
         obj_name = bpy.context.scene.objects[x].name
-        if obj_name.startswith('flow') or obj_name.startswith('dflow') or obj_name.startswith('ped'): # Add to list
+        if obj_name.startswith('flow') or obj_name.startswith('dflow') or obj_name.startswith('ped'): 
             if not obj_name in vPosition:
                 bpy.data.objects[obj_name].hide_render = True
                 bpy.data.objects[obj_name].hide = True
@@ -284,26 +393,6 @@ def animateVehiclesBlender(vPosition, vehicles_blend_path):
         veh.keyframe_insert(data_path="hide", index=-1)
         veh.keyframe_insert(data_path="location", index=-1)
         veh.keyframe_insert(data_path="rotation_euler", index=-1)
-
-
-# Escolhe o angulo para rotacionar que tem a menor diferença de angulo com o angulo anterior
-def chooseAngleToRotate(previousAngle, nextAngle):
-    cw = nextAngle - previousAngle 
-    ccw = - cw 
-    cw360 = convert360(cw)
-    ccw360 = convert360(ccw)
-    if ( cw360 < ccw360 ) :
-        return previousAngle + cw360
-    else:
-        return previousAngle - ccw360
-    
-
-def convert360(x):
-    if ( x < 0 ) :
-        n = ceil(-x / 360)
-        x = x + n*360
-
-    return x % 360
 
 if __name__ == '__main__':
     main()

@@ -1,10 +1,6 @@
-import sys
 import os
-import json
-import bpy
 import csv
 import shutil
-import copy
 import numpy as np
 from bpy import data as D
 from bpy import context as C
@@ -13,41 +9,30 @@ from math import *
 from datetime import datetime
 from zipfile import ZipFile
 from src.scripts.helpers import format_run_name
-
-def load_runtime_config():
-    """
-    Load the runtime configuration passed by blensor_src.py.
-
-    Expected command format:
-        blender scenario.blend --background -P script.py -- run_id config_path
-
-    Example:
-        -- 5 /tmp/raymobtime_blensor_run_00005.json
-    """
-    args = sys.argv
-
-    if "--" not in args:
-        raise RuntimeError(
-            "Missing '--' in Blender command arguments. "
-            "Expected: -- run_id config_path"
-        )
-
-    user_args = args[args.index("--") + 1:]
-
-    if len(user_args) < 2:
-        raise RuntimeError(
-            "Expected arguments after '--': run_id config_path"
-        )
-
-    run_id = int(user_args[0])
-    config_path = user_args[1]
-
-    with open(config_path, "r", encoding="utf-8") as file:
-        cfg = json.load(file)
-
-    return run_id, cfg
+from src.modules.blensor.utils import *
 
 def main():
+
+    """
+    Run the Base Station image simulation for a single Raymobtime run.
+
+    This function loads the runtime configuration passed by the Blensor launcher,
+    retrieves the paths required for ray-tracing results, image output, and vehicle
+    Blender models, and renders images from the configured Base Station cameras.
+
+    The function processes only one run per execution. The run identifier is
+    received from the runtime configuration arguments, and the function searches
+    for the corresponding ray-tracing output folder. Vehicle positions are read
+    from the SUMO output file, animated in the Blender scene, and then images are
+    rendered for each configured camera.
+
+    Raises:
+        RuntimeError: If the runtime configuration arguments are missing or invalid.
+        FileNotFoundError: If required input files such as the SUMO output file are
+            missing during processing.
+        NameError: If a configured camera object is not found in the Blender scene.
+    """
+
     startTime = datetime.now()
 
     run_id, cfg = load_runtime_config()
@@ -108,6 +93,24 @@ def main():
     print("Total time elapsed: " + str(time_elapsed))
 
 def take_image(camera, output_folder_name, run):
+    
+    """
+    Render and save an image from a specified Blender camera.
+
+    This function selects a camera object from the current Blender scene,
+    sets it as the active scene camera, defines the output file path, and
+    renders a still image. The image is saved under the Base Station image
+    output directory for the corresponding simulation run.
+
+    Args:
+        camera: Name of the Blender camera object to be used for rendering.
+        output_folder_name: Base directory where rendered images will be saved.
+        run: Simulation run identifier used to organize the output path.
+
+    Raises:
+        NameError: If the specified camera object is not found in the Blender scene.
+    """
+
     scene = C.scene
     try:
         cam = D.objects[camera]
@@ -116,62 +119,27 @@ def take_image(camera, output_folder_name, run):
     scene.camera = cam
     scene.render.filepath = os.path.join(output_folder_name, 'BS', f'run{run}', f'{camera}')
     bpy.ops.render.render(write_still = True)
-    
-def classifyRays(pathInfoList,  numCl=2):
-    raysCl = {}
-    cleanPathInfo = {}
-
-    # Get Info part
-    for rays in pathInfoList.items():
-        RxLocation = copy.deepcopy( rays[1][len(rays[1])-1] )
-        dbRx = RxLocation[3]
-        RxLocation.pop()
-        for i in range(len(RxLocation)):
-            RxLocation[i] = str(RxLocation[i])
-        key = ' '.join(RxLocation)
-        if key in raysCl:
-            count += 1
-            raysCl[key].append(dbRx)
-        else:
-            count = 0
-            raysCl[key] = [dbRx]
-        if count < numCl:
-            cleanPathInfo[rays[0]] = rays[1]
-
-    return cleanPathInfo
-
-
-def getInfoPath(path_info_file):
-    with open(path_info_file) as pathfile:
-        count = 0
-        npoints = False
-        pathInfoList = {}
-        previousLine = ''
-        raysInfoLine = ''
-        for line in pathfile:
-            if(line.startswith('Tx')):
-                tmp = line.split('-')
-                npoints = len(tmp)
-                ray_number = '%05d' % count
-                pathInfoList[count]  = []
-                raysInfoLine = previousLine
-                count += 1
-            else:
-                if npoints:
-                   tmp = line.split(' ')
-                   tmp[0] = float(tmp[0])
-                   tmp[1] = float(tmp[1])
-                   tmp[2] = float(tmp[2])
-                   tmp2 = raysInfoLine.split(' ')
-                   tmp.append(float(tmp2[2]))
-                   pathInfoList[count-1].append(tmp)
-                   npoints -=1
-            previousLine = line
-
-    return pathInfoList
-
 
 def getInfoVehicles(sumo_info_file):
+    
+    """
+    Read vehicle position information from a SUMO output CSV file.
+
+    This function parses vehicle position, orientation, dimensions, and receiver
+    status from a SUMO-generated CSV file. The vehicle position is adjusted from
+    the reported front-bumper reference point to the approximate vehicle center
+    used in the Blender/InSite coordinate system.
+
+    Args:
+        sumo_info_file: Path to the SUMO output CSV file containing vehicle
+            information for a simulation scene.
+
+    Returns:
+        A dictionary indexed by vehicle ID. Each entry contains the adjusted
+        InSite x and y coordinates, vehicle height, angle, receiver status,
+        and z coordinate.
+    """
+
     #first rotate and then translate
     with open(sumo_info_file) as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',', quotechar='`')
@@ -189,6 +157,23 @@ def getInfoVehicles(sumo_info_file):
     return vPosition
 
 def getInfoPedestrian(info_file):
+    """
+    Read pedestrian position information from a SUMO output CSV file.
+
+    This function parses pedestrian position, orientation, and receiver status
+    from a SUMO-generated CSV file. The pedestrian position is adjusted using
+    the same front-reference correction applied to vehicles and is formatted
+    for use in Blender scene animation.
+
+    Args:
+        info_file: Path to the SUMO output CSV file containing pedestrian
+            information for a simulation scene.
+
+    Returns:
+        A dictionary indexed by pedestrian ID with the prefix ``ped``. Each
+        entry contains the adjusted InSite x and y coordinates, height, angle,
+        receiver status, and z coordinate.
+    """
     #first rotate and then translate
     with open(info_file) as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',', quotechar='`')
@@ -206,6 +191,23 @@ def getInfoPedestrian(info_file):
     return vPosition
 
 def createLineBlender(objname, cList, frame_num, frame_step):
+    """
+    Create a 3D polyline object in Blender to represent a ray path.
+
+    This function creates a curve object from a list of 3D points and assigns
+    a material color according to the received power or path gain value
+    associated with the ray. The generated object is hidden in previous frames
+    and shown at the specified frame to support ray animation.
+
+    Args:
+        objname: Name assigned to the Blender curve object.
+        cList: List of ray path points. Each point is expected to contain
+            x, y, z coordinates and a received power or path gain value.
+        frame_num: Frame in which the ray object should become visible.
+        frame_step: Step used to define previous frames where the object
+            should remain hidden.
+    """
+
     curvedata = bpy.data.curves.new(name='curve', type='CURVE')
     curvedata.dimensions = '3D'
 
@@ -261,12 +263,35 @@ def createLineBlender(objname, cList, frame_num, frame_step):
     objectdata.keyframe_insert(data_path="hide", index=-1)
 
 def rayAnimation(vectorsPath,frame_num, frame_step):
+    """
+    Create Blender ray animations from a collection of propagation paths.
+
+    This function iterates over a dictionary of ray paths and creates one
+    Blender curve object for each ray using ``createLineBlender``.
+
+    Args:
+        vectorsPath: Dictionary containing ray path data indexed by ray ID.
+        frame_num: Frame in which the generated ray objects should be shown.
+        frame_step: Frame step used to hide the ray objects in previous frames.
+    """
+
     for rays in vectorsPath.items():
         objname = str(frame_num)+'Ray'+str('%05d' % rays[0])
         createLineBlender(objname,rays[1], frame_num, frame_step)
 
-
 def endRayAnimation(frame_num, frame_step):
+    """
+    Hide ray objects after their animation frame.
+
+    This function advances the Blender scene to the frame immediately after
+    the ray animation frame and hides all ray objects associated with the
+    given frame number.
+
+    Args:
+        frame_num: Frame number associated with the ray objects to hide.
+        frame_step: Frame step used to determine the next frame.
+    """
+
     bpy.context.scene.frame_set(frame_num + frame_step)
     for x in range(0, len(bpy.context.scene.objects)):
         obj_name = bpy.context.scene.objects[x].name
@@ -277,6 +302,17 @@ def endRayAnimation(frame_num, frame_step):
             bpy.data.objects[obj_name].keyframe_insert(data_path="hide", index=-1)
 
 def endAnimation(frame_num):
+    """
+    Hide animated vehicle objects at the end of the animation.
+
+    This function sets the Blender scene to the specified frame and hides all
+    objects whose names start with ``flow``. Visibility keyframes are inserted
+    to mark the end state of the animation.
+
+    Args:
+        frame_num: Frame number where the final visibility state should be set.
+    """
+
     bpy.context.scene.frame_set(0)
     for x in range(0, len(bpy.context.scene.objects)):
         obj_name = bpy.context.scene.objects[x].name
@@ -286,13 +322,28 @@ def endAnimation(frame_num):
             bpy.data.objects[obj_name].keyframe_insert(data_path="hide_render", index=-1)
             bpy.data.objects[obj_name].keyframe_insert(data_path="hide", index=-1)
 
-# se n existir, cria
-# se existir, movimenta
-# se existia e n existe mais retirar
+# if the vehicle does not exist, create it. if it exists, move it. if it existed and does not exist anymore, remove it.
+
 def animateVehiclesBlender(vPosition, vehicles_blend_path):
+    """
+    Add, update, and animate vehicles in the Blender scene.
+
+    This function synchronizes the Blender scene with the vehicle positions
+    provided in ``vPosition``. Existing vehicles are moved and rotated according
+    to the current scene data, missing vehicles are imported from a vehicle
+    Blender file, and vehicles no longer present in the scene are hidden.
+
+    Args:
+        vPosition: Dictionary containing vehicle or pedestrian position data.
+            Each entry must include adjusted x and y coordinates, height,
+            angle, and z coordinate.
+        vehicles_blend_path: Path to the Blender file or directory containing
+            vehicle models to be appended to the scene.
+    """
+
     bpy.context.scene.frame_set(0)
 
-    # Pre processamento dos que estao na cena
+    # PRE-PROCESSING all vehicles that are in the scene 
     objects_in_scene = []
     for x in range(0, len(bpy.context.scene.objects)):
         obj_name = bpy.context.scene.objects[x].name
@@ -340,26 +391,19 @@ def animateVehiclesBlender(vPosition, vehicles_blend_path):
         veh.keyframe_insert(data_path="rotation_euler", index=-1)
 
 
-# Escolhe o angulo para rotacionar que tem a menor diferença de angulo com o angulo anterior
-def chooseAngleToRotate(previousAngle, nextAngle):
-    cw = nextAngle - previousAngle
-    ccw = - cw
-    cw360 = convert360(cw)
-    ccw360 = convert360(ccw)
-    if ( cw360 < ccw360 ) :
-        return previousAngle + cw360
-    else:
-        return previousAngle - ccw360
-
-
-def convert360(x):
-    if ( x < 0 ) :
-        n = ceil(-x / 360)
-        x = x + n*360
-
-    return x % 360
-
 def buildVehiclesBlender(vPosition):
+    """
+    Build vehicle objects in Blender using predefined vehicle models.
+
+    This function appends vehicle models from a Blender file according to the
+    height of each vehicle and places them at the corresponding InSite
+    coordinates.
+
+    Args:
+        vPosition: Dictionary containing vehicle position and dimension data.
+            The vehicle height is used to select the appropriate model.
+    """
+
     for vehicles in vPosition.items():
         if (float(vehicles[1]['height']) == 1.59): # Car
             bpy.ops.wm.append(directory=os.getcwd().replace('/','//') + "//vehicles.blend/Object/", filepath="vehicles.blend", filename="Car")
@@ -372,11 +416,21 @@ def buildVehiclesBlender(vPosition):
             veh = bpy.data.objects["Truck"]
         veh.name = vehicles[0]
         veh.rotation_euler = (radians(0), radians(0), radians(90-float(vehicles[1]['angle'])))
-        veh.location.xyz = float(vehicles[1]['xinsite']),float(vehicles[1]['yinsite']),0#float(vehicles[1]['height'])/2 # X,Y,Z
+        veh.location.xyz = float(vehicles[1]['xinsite']),float(vehicles[1]['yinsite']),0
 
-
-# Build vehicles in Blender
 def buildVehiclesBlenderBox(vPosition):
+    """
+    Build simplified box-shaped vehicle objects in Blender.
+
+    This function creates cube primitives to represent vehicles and scales
+    them according to predefined dimensions for cars, buses, and trucks.
+    The boxes are positioned and rotated using the provided vehicle data.
+
+    Args:
+        vPosition: Dictionary containing vehicle position, height, and angle
+            information.
+    """
+
     for vehicles in vPosition.items():
         bpy.ops.mesh.primitive_cube_add(radius=1, location = (0,0,0)) # location X, Y, Z/2(center of cube is in its centroid)
         cube = bpy.data.objects["Cube"]
@@ -391,11 +445,30 @@ def buildVehiclesBlenderBox(vPosition):
         cube.location.xyz = float(vehicles[1]['xinsite']),float(vehicles[1]['yinsite']),float(vehicles[1]['height'])/2 # X,Y,Z
 
 def doZip(pathdir):
+    """
+    Compress a directory into a ZIP file and remove the original directory.
+
+    Args:
+        pathdir: Path to the directory that should be compressed.
+    """
+
     os.system('zip %s.zip -r -j %s'%(pathdir, pathdir))
     print('zip %s.zip -r -j %s'%(pathdir, pathdir))
     shutil.rmtree(pathdir)
-# Perform Scan
+
 def doScan(vPosition,pathdir):
+    """
+    Perform LiDAR scans for receiver vehicles in the Blender scene.
+
+    This function places the Blensor scanner above each receiver vehicle,
+    performs a 360-degree LiDAR scan, saves the generated point cloud, and
+    compresses the output directory.
+
+    Args:
+        vPosition: Dictionary containing vehicle position and receiver status.
+        pathdir: Directory where the scan files should be temporarily stored.
+    """
+
     for camera in vPosition.items():
         if camera[1]['isRx']:
             os.mkdir(pathdir)
@@ -405,7 +478,12 @@ def doScan(vPosition,pathdir):
             scanner = bpy.data.objects["Camera"]
             scanner.location.xyz = float(camera[1]['xinsite']),float(camera[1]['yinsite']),height # X,Y,Z
             scanner.rotation_euler = (radians(90), radians(0), radians(0))
-            blensor.blendodyne.scan_advanced(scanner, rotation_speed = 10.0,simulation_fps=24, angle_resolution = 0.1728, max_distance = 120, evd_file= pathdir+'/'+camera[0]+".pcd",noise_mu=0.0, noise_sigma=0.03, start_angle = 0.0, end_angle = 360.0, evd_last_scan=True, add_blender_mesh = False,add_noisy_blender_mesh = False, world_transformation=scanner.matrix_world)
+            blensor.blendodyne.scan_advanced(scanner, rotation_speed = 10.0,simulation_fps=24, 
+                                            angle_resolution = 0.1728, max_distance = 120,
+                                            evd_file= pathdir+'/'+camera[0]+".pcd",noise_mu=0.0, 
+                                            noise_sigma=0.03, start_angle = 0.0, end_angle = 360.0, 
+                                            evd_last_scan=True, add_blender_mesh = False,
+                                            add_noisy_blender_mesh = False, world_transformation=scanner.matrix_world)
             car_to_hide.hide_render = False
             print(pathdir+'/'+camera[0]+".pcd")
             doZip(pathdir)
@@ -413,8 +491,17 @@ def doScan(vPosition,pathdir):
             '''doClean(myfile)'''
     doZip(pathdir)
 
-# Perform Scan
 def doZipPython(filepath):
+    """
+    Compress a directory into a ZIP file using Python's zipfile module.
+
+    This function recursively adds all files from the given directory to a ZIP
+    archive and removes the original directory after compression.
+
+    Args:
+        filepath: Path to the directory that should be compressed.
+    """
+
     with ZipFile(filepath+'Zipped.zip', 'w') as zipped:
         for folderName, subfolders, filenames in os.walk(filepath):
             for filename in filenames:
@@ -424,10 +511,16 @@ def doZipPython(filepath):
     shutil.rmtree(filepath)
 
 def doClean(myfile):
-## If file exists, delete it ##
+    """
+    Remove a file if it exists.
+
+    Args:
+        myfile: Path to the file that should be deleted.
+    """
+
     if os.path.isfile(myfile):
         os.remove(myfile)
-    else:    ## Show an error ##
+    else:   
         print("Error: %s file not found" % myfile)
 
 if __name__ == '__main__':
