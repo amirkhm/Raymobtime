@@ -205,6 +205,40 @@ def process_ep(path, c):
     return hmatrix, beamIndexOutputs, channelOutputs
 
 def gen_beam_output_file(c):
+    """
+    Generate and save beam-selection output files.
+
+    This function processes the configured simulation data to compute MIMO
+    channel matrices, beam indices, and equivalent channel magnitudes. The
+    channel information can be obtained either from ray data stored in HDF5
+    files or from imported Wireless InSite H-matrix files, depending on the
+    configuration.
+
+    For each processed episode, the function calls ``process_ep`` to generate
+    the H-matrix, best beam index, and channel magnitude arrays. The outputs are
+    then stacked across episodes and saved as compressed NumPy files in the
+    beam output folder.
+
+    Args:
+        c: Runtime configuration object containing the working directory,
+            output name, run range, episode settings, MIMO/codebook options,
+            and H-matrix import flag.
+
+    Returns:
+        None. The generated arrays are saved to disk as:
+            - ``hmatrix.npz`` containing the MIMO channel matrices;
+            - ``beam_output.npz`` containing the selected beam indices;
+            - ``channel_output.npz`` containing the equivalent channel magnitudes.
+
+    Raises:
+        FileNotFoundError: If required ray data files or H-matrix folders are
+            missing.
+        ValueError: If the generated output arrays cannot be stacked due to
+            inconsistent shapes.
+        OSError: If an input HDF5 file cannot be opened or an output file cannot
+            be written.
+    """
+    
     output_beam_folder = os.path.join(
         c.working_directory, 
         'sim_data', 
