@@ -4,6 +4,7 @@ base_config:
   resume: null
   clean_previous: null
   logging_level: none                       # logging level: debug, info, warning, error, critical
+  yaml_output: null
 
 pipeline:
   mobility:

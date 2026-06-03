@@ -50,8 +50,9 @@ def main():
     if not os.path.exists(folder_img_dataset):
         os.makedirs(folder_img_dataset)
 
-    current_scn = 0
-    current_ep = 0
+    current_ep = run_id // n_scenes_of_each_episode
+    current_scn = run_id % n_scenes_of_each_episode
+
     listValidsInvalids = cfg["paths"]["coord_vehicle_txrx"]    
     run = start_run
     C.scene.frame_set(frame_num)     
@@ -303,9 +304,9 @@ def getInfoVehicles(sumo_info_file):
             thisAngleInRad = np.radians(float(row['angle'])) #*np.pi/180
             deltaX = (float(row['length'])/2.0) * np.sin(thisAngleInRad)
             deltaY = (float(row['length'])/2.0) * np.cos(thisAngleInRad)
-            vPosition[row['veh']] = {'xinsite':str(float(row['xinsite']) - deltaX),
+            vPosition[row['object_id']] = {'xinsite':str(float(row['xinsite']) - deltaX),
                                      'yinsite':str(float(row['yinsite']) - deltaY),
-                                     'height':row[' height'],'angle':row['angle'],
+                                     'height':row['height'],'angle':row['angle'],
                                      'isRx':row['isRx'], 'z3':row['z3']}
         
     return vPosition

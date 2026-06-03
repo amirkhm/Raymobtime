@@ -4,6 +4,7 @@ import yaml
 from pathlib import Path
 from types import SimpleNamespace
 import logging
+import shutil
 
 # simulators
 from src.modules.blensor.blensor_src import blensor_simulation
@@ -16,6 +17,54 @@ from src.modules.postprocessing import (
    gen_lidar_matrix,
    image_refinement,
    sanity_check_up)
+
+def copy_yaml_to_output(c):
+    """
+    Copy the user YAML configuration file to the Raymobtime output folder.
+
+    This function is used to preserve the exact configuration file used in a
+    simulation run, making the generated results reproducible.
+
+    Args:
+        c: Runtime configuration object containing the project root, scenario,
+            output name, and YAML output flag.
+
+    Returns:
+        None.
+
+    Raises:
+        FileNotFoundError: If neither config.yaml nor config.yml is found in the
+            project root.
+    """
+    project_root = find_project_root()
+
+    user_yaml_path = project_root / "config.yaml"
+    if not user_yaml_path.exists():
+        user_yaml_path = project_root / "config.yml"
+
+    if not user_yaml_path.exists():
+        raise FileNotFoundError(
+            f"File config.yaml or config.yml not found at: {project_root}"
+        )
+
+    output_folder = os.path.join(
+        c.working_directory,
+        "data",
+        c.base_config.scenario,
+        "out",
+        c.base_config.output_name,
+    )
+
+    os.makedirs(output_folder, exist_ok=True)
+
+    output_yaml_path = os.path.join(
+        output_folder,
+        user_yaml_path.name
+    )
+
+    shutil.copy2(user_yaml_path, output_yaml_path)
+
+    print(f"YAML configuration copied to: {output_yaml_path}")
 
 def dict_to_namespace(obj):
     """
@@ -285,6 +334,7 @@ class parameters:
             
         self.working_directory = find_project_root()
 
+        self.yaml_output = self.base_config.yaml_output
         self.fixed_receivers = self.rmt.features.fixed_receivers
         self.vehicles_template = self.rmt.features.vehicles_template
         self.isolated_sim = not self.rmt.enabled
@@ -599,6 +649,9 @@ def raymobtime():
     """
 
     c = parameters()
+
+    if c.yaml_output:
+        copy_yaml_to_output(c)
 
     # Usual Raymobtime Simulation using WI
     if c.mobility.enabled or c.ray_tracing.enabled:

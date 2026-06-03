@@ -2,13 +2,13 @@ base_config:
   output_name: sim_a                          # Simulation identifier name
   scenario: rosslyn                           # scenario name
   resume: false                               # skip steps already concluded (not implemented, necessary logging of concluded steps)
-  clean_previous: false                        # remove result folders before running
+  clean_previous: true                        # remove result folders before running
   logging_level: info                         # logging level: debug, info, warning, error, critical, NONE
-  yaml_output: false
+  yaml_output: true
 
 pipeline:
   mobility:
-    enabled: false
+    enabled: true
     tool: sumo                                # null | none
     placement_limits: 
       enabled: false   
@@ -16,12 +16,12 @@ pipeline:
       min_lim: [660, 334]                     # [x, y] study area limits for placement of Tx and Rx
   
   ray_tracing:                                # parsing automático
-    enabled: false 
+    enabled: true 
     #tool: wireless_insite                    # wireless_insite | none
     jump: true   
   
   blensor:
-    enabled: true 
+    enabled: false 
     outputs: 
       # - lidar
       - image
@@ -30,8 +30,8 @@ pipeline:
     enabled: false  
     which: "selected"                               # all | selected
     outputs:                                        # ["db", "coord", "rays", "beams", "image", "lidar"]
-       - db                                       # database (sqlite/postgres/hdf5)
-       - "coord"                                   # coordenadas
+      - db                                       # database (sqlite/postgres/hdf5)
+      # - "coord"                                   # coordenadas
       # - "rays"
       # - "beams"
       # - "image"
@@ -75,9 +75,9 @@ ray_tracing:
       vehicles_name: random-line
   
 blensor_options:
-  path_to_scenario_blend: /home/fritz/RMT/raymobtime/data/rosslyn/base/blender/rosslyn1.blend
-  path_to_vehicles_blend: /home/fritz/RMT/raymobtime/data/rosslyn/base/blender/vehicles.blend
-  path_blensor_image: /home/fritz/RMT/raymobtime/utils/animation/Blensor-x64.AppImage
+  path_to_scenario_blend: /home/gabriel/Repositorios/rmt2/raymobtime/data/rosslyn/base/blender/rosslyn00.blend
+  path_to_vehicles_blend: /home/gabriel/Repositorios/rmt2/raymobtime/data/rosslyn/base/blender/vehicles.blend
+  path_blensor_image: /home/gabriel/softwares/blensor/Blensor-x64.AppImage
   image_options:
     BS_camera: false
     UE_camera: true

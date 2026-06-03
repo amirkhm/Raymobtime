@@ -195,13 +195,25 @@ def blensor_simulation(c):
 def run_blensor_safely(cmd, cwd=None):
     """
     Run Blensor in an isolated process group on Linux.
-    If Blensor hangs or fails, the whole process group can be killed.
+
+    The project root is added to PYTHONPATH so that Blender/Blensor scripts can
+    import modules from the Raymobtime source tree, such as src.scripts and
+    src.modules.
     """
     proc = None
 
     try:
         env = os.environ.copy()
         env["BLENDER_USER_SCRIPTS"] = "/tmp"
+
+        if cwd is not None:
+            project_root = str(cwd)
+
+            previous_pythonpath = env.get("PYTHONPATH", "")
+            if previous_pythonpath:
+                env["PYTHONPATH"] = project_root + os.pathsep + previous_pythonpath
+            else:
+                env["PYTHONPATH"] = project_root
 
         proc = subprocess.Popen(
             cmd,
