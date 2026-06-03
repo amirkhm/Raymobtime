@@ -1,35 +1,35 @@
 base_config:     
-  output_name: "sim_a"                        # Simulation identifier name
-  scenario: "rosslyn"                      # scenario name
-  resume: false                                # skip steps already concluded (not implemented, necessary logging of concluded steps)
+  output_name: sim_a                          # Simulation identifier name
+  scenario: rosslyn                           # scenario name
+  resume: false                               # skip steps already concluded (not implemented, necessary logging of concluded steps)
   clean_previous: true                       # remove result folders before running
-  logging_level: info                       # logging level: debug, info, warning, error, critical, NONE
+  logging_level: debug                         # logging level: debug, info, warning, error, critical, NONE
 
 pipeline:
   mobility:
     enabled: true
-    tool: "sumo"                              # null | none
+    tool: sumo                                # null | none
     placement_limits: 
       enabled: false   
       max_lim: [843, 523]                     # [x, y] study area limits for placement of Tx and Rx
       min_lim: [660, 334]                     # [x, y] study area limits for placement of Tx and Rx
   
   ray_tracing:                                # parsing automático
-    enabled: false 
-    #tool: "wireless_insite"                  # wireless_insite | none
+    enabled: true 
+    #tool: wireless_insite                    # wireless_insite | none
     jump: true   
   
   blensor:
     enabled: false 
     outputs: 
-      # - "lidar"
-      - "image"
+      # - lidar
+      - image
 
   post_processing:
-    enabled: false  
+    enabled: true  
     which: "selected"                               # all | selected
     outputs:                                        # ["db", "coord", "rays", "beams", "image", "lidar"]
-      # - "db"                                       # database (sqlite/postgres/hdf5)
+      - db                                       # database (sqlite/postgres/hdf5)
       # - "coord"                                   # coordenadas
       # - "rays"
       # - "beams"
@@ -56,14 +56,13 @@ sumo:
 ray_tracing:
   use_pedestrians: false
   use_drone: false
-  receivers_per_episode: 2
+  receivers_per_episode: 1
   transmitters_per_episode: 1
   v2v:
-    enabled: true
-    close_vehicles: false
-    n_of_vehicles: 7  # 1 more level of indent
-    chose_vehicle: false
-    chosen_vehicle: Truck
+    enabled: false
+    closest_vehicles: # from potential receiver vehicles in area, choose the closest ones to be Rx. 
+      enabled: false
+      n_of_vehicles: 5 # Overrites receivers_per_episode
   wireless_insite:
     software_path: /home/gabriel/softwares/wireless-insite/remcom
     LICENSE_FILE: REMCOMINC_LICENSE_FILE=2501@10.10.80.6

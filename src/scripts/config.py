@@ -414,13 +414,12 @@ class parameters:
         self.max_dist_LIDAR = self.post_processing.cartesian_lidar_matrix.max_dist_LIDAR
         self.type_data = self.post_processing.cartesian_lidar_matrix.type_data
 
-        if self.V2V:
-            self.n_Tx_per_episode = self.ray_tracing.transmitters_per_episode
-            self.receivers_per_episode = self.ray_tracing.receivers_per_episode
-            self.close_vehicles = self.ray_tracing.v2v.close_vehicles
-            self.n_of_vehicles = self.ray_tracing.v2v.n_of_vehicles
-            if self.ray_tracing.v2v.chose_vehicle:
-                self.chosen_vehicle = self.ray_tracing.v2v.chosen_vehicle
+        self.n_Tx_per_episode = self.ray_tracing.transmitters_per_episode
+        self.receivers_per_episode = self.ray_tracing.receivers_per_episode
+        self.close_vehicles = self.ray_tracing.v2v.closest_vehicles.enabled
+        self.n_of_vehicles = self.ray_tracing.v2v.closest_vehicles.n_of_vehicles
+        #if self.ray_tracing.v2v.chose_vehicle:
+        #    self.chosen_vehicle = self.ray_tracing.v2v.chosen_vehicle
 
         self.import_precoding = self.post_processing.mimo.import_precoding
         self.import_hmatrix = self.post_processing.mimo.import_channels
@@ -619,7 +618,10 @@ def raymobtime():
     }
 
     if c.post_processing.enabled: 
-       print("Starting post-processing...")
+       logging.info(
+           '\033[92m'
+           'Starting post-processing'
+           '\033[0m')
        if c.post_processing.which == "all":
            for func in [gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file]:
                func(c)
