@@ -607,22 +607,7 @@
                   <remcom::rxapi::Boolean Value="true"></remcom::rxapi::Boolean>
                 </ConformToTerrain>
                 <ControlPoints>
-                  <remcom::rxapi::ProjectedPointList>
-                    <ProjectedPoint>
-                      <remcom::rxapi::CartesianPoint>
-                        <X>
-                          <remcom::rxapi::Double Value="745.24206100000004"></remcom::rxapi::Double>
-                        </X>
-                        <Y>
-                          <remcom::rxapi::Double Value="559.91528600000004"></remcom::rxapi::Double>
-                        </Y>
-                        <Z>
-                          <remcom::rxapi::Double Value="4"></remcom::rxapi::Double>
-                        </Z>
-                      </remcom::rxapi::CartesianPoint>
-                    </ProjectedPoint>
-                  </remcom::rxapi::ProjectedPointList>
-                </ControlPoints>
+                  <remcom::rxapi::ProjectedPointList><ProjectedPoint><remcom::rxapi::CartesianPoint><X><remcom::rxapi::Double Value="778.188226448903492"></remcom::rxapi::Double></X><Y><remcom::rxapi::Double Value="413.094772661183129"></remcom::rxapi::Double></Y><Z><remcom::rxapi::Double Value="4.399999999999999"></remcom::rxapi::Double></Z></remcom::rxapi::CartesianPoint></ProjectedPoint></remcom::rxapi::ProjectedPointList></ControlPoints>
                 <OutputID>
                   <remcom::rxapi::Integer Value="1"></remcom::rxapi::Integer>
                 </OutputID>
@@ -701,7 +686,7 @@
                   <remcom::rxapi::Boolean Value="true"></remcom::rxapi::Boolean>
                 </ConformToTerrain>
                 <ControlPoints>
-                  <remcom::rxapi::ProjectedPointList><ProjectedPoint><remcom::rxapi::CartesianPoint><X><remcom::rxapi::Double Value="692.130035573796476"></remcom::rxapi::Double></X><Y><remcom::rxapi::Double Value="677.285779534252015"></remcom::rxapi::Double></Y><Z><remcom::rxapi::Double Value="4.399999999999999"></remcom::rxapi::Double></Z></remcom::rxapi::CartesianPoint></ProjectedPoint></remcom::rxapi::ProjectedPointList></ControlPoints>
+                  <remcom::rxapi::ProjectedPointList><ProjectedPoint><remcom::rxapi::CartesianPoint><X><remcom::rxapi::Double Value="749.756325553042302"></remcom::rxapi::Double></X><Y><remcom::rxapi::Double Value="660.033497916473380"></remcom::rxapi::Double></Y><Z><remcom::rxapi::Double Value="4.399999999999999"></remcom::rxapi::Double></Z></remcom::rxapi::CartesianPoint></ProjectedPoint><ProjectedPoint><remcom::rxapi::CartesianPoint><X><remcom::rxapi::Double Value="753.600794994526950"></remcom::rxapi::Double></X><Y><remcom::rxapi::Double Value="605.097563666479118"></remcom::rxapi::Double></Y><Z><remcom::rxapi::Double Value="4.399999999999999"></remcom::rxapi::Double></Z></remcom::rxapi::CartesianPoint></ProjectedPoint><ProjectedPoint><remcom::rxapi::CartesianPoint><X><remcom::rxapi::Double Value="762.462158108767767"></remcom::rxapi::Double></X><Y><remcom::rxapi::Double Value="525.720988668310156"></remcom::rxapi::Double></Y><Z><remcom::rxapi::Double Value="4.399999999999999"></remcom::rxapi::Double></Z></remcom::rxapi::CartesianPoint></ProjectedPoint></remcom::rxapi::ProjectedPointList></ControlPoints>
                 <OutputID>
                   <remcom::rxapi::Integer Value="2"></remcom::rxapi::Integer>
                 </OutputID>

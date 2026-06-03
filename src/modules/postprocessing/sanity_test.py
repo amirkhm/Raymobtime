@@ -26,7 +26,9 @@ def csv_check(main_folder):
         KeyError: If required columns such as ``Val``, ``EpisodeID``,
             ``SceneID``, ``RxID``, or ``TxID`` are missing.
     """
-    csv_file = os.path.join(main_folder, 'CoordVehicleTxRx.csv')
+    csv_file = os.path.join(
+        main_folder, 
+        'CoordVehicleTxRx.csv')
     df_coord = pd.read_csv(csv_file)
     valid_channels = df_coord['Val'].value_counts()['V']
     if 'I' in df_coord['Val'].values:
@@ -158,7 +160,7 @@ def sanity_check_up(c):
             missing.
     """
     
-    main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
+    main_folder = c.results_dir_postprocessed
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
     df, df_val = csv_check(main_folder)

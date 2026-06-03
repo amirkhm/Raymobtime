@@ -305,7 +305,7 @@ def writeSUMOInfoIntoFile(
         "height",
         "distance",
         "waitTime",
-        f"currentTime(ms)={traci.simulation.getCurrentTime()}",
+        f"currentTime(ms)={traci.simulation.getTime()}",
         f"Ts(s)={c.sampling_interval}",
     ]
 

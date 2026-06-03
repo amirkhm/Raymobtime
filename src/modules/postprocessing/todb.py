@@ -35,10 +35,12 @@ def count_model_paths(dir):
 def gen_database(c):
     last_simulation_info = None
     simulation_info = None
-    database_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
+    database_folder = c.results_dir_postprocessed
     if not os.path.exists(database_folder):
         os.makedirs(database_folder)
-    database_path = os.path.join(database_folder, f'{c.base_config.output_name}.db')
+    database_path = os.path.join(
+        database_folder, 
+        f'{c.base_config.output_name}.db')
     if not c.isolated_sim:  
         session = fgdb.create_database(database_path)
     else:
@@ -128,25 +130,29 @@ def gen_database(c):
         while True:
         #for run_i in range(100): # use the number of examples in config.py
             run_dir = os.path.join(results_dir, format_run_name(run_i))
-            object_file_name = os.path.join(run_dir, dst_object_file_nameBaseName)
+            object_file_name = os.path.join(
+                run_dir, 
+                dst_object_file_nameBaseName)
             #rays information but phase
-            abs_paths_file_name = os.path.join(run_dir, project_output_dirBaseName, paths_file_name)
+            abs_paths_file_name = os.path.join(
+                run_dir, 
+                project_output_dirBaseName, 
+                paths_file_name)
             if os.path.exists(abs_paths_file_name) == False:
                 print('\nWarning: could not find file ', abs_paths_file_name, ' Stopping...')
                 break
-            #now we get the phase info from CIR file
-            # abs_cir_file_name = abs_paths_file_name.replace("paths","cir") #name for the impulse response (cir) file
-            # if os.path.exists(abs_cir_file_name) == False:
-            #     print('ERROR: could not find file ', abs_cir_file_name)
-            #     print('Did you ask InSite to generate the impulse response (cir) file?')
-            #     exit(-1)
 
-            abs_simulation_info_file_name = os.path.join(run_dir, simulation_info_file_name)
+            abs_simulation_info_file_name = os.path.join(
+                run_dir, 
+                simulation_info_file_name)
             with open(abs_simulation_info_file_name) as infile:
                 simulation_info = json.load(infile)
 
-            abs_sumo_info_file_name = os.path.join(run_dir, sumo_file_name)
+            abs_sumo_info_file_name = os.path.join(
+                run_dir, 
+                sumo_file_name)
             sumo_info = sumoOutputFile.read_csv_sumo(abs_sumo_info_file_name)
+            print(sumo_info)
             
             # start of episode
             if simulation_info['scene_i'] == 0:
@@ -159,7 +165,7 @@ def gen_database(c):
                 #read SUMO information for this scene from text CSV file
                 sumoOutputInfoFileName = os.path.join(run_dir,'sumoOutputInfoFileName.txt')
                 with open(sumoOutputInfoFileName, 'r') as f:
-                    sumoReader = csv.reader(f) #AK-TODO ended up not using the CSV because the string is protected by " " I guess
+                    sumoReader = csv.reader(f) 
                     for row in sumoReader:
                         headerItems = row[0].split(',')
                         TsString = headerItems[-1]
@@ -170,15 +176,14 @@ def gen_database(c):
                         except IndexError: #old format
                             Ts=0.005 #initialize values
                             time=-1
-                        break #process only first 2 rows / line AK-TODO should eliminate the loop
+                        break 
                     for row in sumoReader:
-                        #secondRow = row[1].split(',')
                         thisEpisodeNumber = int(row[0])
                         if thisEpisodeNumber != ep_i:
                             print('ERROR: thisEpisodeNumber != ep_i. They are:', thisEpisodeNumber, 'and', ep_i,
                                 'file: ', sumoOutputInfoFileName, 'read:', row)
                             exit(1)
-                        break #process only first 2 rows / line AK-TODO should eliminate the loop
+                        break 
                 episode = fgdb.Episode(
                     insite_pah=run_dir,
                     sumo_path=sumoOutputInfoFileName,
@@ -195,17 +200,16 @@ def gen_database(c):
 
             with open(object_file_name) as infile:
                 obj_file = objects.ObjectFile.from_file(infile)
-            # print(abs_paths_file_name) #AK TODO take out this comment and use logging
+           
             paths = P2mPaths(abs_paths_file_name)
-            # cir = P2mCir(abs_cir_file_name)
-
+  
             scene = fgdb.Scene()
             # TODO read from InSite
             scene.study_area = ((0, 0, 0), (0, 0, 0))
             
             # This fixes car angle variation for Tx in case of V2V
             if 'cars_with_Tx' in simulation_info.keys():
-                angleTx = sumo_info[simulation_info['cars_with_Tx'][0]]['angle']
+                angleTx = sumo_info[simulation_info['veh_with_Tx'][0]]['angle']
                 
             rec_i = 0
             for structure_group in obj_file:
@@ -224,14 +228,13 @@ def gen_database(c):
                         else:
                             object.angle = 0
                             object.height = 0
-                        if structure.name.rstrip() in simulation_info['cars_with_antenna']:
+                        if structure.name.rstrip() in simulation_info['veh_with_antenna']:
                             receiver = fgdb.InsiteReceiver()
                             if paths.get_total_received_power(rec_i+1) is not None:
                                 receiver.total_received_power = paths.get_total_received_power(rec_i+1)
                                 receiver.mean_time_of_arrival=paths.get_mean_time_of_arrival(rec_i+1)
                                 receiver.position = object.position
 
-                                # phases = cir.get_phase_ndarray(rec_i+1) #get phases for all rays in degrees
                                 rayIndex = 0
                                 for departure, arrival, path_gain, arrival_time, interactions_list, phase in zip(
                                         paths.get_departure_angle_ndarray(rec_i+1),
@@ -252,14 +255,13 @@ def gen_database(c):
                                     ray.path_gain = path_gain
                                     ray.time_of_arrival = arrival_time
                                     ray.interactions = interactions_list
-                                    # ray.phaseInDegrees = phases[rayIndex]
                                     ray.phaseInDegrees = phase
                                     #add 1 because paths start from 1 instead of 0
                                     ray.interactionsPositions = paths.get_interactions_positions_as_string(rec_i+1,rayIndex+1)
 
                                     receiver.rays.append(ray)
                                     rayIndex += 1 #update for next iteration
-                                    #print('Ray = ', ray.path_gain, ' ', ray.phaseInDegrees) #to check
+
 
                             object.receivers.append(receiver)
                             rec_i += 1

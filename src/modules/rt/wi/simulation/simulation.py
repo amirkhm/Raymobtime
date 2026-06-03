@@ -82,23 +82,53 @@ def copytree_base_files(c):
     except FileExistsError:
         if c.base_config.clean_previous:
             shutil.rmtree(c.results_dir)
-            print('Removed folder',c.results_dir)
-            shutil.copytree(c.base_insite_project_path, c.results_base_model_dir, )
+            logging.info(
+                '\033[92m'  # green
+                f'Cleanning output folder.\n'
+                '\033[90m'  # black
+                f'   Removed folder: {c.results_dir}'
+                '\033[0m')  # default collor
+            shutil.copytree(
+                c.base_insite_project_path, 
+                c.results_base_model_dir, )
         else:
-            print('### ERROR: folder / file exists:',c.results_base_model_dir)
-            raise FileExistsError
-    print('Copied folder ',c.base_insite_project_path,'into',c.results_base_model_dir)
+            if c.mobility.enabled:
+                logging.error(
+                    '\033[91m'
+                    f'Folder/file already exists:\n'
+                    '\033[90m'
+                    f'{c.results_base_model_dir}. \n'
+                    '\033[0m')
+                raise FileExistsError
+            return
+    logging.info(
+        '\033[92m'
+        f'Copying scnario to output folder. \n'
+        '\033[90m'
+        f'   Copied folder {c.base_insite_project_path} \n'
+        f'   into {c.results_base_model_dir}'
+        '\033[0m')
 
 def mobility_sumo(c):
     #* Open files for parsing ============================================================
     #open InSite files that are used as the base to create each new scene / simulation
     with open(c.base_object_file_name) as infile:
         objFile = objects.ObjectFile.from_file(infile)
-    print('Opened file with objects:', c.base_object_file_name)
+    logging.debug(
+        '\033[36m'
+        f'Objects\n'
+        '\033[90m'
+        f'   Opened file with objects: {c.base_object_file_name}'
+        '\033[0m')
     with open(c.base_txrx_file_name) as infile:
         txrxFile = txrx.TxRxFile.from_file(infile)
-    print('Opened file with transmitters and receivers:', c.base_txrx_file_name)
-    
+    logging.debug(
+        '\033[36m'
+        f'Transmitters and Receivers file\n'
+        '\033[90m'
+        f'   Opened file with transmitters and receivers: {c.base_txrx_file_name}'
+        '\033[0m')
+
     #* End Open files for parsing ============================================================
 
     antenna = txrxFile[c.insite_rx_name].location_list[0]
@@ -128,11 +158,14 @@ def mobility_sumo(c):
 
     elif c.mobility.enabled and c.mobility.tool == 'sumo':
         np.random.seed(c.sumo.seed)
-        logging.info('Starting SUMO')
+        logging.info(
+            '\033[92m'
+            'Mobility:SUMO (Starting placement)'
+            '\033[0m')
         traci.start(c.sumo_cmd)
 
         scene_i = 0
-        episode_i = 0
+        episode_i = -1
 
         #======================================================================================
         # Jumps to the defined traci start
@@ -148,7 +181,10 @@ def mobility_sumo(c):
                         traci_vehicle_IDList = onlyDronesList(traci.vehicle.getIDList())
                     if len(traci_vehicle_IDList) < c.receivers_per_episode:
                         traci.simulationStep()
-                        logging.debug(f'not enough vehicles at time {traci.simulation.getCurrentTime()}')
+                        logging.warning(
+                            '\033[35m'
+                            f'At run {tmp_var}: not enough vehicles at time {traci.simulation.getTime()}'
+                            '\033[0m')
                     else:
                         break
                 veh_with_antenna = np.random.choice(
@@ -165,7 +201,10 @@ def mobility_sumo(c):
                     episode_i += 1
                     for _ in range(c.time_between_episodes):
                         traci.simulationStep()
-            logging.info(f'Jump until the step {c.n_run[0]}: {int((tmp_var/c.n_run[0])* 100)}%')
+            logging.info(
+                '\033[97m'
+                f'Jump until the step {c.n_run[0]}: {int((tmp_var/c.n_run[0])* 100)}%'
+                '\033[0m')
     
         #======================================================================================
         # start the loop to create the scenes and episodes
@@ -177,13 +216,14 @@ def mobility_sumo(c):
                 format_run_name(i - n_scenes_without_channels))
             objFile.clear()
 
-            if scene_i >= c.scenes_per_episode or (episode_i == 0 and scene_i == 0):
+            if scene_i >= c.scenes_per_episode or (episode_i == -1):
                 # Step episode and reset scene
                 episode_i += 1
                 scene_i = 0
                 # step time_between_episodes
-                for _ in range(c.time_between_episodes):
-                    traci.simulationStep()
+                if episode_i > 0:
+                    for _ in range(c.time_between_episodes):
+                        traci.simulationStep()
                 #======================================================================================
                 # choose vehicles to be receivers or transmitters at the beginning of episode
                 #======================================================================================
@@ -206,6 +246,7 @@ def mobility_sumo(c):
                     else:
                         min_vehicles = c.receivers_per_episode
 
+                    enough_vehicles = True
                     while 1:
                         # Take vehicles of interest, if specified
                         if c.drone_simulation: 
@@ -226,9 +267,21 @@ def mobility_sumo(c):
                             veh = traci_vehicle_IDList
                         
                         if n_veh < min_vehicles:
-                            logging.debug(f'not enough vehicles in the area at time {traci.simulation.getCurrentTime()}')
+                            if enough_vehicles == True:
+                                enough_vehicles = False
+                                logging.warning(
+                                    '\033[35m'
+                                    f'{format_run_name(i - n_scenes_without_channels)}:'
+                                    f'Not enough vehicles in the area at time {traci.simulation.getTime()}'
+                                    '\033[0m')
                             traci.simulationStep()
                         else:
+                            if enough_vehicles == False:
+                                logging.warning(
+                                    '\033[35m'
+                                    f'{format_run_name(i - n_scenes_without_channels)}:'
+                                    f'Enough vehicles in the area at time {traci.simulation.getTime()}'
+                                    '\033[0m')
                             break
 
                     # Choose vehicles
@@ -316,7 +369,13 @@ def mobility_sumo(c):
 
             # if use wireless insite copy base ============================================================
             shutil.copytree(c.base_insite_project_path, run_dir)
-            print('Copied',c.base_insite_project_path,'into',run_dir)
+            logging.debug(
+                '\033[92m'
+                f'{format_run_name(i - n_scenes_without_channels)} \n'
+                '\033[90m'
+                f'   Copied {c.base_insite_project_path} \n'
+                f'   into {run_dir}'
+                '\033[0m')
 
             # writes at a run
             objFile.add_structure_groups(structure_group)
@@ -334,7 +393,12 @@ def mobility_sumo(c):
                 x3d_xml_file = X3dXmlFile3_3(c.base_x3d_xml_path)
             else:
                 x3d_xml_file = X3dXmlFile(c.base_x3d_xml_path)
-            print('Opened file with InSite XML:', c.base_x3d_xml_path)
+            logging.debug(
+                '\033[36m'
+                f'InSite XML\n'
+                '\033[90m'
+                f'   Opened file: {c.base_x3d_xml_path}'
+                '\033[0m')
             #get name of XML
             xml_full_path = os.path.join(
                 run_dir, 
@@ -384,7 +448,12 @@ def mobility_sumo(c):
                 c.use_pedestrians)
 
             scene_i += 1 #update scene counter
+        
         traci.close()
+        logging.info(
+            '\033[92m'
+            'Finished SUMO placement'
+            '\033[0m')
 
 def main(c):
     # copy base files to output to modify them eventualy

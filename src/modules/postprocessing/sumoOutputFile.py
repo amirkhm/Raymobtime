@@ -8,12 +8,12 @@ def read_csv_sumo(file_name):
         for row in reader:
             if ('episode' in row[0]) or (len(row)==0):
                 continue
-            scene_veh_info[row[4]] = {
-                'position':np.array([float(row[7]),
-                                    float(row[8]),
-                                    float(row[17])
+            scene_veh_info[row[5]] = {
+                'position':np.array([float(row[8]),
+                                    float(row[9]),
+                                    float(row[18])
                 ]),
-                'angle':angle_sumo2wi(float(row[13]))
+                'angle':angle_sumo2wi(float(row[14]))
             }
     return scene_veh_info
 

@@ -1,52 +1,52 @@
 base_config:     
-  output_name: "sim_b"                        # Simulation identifier name
-  scenario: "rosslyn_60GHz"                      # scenario name
+  output_name: "sim_a"                        # Simulation identifier name
+  scenario: "rosslyn"                      # scenario name
   resume: false                                # skip steps already concluded (not implemented, necessary logging of concluded steps)
   clean_previous: true                       # remove result folders before running
+  logging_level: info                       # logging level: debug, info, warning, error, critical, NONE
 
 pipeline:
   mobility:
-    enabled: true 
+    enabled: true
     tool: "sumo"                              # null | none
     placement_limits: 
       enabled: false   
       max_lim: [843, 523]                     # [x, y] study area limits for placement of Tx and Rx
       min_lim: [660, 334]                     # [x, y] study area limits for placement of Tx and Rx
-      ##end_ep_for_no_veh: true #nop
   
   ray_tracing:                                # parsing automático
-    enabled: true 
+    enabled: false 
     #tool: "wireless_insite"                  # wireless_insite | none
     jump: true   
   
   blensor:
     enabled: false 
     outputs: 
-      - "lidar"
+      # - "lidar"
       - "image"
 
   post_processing:
     enabled: false  
-    which: "all"                              # all | selected
-    outputs:                                  # ["db", "coord", "rays", "beams", "image", "lidar"]
-      - "db"                                  # database (sqlite/postgres/hdf5)
-      - "coord"                               # coordenadas
-      - "rays"
-      - "beams"
-      - "image"
-      - "lidar"
+    which: "selected"                               # all | selected
+    outputs:                                        # ["db", "coord", "rays", "beams", "image", "lidar"]
+      # - "db"                                       # database (sqlite/postgres/hdf5)
+      # - "coord"                                   # coordenadas
+      # - "rays"
+      # - "beams"
+      # - "image"
+      # - "lidar"
   
   validation:
-    run_checkup: false  
+    run_checkup: false
 
 rmt:
   enabled: true                               # false for isolated simulation
   scenes_per_episode: 2 
   time_between_episodes: 35                   # This time needs to be multiple of scene time step
-  sampling_parameters: [0, 6, 0.5]          # start, end, step
+  sampling_parameters: [0, 6, 0.5]            # start, end, time_step
   features:
     fixed_receivers: false  
-    vehicles_template: true 
+    vehicles_template: false 
 
 sumo:
   seed: 10  
@@ -56,12 +56,12 @@ sumo:
 ray_tracing:
   use_pedestrians: false
   use_drone: false
-  receivers_per_episode: 1
+  receivers_per_episode: 2
   transmitters_per_episode: 1
   v2v:
-    enabled: false
-    close_vehicles: true
-    n_of_vehicles: 7
+    enabled: true
+    close_vehicles: false
+    n_of_vehicles: 7  # 1 more level of indent
     chose_vehicle: false
     chosen_vehicle: Truck
   wireless_insite:
@@ -75,22 +75,22 @@ ray_tracing:
       vehicles_name: random-line
   
 blensor_options:
-  path_to_scenario_blend: /home/gabrielferreiravieira/Documents/repositories/r2/raymobtime/base_files/B-pnm-SP/Blender/B-pnm-SP.blend
-  path_to_vehicles_blend: /home/gabrielferreiravieira/Documents/repositories/r2/raymobtime/base_files/B-pnm-SP/Blender/vehicles.blend
-  path_blensor_image: ~/Blensor-x64.AppImage
+  path_to_scenario_blend: /home/gabriel/Repositorios/rmt2/raymobtime/data/rosslyn/base/blender/rosslyn00.blend
+  path_to_vehicles_blend: /home/gabriel/Repositorios/rmt2/raymobtime/data/rosslyn/base/blender/vehicles.blend
+  path_blensor_image: /home/gabriel/softwares/blensor/Blensor-x64.AppImage
   image_options:
     BS_camera: false
-    UE_camera: false
+    UE_camera: true
     n_camera_BS: 3
 
 post_processing:
-  area_of_analyses: # only fill hdf5 with objects within this area
-    enabled: false
+  area_of_analyses: # only fill csv with objects within this area
+    enabled: true
     limits: [660, 334, 843, 523]              #[x1,y1, x2, y2]
 
   mimo:
-    import_precoding: Codebook/default_mikrotik_cb.npy
-    import_channels: true
+    import_precoding: assets/codebooks/default_mikrotik_cb.npy
+    import_channels: false
     import_combining: false
     antenna_array_expansion:
       Tx: [6, 6] #[x, y]
