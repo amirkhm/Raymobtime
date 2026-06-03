@@ -2,6 +2,19 @@ from xml.etree import ElementTree
 from src.modules.rt.wi.modeling.errors import FormatError
 
 class X3dXmlFile3_3:
+    """
+    XML handler for Wireless InSite 3.3 X3D files.
+
+    This class loads an X3D XML file, updates vertex lists at selected XML
+    locations, and writes the modified file back to disk. It also handles the
+    namespace separator used in Wireless InSite 3.3 files by temporarily
+    replacing ``::`` with ``__`` so that Python's XML parser can process the
+    file correctly.
+
+    Attributes:
+        _file_name: Path to the loaded XML file.
+        _et: Parsed ElementTree object representing the XML document.
+    """
 
     def __init__(self, file_name):
         self._file_name = file_name
@@ -14,6 +27,29 @@ class X3dXmlFile3_3:
         self._et = ElementTree.parse(file_name)
 
     def add_vertice_list(self, vertice_list, xpath, clear=True):
+        """
+        Add a vertex list to a selected XML point-list element.
+
+        This method finds a single XML element using the provided XPath and appends
+        the vertices from ``vertice_list`` as ``ProjectedPoint`` entries. Each vertex
+        is written as a Cartesian point with X, Y, and Z coordinates using the
+        Wireless InSite 3.3 XML tag format.
+
+        Args:
+            vertice_list: Vertex list object containing ``vertice_array`` and
+                ``float_format_string`` attributes.
+            xpath: XPath expression used to select the target XML point-list element.
+            clear: Whether to remove existing children from the selected XML element
+                before adding the new vertices. Defaults to ``True``.
+
+        Returns:
+            None.
+
+        Raises:
+            FormatError: If the XPath does not select exactly one XML element.
+            AttributeError: If ``vertice_list`` does not provide the expected
+                attributes.
+        """
         point_list = self._et.findall(xpath)
         if len(point_list) != 1:
             raise FormatError(
@@ -46,6 +82,17 @@ class X3dXmlFile3_3:
         
 
 class X3dXmlFile:
+    """
+    XML handler for standard Wireless InSite X3D files.
+
+    This class loads an X3D XML file, allows vertex lists to be inserted into
+    selected XML point-list elements, and writes the modified XML structure back
+    to disk.
+
+    Attributes:
+        _file_name: Path to the loaded XML file.
+        _et: Parsed ElementTree object representing the XML document.
+    """
 
     def __init__(self, file_name):
         self._file_name = file_name

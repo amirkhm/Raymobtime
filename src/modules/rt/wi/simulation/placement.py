@@ -13,11 +13,59 @@ def place_by_sumo(
         car_material_id, 
         lane_boundary_dict, 
         veh_with_antenna, 
-        Tx_veh = None, 
+        Tx_veh=None, 
         V2V=False, 
         fixed_receivers=False, 
         use_pedestrians=False):
-    
+    """
+    Place SUMO vehicles and pedestrians into a Wireless InSite structure group.
+
+    This function reads the current SUMO simulation state through TraCI,
+    converts vehicle and pedestrian positions to Wireless InSite coordinates,
+    creates rectangular prism representations for each object, and places
+    receiver and transmitter antennas on the selected vehicles.
+
+    When detailed vehicle templates are enabled in the configuration, the
+    function also generates the serialized object geometry string using the
+    corresponding vehicle or pedestrian model files.
+
+    Args:
+        c: Runtime configuration object containing simulation settings, template
+            options, geographic reference information, and asset paths.
+        antenna: Receiver antenna vertex list template. It is copied and cleared
+            before receiver positions are inserted.
+        antenna_Tx: Transmitter antenna vertex list template. Used only in V2V
+            mode.
+        car_material_id: Material identifier used for generated rectangular
+            prism vehicles and pedestrians.
+        lane_boundary_dict: Lane boundary information. Currently not used
+            directly by this function.
+        veh_with_antenna: Iterable containing vehicle IDs that should receive
+            receiver antennas.
+        Tx_veh: Iterable containing vehicle IDs that should receive transmitter
+            antennas in V2V mode. Defaults to ``None``.
+        V2V: Whether to place transmitter antennas on vehicles. Defaults to
+            ``False``.
+        fixed_receivers: Whether the scenario uses fixed receivers instead of
+            vehicle-mounted receivers. Defaults to ``False``.
+        use_pedestrians: Whether to include SUMO pedestrians in the generated
+            Wireless InSite object group. Defaults to ``False``.
+
+    Returns:
+        A tuple containing:
+            - structure_group: Wireless InSite structure group with generated
+              vehicles and pedestrians.
+            - antenna: Receiver antenna vertex list, or ``None`` when not
+              applicable.
+            - antenna_Tx: Transmitter antenna vertex list, or ``None`` when not
+              applicable.
+            - all_vehicles: Serialized detailed vehicle geometry when templates
+              are enabled, otherwise an empty string.
+
+        If no required antenna vehicle is present, the function returns
+        ``(None, None, None, None)``.
+    """
+
     antenna = copy.deepcopy(antenna)
     antenna.clear()
     if V2V:
@@ -150,16 +198,35 @@ def place_on_line(
         object,
         antenna=None, 
         antenna_origin=None):
-    """ Place object in a line separated by space
+    """
+    Place repeated copies of an object along one or more straight lines.
 
-    :param origin_array: (x, y, z) or ((x, y, z),)
-    :param destination_list: scalar or list the maximum coordinate of the line
-    :param dim_list: 0, 1, 2 for x, y or z (one or list of)
-    :param space: function that return the space between `object`
-    :param object: a RWI Structure with "origin" in (0, 0, 0) (must have a valid dimension)
-    :param antenna_origin: (x, y, z) normally "inside" the object
-    :param antenna: VerticeList
-    :return: a structure group
+    This function creates a structure group by repeatedly copying an input
+    Wireless InSite structure and placing each copy along a selected coordinate
+    dimension. The objects are separated by a spacing value returned by the
+    ``space`` function. Optionally, antenna vertices can also be generated at a
+    fixed offset relative to each placed object.
+
+    Args:
+        origin_array: Starting coordinate or list of starting coordinates for
+            the placement lines.
+        destination_list: Maximum coordinate value for each placement line.
+        dim_list: Coordinate dimension used for placement. Use 0 for x, 1 for y,
+            or 2 for z.
+        space: Callable that returns the spacing between consecutive objects.
+        object: Wireless InSite structure object to be copied and placed. It
+            must have a valid ``dimensions`` attribute.
+        antenna: Optional antenna vertex list template. If provided, antenna
+            positions are generated for each placed object.
+        antenna_origin: Optional antenna offset relative to each placed object.
+
+    Returns:
+        If ``antenna`` is provided, returns a tuple containing the generated
+        structure group and antenna vertex list. Otherwise, returns only the
+        generated structure group.
+
+    Raises:
+        FormatError: If the input object does not have valid dimensions.
     """
 
     origin_array = np.array(origin_array, ndmin=2)
@@ -219,8 +286,17 @@ def place_on_line(
         return structure_group
 
 def rotate(vertice, angle):
-    """Rotate counterclockwise by a given angle around a given origin.
-    The angle should be given in degrees.
+    """
+    Rotate a 3D vertex counterclockwise around the z-axis.
+
+    The rotation is applied in the x-y plane while preserving the z coordinate.
+
+    Args:
+        vertice: Input vertex or coordinate vector ``[x, y, z]``.
+        angle: Rotation angle in degrees.
+
+    Returns:
+        Rotated vertex as a NumPy array.
     """
     angle = np.radians(angle)
 
@@ -232,7 +308,38 @@ def rotate(vertice, angle):
 
     return vertice_array
 
-def get_model(c, str_vehicles,name,x,y,z,angle,height,length=1,width=1):
+def get_model(c, str_vehicles, name, x, y, z, angle, height, length=1, width=1):
+    """
+    Load, transform, and append a detailed vehicle model to a serialized object string.
+
+    This function selects a detailed Wireless InSite object model according to
+    the object height, reads its vertices, rotates them by the given angle,
+    translates them to the target position, and appends the transformed geometry
+    to the accumulated vehicle object string.
+
+    The object height is currently used as a classification rule to select the
+    model type, such as car, bus, truck, pedestrian, or drone.
+
+    Args:
+        c: Runtime configuration object containing the project working directory.
+        str_vehicles: Accumulated serialized Wireless InSite vehicle geometry.
+        name: Name assigned to the generated structure group.
+        x: Target x coordinate.
+        y: Target y coordinate.
+        z: Target z coordinate.
+        angle: Rotation angle in degrees applied to the model vertices.
+        height: Object height used to select the corresponding model file.
+        length: Optional object length. Currently not used directly. Defaults to 1.
+        width: Optional object width. Currently not used directly. Defaults to 1.
+
+    Returns:
+        Updated serialized Wireless InSite vehicle geometry string.
+
+    Raises:
+        SystemExit: If no detailed model is available for the provided height.
+        FileNotFoundError: If the selected model object file does not exist.
+        ValueError: If vertex coordinates cannot be converted to numeric values.
+    """
 
     # The height here is utilized as trick to choose which model will be utilized .
     # TODO: Find a new way to classify the models, instead of height.

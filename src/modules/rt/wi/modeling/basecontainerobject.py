@@ -6,6 +6,18 @@ MAX_LEN_NAME = 71
 
 
 class BaseObject():
+    """
+    Base class for Wireless InSite modeling objects.
+
+    This class stores common metadata shared by modeling entities, such as the
+    object name, material identifier, and dimensions. It also validates the
+    object name length according to the Wireless InSite file format limitation.
+
+    Attributes:
+        material: Material identifier associated with the object.
+        name: Object name.
+        dimensions: Object dimensions, initialized as ``None``.
+    """
     def __init__(self, name='', material=0):
         self.material = material
         self.name = name
@@ -25,6 +37,24 @@ class BaseObject():
 
 
 class BaseContainerObject(BaseObject):
+    """
+    Base class for Wireless InSite container objects.
+
+    A container object stores and manages a list of child entities of a specific
+    type. It provides common functionality for parsing file sections, appending
+    children, translating child objects, serializing the container, writing it to
+    disk, and iterating over its contents.
+
+    Attributes:
+        _child_list: List of child entities stored in the container.
+        _child_type: Expected class type for child entities.
+        _begin_re: Regular expression that marks the beginning of the entity.
+        _end_header_re: Regular expression that marks the end of the header.
+        _begin_tail_re: Regular expression that marks the beginning of the tail.
+        _end_re: Regular expression that marks the end of the entity.
+        _header_str: Serialized header string.
+        _tail_str: Serialized tail string.
+    """
 
     def __init__(self, child_type, **kargs):
         BaseObject.__init__(self, **kargs)
@@ -61,10 +91,18 @@ class BaseContainerObject(BaseObject):
         return content_str
 
     def append(self, children):
-        """Append an element to the container
+        """
+        Append one or more child objects to the container.
 
-        :param children: instance or iterator of instances of _child_type
-        :return:
+        This method verifies that every appended object matches the expected child
+        type before inserting it into the internal child list.
+
+        Args:
+            children: A single child object or a list of child objects to append.
+
+        Raises:
+            NotImplementedError: If the container does not define a child type.
+            FormatError: If any child object does not match the expected child type.
         """
         # only allow insertion of typed elements
         if self._child_type is None:
@@ -100,13 +138,20 @@ class BaseContainerObject(BaseObject):
             dst_file.write(self.serialize())
 
     def _parse_head(self, infile):
-        """Parse the start of the entity
+        """
+        Parse the header section of a container entity.
 
-        if _begin_re is defined read only the first line which must match _begin_re
-        if _begin_re is not defined read until _end_header_re is found
+        If ``_begin_re`` is defined, the first line must match it. Otherwise, the
+        method reads the input file until ``_end_header_re`` is found and stores the
+        consumed lines as the header string.
 
-        :param infile: opened input file
-        :return:
+        Args:
+            infile: Open input file object positioned at the beginning of the entity.
+
+        Raises:
+            FormatError: If the expected header pattern cannot be found.
+            NotImplementedError: If neither ``_begin_re`` nor ``_end_header_re`` is
+                defined.
         """
         self._header_str = ''
         # if _begin_re is defined it must match the first line and the processing ends
@@ -131,13 +176,18 @@ class BaseContainerObject(BaseObject):
             raise NotImplementedError()
 
     def _parse_tail(self, infile):
-        """Parse the end of the entity
+        """
+        Parse the tail section of a container entity.
 
-        read the file until _end_re is found and save in _tail_str
-        if _end_re is None the file is read until its end
+        This method reads lines from the input file until ``_end_re`` is matched. If
+        ``_end_re`` is ``None``, the file is read until the end.
 
-        :param infile: opened input file
-        :return:
+        Args:
+            infile: Open input file object positioned at the beginning of the tail.
+
+        Raises:
+            FormatError: If ``_end_re`` is defined but not found before the end of
+                the file.
         """
         self._tail_str = ''
         while True:
@@ -179,15 +229,26 @@ class BaseContainerObject(BaseObject):
             keys.append(child.name)
         return keys
 
-    def from_file(self, infile, MIMO = False):
-        """Parse entity
+    def from_file(self, infile, MIMO=False):
+        """
+        Parse a container entity from an input file.
 
-        Parse the head and then find childs defined by:
-            * if _begin_tail is defined calls _parse_tail when _begin_tail is matched
-            * if _begin_tail is None _end_re must be defined and children are parsed until it is found
+        This method parses the container header, then repeatedly parses child
+        entities until the beginning of the tail or the end of the entity is found.
+        When MIMO mode is enabled, a sequential MIMO identifier is passed to each
+        parsed child.
 
-        :param infile: opened input file
-        :return: entity instance
+        Args:
+            infile: Open input file object positioned at the beginning of the
+                container entity.
+            MIMO: Whether to parse child entities with sequential MIMO identifiers.
+                Defaults to ``False``.
+
+        Returns:
+            None.
+
+        Raises:
+            FormatError: If the entity format does not match the expected patterns.
         """
         # consumes the entity header
     

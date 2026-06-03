@@ -18,6 +18,20 @@ from src.modules.postprocessing import (
    sanity_check_up)
 
 def dict_to_namespace(obj):
+    """
+    Recursively convert dictionaries into SimpleNamespace objects.
+
+    This function allows configuration values loaded from dictionaries to be
+    accessed using attribute notation. Lists are also processed recursively.
+
+    Args:
+        obj: Object to be converted. It can be a dictionary, list, or any other
+            value.
+
+    Returns:
+        A SimpleNamespace object if ``obj`` is a dictionary, a recursively
+        converted list if ``obj`` is a list, or the original value otherwise.
+    """
     if isinstance(obj, dict):
         return SimpleNamespace(**{
             key: dict_to_namespace(value)
@@ -31,6 +45,18 @@ def dict_to_namespace(obj):
 
 
 def load_yaml(path):
+    """
+    Load a YAML file and return its contents as a dictionary.
+
+    If the file does not exist or is empty, an empty dictionary is returned.
+
+    Args:
+        path: Path to the YAML file.
+
+    Returns:
+        Dictionary containing the YAML data, or an empty dictionary when the file
+        does not exist or contains no data.
+    """
     path = Path(path)
 
     if not path.exists():
@@ -43,6 +69,20 @@ def load_yaml(path):
 
 
 def deep_merge(default_dict, user_dict):
+    """
+    Recursively merge a user configuration dictionary into a default dictionary.
+
+    Values provided by the user override the corresponding default values. When
+    both values are dictionaries, the merge is performed recursively so that
+    nested default values are preserved unless explicitly overwritten.
+
+    Args:
+        default_dict: Dictionary containing default configuration values.
+        user_dict: Dictionary containing user-defined configuration values.
+
+    Returns:
+        A merged dictionary containing default values overwritten by user values.
+    """
     result = default_dict.copy()
 
     for key, user_value in user_dict.items():
@@ -58,7 +98,18 @@ def deep_merge(default_dict, user_dict):
 
 def find_project_root():
     """
-    Find the project root by looking for pyproject.toml.
+    Find the project root directory.
+
+    This function searches upward from the current file location until it finds
+    a directory containing ``pyproject.toml``. That directory is considered the
+    project root.
+
+    Returns:
+        Path object pointing to the project root directory.
+
+    Raises:
+        FileNotFoundError: If no ``pyproject.toml`` file is found in the parent
+            directories.
     """
     current = Path(__file__).resolve()
 
@@ -71,7 +122,19 @@ def find_project_root():
 
 def load_config():
     """
-    Load default.yaml and the user config.yaml from the project root.
+    Load and merge the default and user configuration files.
+
+    This function locates the project root, loads ``src/configs/default.yaml``
+    and the user configuration file from the project root, then merges both
+    configurations. The resulting dictionary is converted to a SimpleNamespace
+    object for attribute-style access.
+
+    Returns:
+        A SimpleNamespace object containing the merged configuration.
+
+    Raises:
+        FileNotFoundError: If ``default.yaml`` or the user ``config.yaml`` /
+            ``config.yml`` file cannot be found.
     """
 
     project_root = find_project_root()
@@ -101,10 +164,20 @@ def load_config():
 
 def get_lat_long(base_insite_project_path):
     """
-    Extract latitude and longitude from the base.txrx file of a Wireless InSite project.
-    Args:       base_insite_project_path (str): Path to the base InSite project directory.
-    Returns:    tuple[str, str]: A tuple containing (latitude, longitude) as strings.
-    Raises:     FileNotFoundError: If the base.txrx file does not exist.
+    Extract latitude and longitude from a Wireless InSite TX/RX file.
+
+    This function reads ``base.txrx`` from a base Wireless InSite project folder
+    and searches for latitude and longitude entries.
+
+    Args:
+        base_insite_project_path: Path to the base Wireless InSite project
+            directory.
+
+    Returns:
+        A tuple containing ``(latitude, longitude)`` as strings.
+
+    Raises:
+        FileNotFoundError: If the ``base.txrx`` file does not exist.
     """
     txrx_file = open(os.path.join(base_insite_project_path, 'base.txrx'), 'r')
     latitude = False
@@ -120,10 +193,21 @@ def get_lat_long(base_insite_project_path):
 
 def get_insite_version(base_insite_project_path):
     """
-    Parse and return the Wireless InSite version from the model.study.xml file.
-    Args:       base_insite_project_path (str): Path to the base InSite project directory.
-    Returns:    str: The InSite version (e.g., '3.0', '3.2').
-    Raises:     FileNotFoundError: If the model.study.xml file does not exist.
+    Extract the Wireless InSite version from the model study XML file.
+
+    This function reads ``model.study.xml`` from a base Wireless InSite project
+    folder and extracts the version declared in the ``<InSite version=...>``
+    field.
+
+    Args:
+        base_insite_project_path: Path to the base Wireless InSite project
+            directory.
+
+    Returns:
+        Wireless InSite version string, such as ``"3.2"`` or ``"3.3"``.
+
+    Raises:
+        FileNotFoundError: If the ``model.study.xml`` file does not exist.
     """
     model_file = open(os.path.join(base_insite_project_path, 'model.study.xml'), 'r')
     insite_version = False
@@ -134,6 +218,24 @@ def get_insite_version(base_insite_project_path):
             return insite_version
 
 class parameters:
+    """
+    Runtime configuration container for the Raymobtime pipeline.
+
+    This class loads the merged YAML configuration, exposes the main
+    configuration sections as attributes, and derives all paths, flags, command
+    arguments, Wireless InSite settings, SUMO settings, Blensor settings, and
+    post-processing parameters needed by the Raymobtime workflow.
+
+    Attributes:
+        cfg: Complete merged configuration object.
+        base_config: General project configuration section.
+        pipeline: Pipeline execution flags and options.
+        rmt: Raymobtime mobility/sampling configuration section.
+        sumo: SUMO configuration section.
+        ray_tracing: Ray-tracing configuration section.
+        blensor_options: Blensor configuration section.
+        post_processing: Post-processing configuration section.
+    """
     def __init__(self):
         self.cfg = load_config()
 
@@ -148,6 +250,22 @@ class parameters:
         self.setparameters()
 
     def setparameters(self):
+        """
+        Derive all runtime parameters from the loaded configuration.
+
+        This method configures logging, resolves the project root, builds input and
+        output paths, reads Wireless InSite metadata, prepares SUMO commands,
+        configures mobility/ray-tracing/Blensor/post-processing options, and sets
+        auxiliary parameters used throughout the Raymobtime pipeline.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: If an invalid logging level or unsupported coordinate system
+                option is provided.
+            FileNotFoundError: If required Wireless InSite base files are missing.
+        """
         if self.base_config.logging_level:
             level = self.base_config.logging_level.upper()
             if level == "DEBUG":
@@ -166,7 +284,6 @@ class parameters:
                 raise ValueError(f"Invalid logging level: {self.base_config.logging_level}")
             
         self.working_directory = find_project_root()
-        #os.path.dirname(os.path.realpath(__file__))
 
         self.fixed_receivers = self.rmt.features.fixed_receivers
         self.vehicles_template = self.rmt.features.vehicles_template

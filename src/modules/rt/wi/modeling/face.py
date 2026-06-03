@@ -4,6 +4,17 @@ from src.modules.rt.wi.modeling.verticelist import VerticeList
 
 
 class Face(BaseObject, VerticeList):
+    """
+    Representation of a Wireless InSite face entity.
+
+    A face is a geometric object defined by a name, a material identifier, and a
+    list of vertices. This class supports serialization to the Wireless InSite
+    object file format and parsing from an existing face block.
+
+    Attributes:
+        name: Face name.
+        material: Material identifier assigned to the face.
+    """
     _begin_re = r'^\s*begin_<face>\s+(?P<fname>.*)\s*$'
     _end_re = r'^\s*end_<face>\s*$'
     _material_re = r'\s*Material\s+(?P<mid>\d+)\s*$'

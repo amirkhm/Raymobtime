@@ -7,9 +7,25 @@ class ParsingError(Exception):
     pass
 
 class P2mFileParser:
-    """Parser for p2m files. It currently support doa, paths and cir. Notice the regular expression in the code."""
+    """
+    Base parser for Wireless InSite P2M files.
 
-    # project.type.tx_y.rz.p2m
+    This class provides common parsing logic for Wireless InSite ``.p2m`` files,
+    including filename metadata extraction, header parsing, comment skipping,
+    and receiver-by-receiver parsing. Specific P2M file types, such as DOA,
+    paths, or CIR, should extend this class and implement ``_parse_receiver``.
+
+    Attributes:
+        filename: Path to the P2M file being parsed.
+        file: Open file object used during parsing.
+        data: Ordered dictionary containing parsed receiver data.
+        project: Project name extracted from the filename.
+        transmitter_set: Transmitter set index extracted from the filename.
+        transmitter: Transmitter index extracted from the filename.
+        receiver_set: Receiver set index extracted from the filename.
+        n_receivers: Number of receivers declared in the P2M file header.
+    """
+
     _filename_match_re = (r'^(?P<project>.*)' +
                           r'\.' +
                           r'(?P<type>((doa)|(paths)|(cir)))' +
@@ -28,9 +44,28 @@ class P2mFileParser:
         self._parse()
 
     def get_data_dict(self):
+        """
+        Return the parsed P2M data as a dictionary.
+
+        Returns:
+            Ordered dictionary containing the parsed data grouped by receiver.
+        """
         return self.data
 
     def _parse_meta(self):
+        """
+        Parse metadata from the P2M filename.
+
+        This method extracts the project name, transmitter index, transmitter set,
+        and receiver set from the filename using the expected Wireless InSite P2M
+        naming convention.
+
+        Returns:
+            None.
+
+        Raises:
+            AttributeError: If the filename does not match the expected pattern.
+        """
         match = re.match(P2mFileParser._filename_match_re,
                          os.path.basename(self.filename))
 
@@ -40,6 +75,20 @@ class P2mFileParser:
         self.receiver_set = int(match.group('receiver_set'))
 
     def _parse(self):
+        """
+        Parse the full P2M file.
+
+        This method opens the input file, parses filename metadata, reads the header,
+        initializes the data dictionary, and delegates receiver-specific parsing to
+        ``_parse_receiver``.
+
+        Returns:
+            None.
+
+        Raises:
+            FileNotFoundError: If the input file does not exist.
+            ParsingError: If the file ends unexpectedly or is malformed.
+        """
         with open(self.filename) as self.file:
             self._parse_meta()
             self._parse_header()
@@ -48,7 +97,18 @@ class P2mFileParser:
                 self._parse_receiver()
 
     def _parse_header(self):
-        """read the first line of the file, indicating the number of receivers"""
+        """
+        Parse the P2M file header.
+
+        The header contains the number of receivers stored in the file.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: If the receiver count cannot be converted to an integer.
+            ParsingError: If the header line cannot be read.
+        """
         line = self._get_next_line()
         self.n_receivers = int(line.strip())
 
@@ -56,9 +116,19 @@ class P2mFileParser:
         raise NotImplementedError()
 
     def _get_next_line(self):
-        """Get the next uncommedted line of the file
+        """
+        Return the next non-comment line from the P2M file.
 
-        Call this only if a new line is expected
+        This method skips lines that start with ``#`` and returns the next valid
+        content line. It should only be called when a new line is expected by the
+        parser.
+
+        Returns:
+            The next non-comment line from the file.
+
+        Raises:
+            ParsingError: If the file is closed or the end of file is reached
+                unexpectedly.
         """
         if self.file is None:
             raise ParsingError('File is closed')
@@ -72,10 +142,19 @@ class P2mFileParser:
                 return next_line
 
 class P2MDoA(P2mFileParser):
-    """Parse a p2m direction of arrival file
-    > P2MDoA('iter0.doa.t001_05.r006.p2m').get_data_ndarray()
     """
-    # project.type.tx_y.rz.p2m
+    Parser for Wireless InSite P2M direction-of-arrival files.
+
+    This class parses ``.doa`` P2M files and stores direction information for
+    each receiver and propagation path. Parsed data can be returned as a nested
+    dictionary or converted into a NumPy array.
+
+    Attributes:
+        filename: Path to the DOA P2M file.
+        data: Ordered dictionary containing direction vectors grouped by
+            receiver and path.
+    """
+
     _filename_match_re = (r'^(?P<project>.*)' +
                           r'\.' + 
                           r'doa' + 
@@ -94,12 +173,15 @@ class P2MDoA(P2mFileParser):
         self._parse()
         
     def get_data_ndarray(self):
-        ''' return the DoA as a ndarray
-        
-        The array is shaped (reiceiver, path, direction) the order is the one they appear in the file
-        
-        If a receiver has less paths than another its path is populated with zeros
-        '''
+        """
+        Return the parsed direction-of-arrival data as a NumPy array.
+
+        The returned array has shape ``(receiver, path, direction)``. Receivers with
+        fewer paths than the maximum number of paths are padded with zeros.
+
+        Returns:
+            NumPy array containing direction data for all receivers and paths.
+        """
         data_ndarray = np.zeros((self.n_receivers, self.biggest_n_paths(), 3))
         for rec_idx, path_dict in enumerate(self.data.values()):
             for path_idx, direction in enumerate(path_dict.values()):
@@ -107,7 +189,12 @@ class P2MDoA(P2mFileParser):
         return data_ndarray
     
     def biggest_n_paths(self):
-        ''' find the reciever with the biggest number of received paths'''
+        """
+        Find the maximum number of paths among all receivers.
+
+        Returns:
+            Largest number of received paths found for any receiver.
+        """
         biggest = -np.inf
         for receiver, receiver_v in self.data.items():
             n_paths = len(receiver_v)
@@ -116,6 +203,21 @@ class P2MDoA(P2mFileParser):
         return biggest
 
     def _parse_receiver(self):
+        """
+        Parse direction-of-arrival data for one receiver.
+
+        This method reads the receiver identifier and number of paths, then parses
+        one direction vector for each path and stores the result in the internal
+        ordered dictionary.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: If receiver IDs, path IDs, or direction values cannot be
+                converted to numeric types.
+            ParsingError: If the file ends unexpectedly.
+        """
         line = self._get_next_line()
         receiver, n_paths = [int(i) for i in line.split()]
         self.data[receiver] = collections.OrderedDict()
@@ -126,12 +228,3 @@ class P2MDoA(P2mFileParser):
             direction = np.array([float(j) for j in sp_line[1:]])
             self.data[receiver][path] = direction
 
-if __name__=='__main__':
-    doa = P2MDoA('example/iter0.doa.t001_05.r006.p2m')
-    print('project: ', doa.project)
-    print('transmitter set: ', doa.transmitter_set)
-    print('transmitter: ', doa.transmitter)
-    print('receiver set: ', doa.receiver_set)
-    print(doa.get_data_ndarray())
-    data_ndarray = doa.get_data_ndarray()
-    print(data_ndarray[0][0][0:3])

@@ -3,9 +3,7 @@ Change log:
 AK - April 19, 2019 - provided support to InSite version 3.3, which includes path phase into p2m file.
 '''
 import collections
-
 import numpy as np
-
 from src.modules.rt.wi.parsing.p2mdoa import P2mFileParser
 
 class P2mPaths(P2mFileParser):
@@ -61,7 +59,7 @@ class P2mPaths(P2mFileParser):
                 sp_line = line.split()
                 interaction = i 
                 coordinates = np.array([float(j) for j in sp_line[0:]])
-                #self.data[receiver][ray_n]['interactions'][interactions_list.split('-')[i]] = coordinates
+                
                 self.data[receiver][ray_n]['interactions'][str(interaction)] = coordinates
 
     def get_num_receivers(self):
@@ -69,21 +67,25 @@ class P2mPaths(P2mFileParser):
         return len(self.data)
 
     def get_total_received_power(self, antenna_number):
+        '''Return the total received power for a given receiver (antenna) index.'''
         if self.data[antenna_number] is None:
             return None
         return self.data[antenna_number]['received_power']
 
     def get_mean_time_of_arrival(self, antenna_number):
+        '''Return the mean time of arrival for a given receiver (antenna) index.'''
         if self.data[antenna_number] is None:
             return None
         return self.data[antenna_number]['arrival_time']
 
     def get_spread_delay(self, antenna_number):
+        '''Return the spread delay for a given receiver (antenna) index.'''
         if self.data[antenna_number] is None:
             return None
         return self.data[antenna_number]['spread_delay']
 
     def get_arrival_time_ndarray(self, antenna_number):
+        """Return the arrival times for a receiver as a NumPy array."""
         if self.data[antenna_number] is None:
             return None
         data_ndarray = np.zeros((self.data[antenna_number]['paths_number'],))
@@ -92,6 +94,7 @@ class P2mPaths(P2mFileParser):
         return data_ndarray
 
     def get_interactions_list(self, antenna_number):
+        """Return the interactions list for a receiver as a list."""
         if self.data[antenna_number] is None:
             return None
         data = []
@@ -100,18 +103,19 @@ class P2mPaths(P2mFileParser):
         return data
 
     def get_interactions_positions(self, antenna_number, ray_number):
+        """Return the interactions positions for a given ray of a receiver as a list of coordinates."""
         if self.data[antenna_number] is None:
             return None
         if self.data[antenna_number][ray_number] is None:
             return None
         data = []
-        #self.data[receiver][ray_n]['interactions'][interaction]
         #add 2 to take in account Tx and Rx
         for paths in range(2 + self.data[antenna_number][ray_number]['n_interactions']):
             data.append(self.data[antenna_number][ray_number]['interactions'][str(paths)])
         return data
 
     def get_interactions_positions_as_string(self, antenna_number, ray_number):
+        """Return the interactions positions for a given ray of a receiver as a string formatted as "x1 y1 z1, x2 y2 z2, ...", where each "xi yi zi" corresponds to the coordinates of an interaction point."""
         data = self.get_interactions_positions(antenna_number, ray_number)
         outputString = ''
         for i in range(len(data)-1):
@@ -243,17 +247,3 @@ class P2mPaths(P2mFileParser):
         data_ndarray[:,4:6] = self.get_arrival_angle_ndarray(antenna_number)
         data_ndarray[:,6] = self.get_p_phase_ndarray(antenna_number)
         return data_ndarray
-
-if __name__=='__main__':
-    #InSite version 3.2 example:
-    #path = P2mPaths('D:/insitedata/results_long_episodes/run00000/study/model.paths.t001_01.r002.p2m')
-    #InSite version 3.3 example:
-    path = P2mPaths('D:/insitedata/2019_04_19_fixed_ul_dl/ul_simu_3.3/run00008/study/model.paths.t001_02.r001.p2m')
-    #path = P2mPaths('example/iter0.paths.t001_05.r006.p2m')
-    print('Departure angles: ',path.get_departure_angle_ndarray(1)) #Pass the antenna_number as argument
-    print('Arrival angles: ',path.get_arrival_angle_ndarray(1))
-    print('Gains: ',path.get_p_gain_ndarray(1))
-    print('Phases: ',path.get_p_phase_ndarray(1))
-    print('Interactions: ',path.get_interactions_list(1))
-    print('Interactions positions: ',path.get_interactions_positions(1, 3)) #receiver 2, ray 3
-    print('Interactions positions as string: ',path.get_interactions_positions_as_string(1, 3)) #receiver 2, ray 3

@@ -6,9 +6,25 @@ import platform
 
 def pick_veh_from_area(veh_list, area_lim, n_veh, return_counts=False):
     """
-    veh_list: id name from sumo of all cars
-    area_lim: ((xmin, ymin), (xmax, ymax))
-    n_veh: number of  vehicles to pick
+    Select vehicles located inside a rectangular area.
+
+    This function checks the current SUMO position of each vehicle, converts it
+    to the Wireless InSite coordinate system, filters vehicles inside the given
+    area limits, and randomly selects the requested number of vehicles.
+
+    Args:
+        veh_list: List of SUMO vehicle identifiers.
+        area_lim: Area limits defined as ``((xmin, ymin), (xmax, ymax))``.
+        n_veh: Number of vehicles to randomly select from the area.
+        return_counts: If ``True``, also return the number of vehicles found
+            inside the area. Defaults to ``False``.
+
+    Returns:
+        If ``return_counts`` is ``False``, returns an array with the selected
+        vehicle IDs or ``None`` if there are not enough vehicles.
+        If ``return_counts`` is ``True``, returns a tuple containing the selected
+        vehicle IDs and the number of vehicles inside the area. If there are not
+        enough vehicles, returns ``(None, 0)``.
     """
     min_x, min_y = area_lim[0]
     max_x, max_y = area_lim[1]
@@ -34,17 +50,30 @@ def pick_veh_from_area(veh_list, area_lim, n_veh, return_counts=False):
 
 def _get_csv_newline():
     """
-    Avoid extra blank lines on Windows when using csv.writer.
+    Return the newline parameter used when writing CSV files.
+
+    This helper avoids extra blank lines on Windows when using ``csv.writer``.
+
+    Returns:
+        An empty string on Windows, otherwise ``None``.
     """
     return "" if platform.system() == "Windows" else None
 
 
 def _as_ordered_index_dict(items):
     """
-    Creates a dictionary preserving the original order of the input iterable.
+    Create an index dictionary while preserving the input order.
 
-    Example:
-        ["veh3", "veh7"] -> {"veh3": 0, "veh7": 1}
+    This function maps each item to its position in the original iterable. It is
+    used to preserve the original receiver and transmitter ordering when writing
+    SUMO metadata to CSV.
+
+    Args:
+        items: Iterable of item identifiers, or ``None``.
+
+    Returns:
+        A dictionary mapping each item to its original index. If ``items`` is
+        ``None``, returns an empty dictionary.
     """
     if items is None:
         return {}
@@ -57,12 +86,22 @@ def _as_ordered_index_dict(items):
 
 def _read_fixed_receivers_from_txrx(base_txrx_path, insite_rx_name):
     """
-    Reads fixed receiver coordinates from base.txrx.
+    Read fixed receiver coordinates from a Wireless InSite TX/RX file.
 
-    Returns
-    -------
-    list[tuple]
-        List of fixed receiver coordinates: [(x, y, z), ...]
+    This function searches for the receiver points block identified by
+    ``insite_rx_name`` in a ``base.txrx`` file, reads the declared vertices, and
+    returns their coordinates.
+
+    Args:
+        base_txrx_path: Path to the Wireless InSite ``base.txrx`` file.
+        insite_rx_name: Name of the receiver points block to read.
+
+    Returns:
+        A list of fixed receiver coordinates as ``[(x, y, z), ...]``.
+
+    Raises:
+        FileNotFoundError: If the TX/RX file does not exist.
+        ValueError: If the ``nVertices`` value cannot be converted to an integer.
     """
     receivers = []
     reading_rx_block = False
@@ -103,12 +142,21 @@ def _write_fixed_receivers_rows(
     insite_rx_name,
 ):
     """
-    Writes fixed receiver rows into the unified CSV file.
+    Write fixed receiver rows to the unified SUMO information CSV file.
 
-    Returns
-    -------
-    int
-        Number of fixed receivers written.
+    This function reads fixed receiver coordinates from ``base.txrx`` and writes
+    one CSV row for each receiver using the ``fixed_receiver`` object class.
+
+    Args:
+        writer: CSV writer object used to write rows.
+        episode_i: Episode index associated with the current scene.
+        scene_i: Scene index associated with the current scene.
+        base_insite_project_path: Path to the base Wireless InSite project
+            folder.
+        insite_rx_name: Name of the receiver points block in ``base.txrx``.
+
+    Returns:
+        Number of fixed receiver rows written to the CSV file.
     """
     base_txrx_path = os.path.join(base_insite_project_path, "base.txrx")
     fixed_receivers = _read_fixed_receivers_from_txrx(
@@ -155,7 +203,28 @@ def _write_vehicle_rows(
     transmitter_index_by_vehicle,
 ):
     """
-    Writes SUMO vehicle rows into the unified CSV file.
+    Write SUMO vehicle rows to the unified CSV file.
+
+    This function iterates over the current SUMO vehicles, extracts mobility and
+    geometric information through TraCI, converts vehicle positions to Wireless
+    InSite coordinates, assigns receiver and transmitter indices when
+    applicable, and writes the vehicle metadata to the CSV file.
+
+    Args:
+        c: Runtime configuration object containing V2V and simulation settings.
+        writer: CSV writer object used to write rows.
+        episode_i: Episode index associated with the current scene.
+        scene_i: Scene index associated with the current scene.
+        fixedReceivers: Whether the simulation uses fixed receivers.
+        num_fixed_receivers: Number of fixed receivers already written to the
+            CSV file.
+        receiver_index_by_vehicle: Dictionary mapping receiver vehicle IDs to
+            receiver indices.
+        transmitter_index_by_vehicle: Dictionary mapping transmitter vehicle IDs
+            to transmitter indices.
+
+    Returns:
+        None.
     """
     for veh_i, veh in enumerate(traci.vehicle.getIDList()):
         x, y = traci.vehicle.getPosition(veh)
@@ -214,7 +283,20 @@ def _write_pedestrian_rows(
     scene_i,
 ):
     """
-    Writes SUMO pedestrian rows into the unified CSV file.
+    Write SUMO pedestrian rows to the unified CSV file.
+
+    This function iterates over the current SUMO pedestrians, extracts their
+    position, orientation, size, speed, type, and waiting time through TraCI,
+    converts their coordinates to the Wireless InSite coordinate system, and
+    writes them to the CSV file using the ``pedestrian`` object class.
+
+    Args:
+        writer: CSV writer object used to write rows.
+        episode_i: Episode index associated with the current scene.
+        scene_i: Scene index associated with the current scene.
+
+    Returns:
+        None.
     """
     for ped_i, ped in enumerate(traci.person.getIDList()):
         x, y = traci.person.getPosition(ped)
@@ -264,18 +346,38 @@ def writeSUMOInfoIntoFile(
     use_pedestrians,
 ):
     """
-    Save SUMO scene information into a single CSV file.
+    Save SUMO scene information to a unified CSV file.
 
-    This function writes vehicles, fixed receivers, transmitters and,
-    optionally, pedestrians into the same CSV file.
+    This function writes metadata from the current SUMO scene into a single CSV
+    file. The output can include vehicles, fixed receivers, transmitters, and
+    optionally pedestrians. The ``object_class`` column identifies the type of
+    each row.
 
-    The column `object_class` identifies the row type:
-        - vehicle
-        - pedestrian
-        - fixed_receiver
+    Receiver and transmitter indices preserve the original order of
+    ``veh_with_antenna`` and ``Tx_veh``.
 
-    The original order of `veh_with_antenna` and `Tx_veh` is preserved
-    when assigning receiver and transmitter indices.
+    Args:
+        c: Runtime configuration object containing simulation timing, V2V
+            settings, base Wireless InSite paths, and receiver names.
+        sumoOutputInfoFileName: Path to the CSV file to be written.
+        episode_i: Episode index associated with the current scene.
+        scene_i: Scene index associated with the current scene.
+        lane_boundary_dict: Lane boundary information. Currently not used
+            directly by this function.
+        veh_with_antenna: Iterable containing vehicles selected as receivers.
+        Tx_veh: Iterable containing vehicles selected as transmitters, or
+            ``None`` when V2V mode is disabled.
+        fixedReceivers: Whether fixed receivers should be written from
+            ``base.txrx``.
+        use_pedestrians: Whether pedestrian rows should be included.
+
+    Returns:
+        None. The CSV file is written to ``sumoOutputInfoFileName``.
+
+    Raises:
+        FileNotFoundError: If fixed receivers are enabled and ``base.txrx`` is
+            not found.
+        OSError: If the output CSV file cannot be written.
     """
 
     newline = _get_csv_newline()

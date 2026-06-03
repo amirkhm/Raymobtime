@@ -9,12 +9,23 @@ from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
 
-
 class FormatError(Exception):
     pass
 
-
 class Episode(Base):
+    """
+    SQLAlchemy model representing a simulation episode.
+
+    An episode groups multiple scenes and stores metadata related to the
+    Wireless InSite path, SUMO path, simulation start time, and sampling time.
+
+    Attributes:
+        id: Primary key identifier of the episode.
+        insite_pah: Path to the Wireless InSite data associated with the episode.
+        sumo_path: Path to the SUMO data associated with the episode.
+        simulation_time_begin: Initial simulation time of the episode.
+        sampling_time: Sampling interval used between scenes.
+    """
     __tablename__ = 'episodes'
 
     id = db.Column(db.Integer, primary_key=True, index=True)
@@ -30,6 +41,19 @@ class Episode(Base):
 
 
 class InsiteObject(Base):
+    """
+    SQLAlchemy model representing an object in a Wireless InSite scene.
+
+    This model stores object geometry, position, dimensions, and its relationship
+    with a scene. Geometric arrays are stored as binary fields and converted to
+    NumPy arrays through property getters and setters.
+
+    Attributes:
+        id: Primary key identifier of the object.
+        name: Object name.
+        scene_id: Foreign key referencing the associated scene.
+        scene: Scene object associated with this object.
+    """
     __tablename__ = 'objects'
 
     id = db.Column(db.Integer, primary_key=True, index=True)
@@ -76,6 +100,19 @@ class InsiteObject(Base):
 
 
 class InsiteReceiver(Base):
+    """
+    SQLAlchemy model representing a Wireless InSite receiver.
+
+    A receiver stores aggregate ray-tracing information, its 3D position, and
+    its relationship with the object to which it belongs.
+
+    Attributes:
+        id: Primary key identifier of the receiver.
+        total_received_power: Total received power at the receiver.
+        mean_time_of_arrival: Mean time of arrival of received rays.
+        object_id: Foreign key referencing the associated object.
+        episode: InsiteObject associated with this receiver.
+    """
     __tablename__ = 'receivers'
 
     id = db.Column(db.Integer, primary_key=True, index=True)
@@ -103,6 +140,27 @@ class InsiteReceiver(Base):
 
 
 class Ray(Base):
+    """
+    SQLAlchemy model representing a propagation ray.
+
+    A ray stores angular, temporal, power, phase, and interaction information
+    extracted from Wireless InSite ray-tracing outputs. Each ray is associated
+    with one receiver.
+
+    Attributes:
+        id: Primary key identifier of the ray.
+        departure_elevation: Elevation angle of departure.
+        departure_azimuth: Azimuth angle of departure.
+        arrival_elevation: Elevation angle of arrival.
+        arrival_azimuth: Azimuth angle of arrival.
+        path_gain: Path gain of the ray.
+        time_of_arrival: Time of arrival of the ray.
+        interactions: String describing the ray interactions.
+        phaseInDegrees: Ray phase in degrees.
+        interactionsPositions: String containing ray interaction positions.
+        receiver_id: Foreign key referencing the associated receiver.
+        episode: InsiteReceiver associated with this ray.
+    """
     __tablename__ = 'rays'
 
     id = db.Column(db.Integer, primary_key=True, index=True)
@@ -126,6 +184,19 @@ class Ray(Base):
 
 
 class Scene(Base):
+    """
+    SQLAlchemy model representing a simulation scene.
+
+    A scene belongs to one episode and contains multiple Wireless InSite objects.
+    It stores the study area geometry as a binary NumPy array and provides
+    helper properties for counting receivers and mobile objects.
+
+    Attributes:
+        id: Primary key identifier of the scene.
+        episode_id: Foreign key referencing the associated episode.
+        episode: Episode object associated with this scene.
+    """
+
     __tablename__ = 'scenes'
 
     """- map between transmitters and mobile objects
@@ -163,7 +234,6 @@ class Scene(Base):
     def number_of_mobile_objects(self):
         return len(self.objects)
 
-#engine = create_engine('sqlite:////tmp/episodedata.db')
 dataBaseFileName = 'episodedata.db'
 print('########## Important ##########')
 print('Will try to open database in file (should be in your current folder): ', dataBaseFileName)

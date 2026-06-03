@@ -7,9 +7,27 @@ class ParsingError(Exception):
     pass
 
 class P2mFileParser:
-    """Parser for p2m files"""
+    """
+    Base parser for Wireless InSite P2M files.
 
-    # project.type.tx_y.rz.p2m
+    This class provides common parsing logic for P2M files, including filename
+    metadata extraction, header parsing, comment skipping, and receiver-specific
+    parsing. Subclasses must implement ``_parse_receiver`` according to the
+    specific P2M file type.
+
+    Supported file types in the filename pattern include ``doa``, ``paths``,
+    and ``positions``.
+
+    Attributes:
+        filename: Path to the P2M file being parsed.
+        file: Open file object used during parsing.
+        data: Ordered dictionary containing parsed data.
+        project: Project name extracted from the filename.
+        transmitter_set: Transmitter set index extracted from the filename.
+        transmitter: Transmitter index extracted from the filename.
+        receiver_set: Receiver set index extracted from the filename.
+        n_receivers: Number of receivers declared in the file header.
+    """
     _filename_match_re = (r'^(?P<project>.*)' +
                           r'\.' +
                           r'(?P<type>((doa)|(paths)|(positions)))' +
@@ -72,7 +90,17 @@ class P2mFileParser:
 
 
 class P2mCir(P2mFileParser):
-    """Parse a p2m cir file"""
+    """
+    Parser for Wireless InSite P2M position files.
+
+    Despite the class name, this implementation parses position-like P2M data.
+    For each parsed block, it reads the simulation time, the number of vehicles,
+    and, for each vehicle, its name, position, velocity, and acceleration.
+
+    Attributes:
+        data: Ordered dictionary containing parsed vehicle position information.
+            The main entry is stored under the ``"positions"`` key.
+    """
 
     def _parse_receiver(self):
         """Get receiver and number of paths (pair Tx-Rx)"""
@@ -108,8 +136,3 @@ class P2mCir(P2mFileParser):
         for paths in range(self.data[antenna_number]['paths_number']):
             data_ndarray[paths] = self.data[antenna_number][paths + 1]['phase']
         return data_ndarray
-
-
-if __name__ == '__main__':
-    cir = P2mCir('../example/model.positions.t001_01.r002.p2m')
-    print('Phase: ', cir.get_phase_ndarray(1))  # Pass the antenna_number as argument

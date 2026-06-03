@@ -3,6 +3,17 @@ from src.modules.rt.wi.modeling.utils import match_or_error
 from src.modules.rt.wi.modeling.verticelist import VerticeList
 
 class Location(VerticeList, BaseContainerObject):
+    """
+    Container representing a Wireless InSite location block.
+
+    A location stores a list of vertices and provides parsing and serialization
+    support for ``begin_<location>`` blocks in Wireless InSite transmitter or
+    receiver point files.
+
+    Attributes:
+        vertice_float_precision: Number of decimal places used when serializing
+            vertex coordinates.
+    """
 
     def __init__(self):
         VerticeList.__init__(self)
@@ -32,6 +43,17 @@ class Location(VerticeList, BaseContainerObject):
 
 
 class TxRx(BaseContainerObject):
+    """
+    Container representing a Wireless InSite transmitter or receiver points block.
+
+    This class stores one or more ``Location`` objects and provides parsing and
+    serialization support for ``begin_<points>`` blocks, which are commonly used
+    to define transmitter or receiver positions in Wireless InSite files.
+
+    Attributes:
+        name: Name of the points block.
+        location_list: List of Location objects contained in this block.
+    """
 
     def __init__(self, name=''):
         BaseContainerObject.__init__(self, Location, name=name)
@@ -67,6 +89,16 @@ class TxRx(BaseContainerObject):
 
 
 class TxRxFile(BaseContainerObject):
+    """
+    Container representing a complete Wireless InSite transmitter/receiver file.
+
+    This class stores one or more ``TxRx`` point blocks and provides parsing and
+    serialization support for files that define transmitter or receiver
+    locations.
+
+    Attributes:
+        name: Optional file/container name.
+    """
 
     def __init__(self, name=''):
         BaseContainerObject.__init__(self, TxRx, name=name)
@@ -80,17 +112,4 @@ class TxRxFile(BaseContainerObject):
     def from_file(infile):
         inst = TxRxFile()
         BaseContainerObject.from_file(inst, infile)
-        #print(inst.__dict__)
         return inst
-
-if __name__=='__main__':
-    with open('../example/model.txrx') as infile:
-        #print(Location.from_file(infile).serialize())
-        #print(TxRx.from_file(infile).serialize())
-        txrx = TxRxFile.from_file(infile)
-        txrx.serialize()
-        for child in txrx._child_list:
-            for antena in child._child_list:
-                print(antena.__dict__)
-        print('////')
-        #print(txrx['Rx'].location_list[0].__dict__)

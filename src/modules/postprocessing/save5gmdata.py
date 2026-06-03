@@ -412,7 +412,25 @@ class Scene(Base):
         return len(self.objects)
     
 def create_database(dataBaseFileName='episodedata.db'):
-    
+    """
+    Create a new SQLite database for Raymobtime simulation data.
+
+    If a database file with the same name already exists, it is removed before
+    creating a new database. All SQLAlchemy ORM tables defined in this module
+    are created, and an active database session is returned.
+
+    Args:
+        dataBaseFileName: Path or filename of the SQLite database to create.
+            Defaults to ``"episodedata.db"``.
+
+    Returns:
+        A SQLAlchemy session connected to the newly created database.
+
+    Raises:
+        OSError: If an existing database file cannot be removed.
+        SQLAlchemyError: If the database engine, metadata, or session cannot be
+            created.
+    """    
     if os.path.isfile(dataBaseFileName):
         os.remove(dataBaseFileName)
         print(colored(f'Removed old database: {dataBaseFileName}', color='red'))
@@ -426,6 +444,24 @@ def create_database(dataBaseFileName='episodedata.db'):
     return Session()
 
 def open_database(dataBaseFileName='episodedata.db'):
+    """
+    Open an existing SQLite database for Raymobtime simulation data.
+
+    This function checks whether the requested database file exists, initializes
+    the SQLAlchemy engine and metadata, and returns an active database session.
+
+    Args:
+        dataBaseFileName: Path or filename of the SQLite database to open.
+            Defaults to ``"episodedata.db"``.
+
+    Returns:
+        A SQLAlchemy session connected to the existing database.
+
+    Raises:
+        SystemExit: If the specified database file does not exist.
+        SQLAlchemyError: If the database engine, metadata, or session cannot be
+            initialized.
+    """
     
     if os.path.isfile(dataBaseFileName):
         print(f'Found database file: {dataBaseFileName}')

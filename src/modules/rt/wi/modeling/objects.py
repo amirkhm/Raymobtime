@@ -12,7 +12,16 @@ from src.modules.rt.wi.modeling.utils import match_or_error
 
 
 class Structure(BaseContainerObject):
+    """
+    Container representing a Wireless InSite structure.
 
+    A structure groups one or more substructures and provides parsing and
+    serialization support for ``begin_<structure>`` blocks in Wireless InSite
+    object files.
+
+    Attributes:
+        name: Structure name.
+    """
     def __init__(self, **kargs):
         BaseContainerObject.__init__(self, SubStructure, **kargs)
         self._begin_re = r'^\s*begin_<structure>\s+(?P<stname>.*)\s*$'
@@ -44,10 +53,18 @@ class Structure(BaseContainerObject):
 
 
 class RectangularPrism(SubStructure):
-    """Rectangular prism
-    attention has to be made to the order of the vertices,
-    maybe it has something to do with the direction of the "movement"
-    to define the "outside" of the object
+    """
+    Substructure representing a rectangular prism.
+
+    This class builds a rectangular prism from six faces: top, bottom, front,
+    back, left, and right. The prism is generated from its length, width, height,
+    name, and material identifier.
+
+    Attributes:
+        length: Prism length along the x-axis.
+        width: Prism width along the y-axis.
+        height: Prism height along the z-axis.
+        dimensions: NumPy array containing ``[length, width, height]``.
     """
 
     def __init__(self, length, width, height, name='', material=1):
@@ -126,6 +143,16 @@ class RectangularPrism(SubStructure):
 
 
 class ObjectFile(BaseContainerObject):
+    """
+    Container representing a Wireless InSite object file.
+
+    This class stores structure groups and provides default Wireless InSite
+    object file headers and tails. It supports parsing existing object files and
+    serializing generated or modified geometry back to disk.
+
+    Attributes:
+        name: Object file name.
+    """
     _default_head = (
         'Format type:keyword version: 1.1.0\n' +
         'begin_<object> Untitled Model\n' +
@@ -167,7 +194,6 @@ class ObjectFile(BaseContainerObject):
         self._head_str = ObjectFile._default_head if head is None else head
         self._tail_str = ObjectFile._default_tail if tail is None else tail
         self._end_header_re = StructureGroup._begin_re
-        #self._begin_tail_re = r'^\s*end_<object>\s*$'
         self._begin_tail_re = r'^\s*(?!begin_<structure_group>).*$'
 
     def add_structure_groups(self, structure_groups):
@@ -180,6 +206,16 @@ class ObjectFile(BaseContainerObject):
 
 
 class StructureGroup(BaseContainerObject):
+    """
+    Container representing a Wireless InSite structure group.
+
+    A structure group stores one or more structures and provides parsing and
+    serialization support for ``begin_<structure_group>`` blocks in Wireless
+    InSite object files.
+
+    Attributes:
+        name: Structure group name.
+    """
 
     _begin_re = r'^\s*begin_<structure_group>\s+(?P<name>.*)\s*$'
 
@@ -211,20 +247,3 @@ class StructureGroup(BaseContainerObject):
         tail_str = ''
         tail_str += 'end_<structure_group>\n'
         return tail_str
-
-
-if __name__ == '__main__':
-    #car = RectangularPrism(4.54, 1.76, 1.47, material=0)
-    #car_obj = ObjectFile('car-api.object')
-    #car_obj.add_structures(car)
-    #car_obj.write()
-    #print(car_obj.serialize())
-    dst = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                       'example', 'car-handmade-copy.object')
-    ori = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                       'example', 'car-handmade.object')
-    with open(ori) as infile:
-        obj = ObjectFile.from_file(infile)
-        obj.translate((10, 5, 3))
-    obj.write(dst)
-    print('Wrote "{}" to "{}"'.format(ori, dst))

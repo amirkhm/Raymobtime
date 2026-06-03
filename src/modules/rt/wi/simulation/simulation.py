@@ -17,12 +17,53 @@ from src.modules.rt.wi.simulation.placement import (
     place_by_sumo)
 
 def onlyDronesList(idList):
+    """
+    Filter a SUMO vehicle ID list to keep only drone vehicles.
+
+    This function removes all vehicle IDs that do not start with ``"dflow"``.
+    It is used when the simulation should consider only drone mobility flows.
+
+    Args:
+        idList: List of SUMO vehicle identifiers.
+
+    Returns:
+        The filtered list containing only drone vehicle identifiers.
+    """
     for v_id, veh in enumerate(idList[:]):
         if not veh.startswith('dflow'):
             idList.remove(veh)
     return idList
 
 def wireless_insite_simulation(c):
+    """
+    Run Wireless InSite ray-tracing simulations for the configured runs.
+
+    This function validates configuration constraints, creates a Wireless InSite
+    project runner, and executes the ray-tracing simulation through the
+    configured batch executable. It supports both isolated simulations and
+    regular Raymobtime simulations over multiple run folders.
+
+    In isolated mode, the function runs a single Wireless InSite project from
+    the isolated results directory. In regular mode, it iterates over the
+    configured run indices and executes Wireless InSite for each run that does
+    not already contain the expected path output file, unless cleaning or jump
+    behavior is enabled.
+
+    Args:
+        c: Runtime configuration object containing Wireless InSite paths,
+            execution flags, output directories, run indices, study area name,
+            setup name, and batch executable path.
+
+    Returns:
+        None.
+
+    Raises:
+        Exception: If incompatible configuration flags are enabled, if a required
+            output file already exists and cannot be overwritten, or if fixed
+            receiver configuration is inconsistent.
+        subprocess.CalledProcessError: If the Wireless InSite batch execution
+            fails.
+    """
     if c.fixed_receivers and c.receivers_per_episode != 0:
         # At fixed receivers, position set on WI is maintained, 
         # that manner it should not change here, default zero.
@@ -34,8 +75,7 @@ def wireless_insite_simulation(c):
         raise Exception()
 
     insite_project = insite.InSiteProject(
-        project_name='model', 
-        #calcprop_bin=c.calcprop_bin,
+        project_name='model',
         wibatch_bin=c.wibatch_bin)
 
     logging.info('Simulation started')
@@ -76,6 +116,31 @@ def wireless_insite_simulation(c):
     logging.info('Finished running ray-tracing')
 
 def copytree_base_files(c):
+    """
+    Copy the base Wireless InSite project files to the output model directory.
+
+    This function copies the base Wireless InSite project folder into the
+    Raymobtime output folder. If the destination already exists and
+    ``clean_previous`` is enabled, the old results directory is removed and the
+    base project is copied again. If the destination exists and mobility is
+    enabled without cleaning, an error is raised to avoid overwriting previous
+    results.
+
+    Args:
+        c: Runtime configuration object containing the base project path,
+            output model directory, result directory, mobility flags, and
+            cleaning options.
+
+    Returns:
+        None.
+
+    Raises:
+        FileExistsError: If the destination folder already exists and the
+            configuration does not allow overwriting it.
+        FileNotFoundError: If the base Wireless InSite project folder does not
+            exist.
+        OSError: If copying or removing folders fails.
+    """
     #copy files from initial (source folder) to results base folder
     try:
         shutil.copytree(c.base_insite_project_path, c.results_base_model_dir, )
@@ -110,6 +175,39 @@ def copytree_base_files(c):
         '\033[0m')
 
 def mobility_sumo(c):
+    """
+    Generate Wireless InSite simulation scenes from SUMO mobility data.
+
+    This function reads the base Wireless InSite object and transmitter/receiver
+    files, starts a SUMO simulation through TraCI, selects receiver and
+    transmitter vehicles according to the configuration, places vehicles,
+    pedestrians, and antennas into each scene, and writes the modified Wireless
+    InSite files for each generated run.
+
+    The function supports SUMO-based mobility, optional V2V simulations, drone
+    filtering, area-limited receiver selection, fixed receivers, pedestrian
+    placement, detailed vehicle templates, and XML updates for transmitter and
+    receiver positions. It also writes per-run metadata and SUMO output
+    information files.
+
+    Args:
+        c: Runtime configuration object containing SUMO command settings,
+            mobility options, Wireless InSite base files, output paths,
+            antenna names, receiver/transmitter counts, scene and episode
+            settings, V2V options, pedestrian options, and template settings.
+
+    Returns:
+        None. The generated simulation folders and modified Wireless InSite files
+        are written to disk.
+
+    Raises:
+        FileNotFoundError: If required base object, TX/RX, XML, or project files
+            are missing.
+        FileExistsError: If a run directory cannot be created or copied.
+        KeyError: If expected transmitter/receiver names are missing from the
+            parsed TX/RX file.
+        RuntimeError: If SUMO/TraCI fails during simulation execution.
+    """
     #* Open files for parsing ============================================================
     #open InSite files that are used as the base to create each new scene / simulation
     with open(c.base_object_file_name) as infile:
@@ -456,6 +554,21 @@ def mobility_sumo(c):
             '\033[0m')
 
 def main(c):
+    """
+    Run the Raymobtime Wireless InSite simulation pipeline.
+
+    This function is the entry point for the Wireless InSite simulation module.
+    It first copies the base project files to the output directory, then runs
+    SUMO-based mobility generation if enabled, and finally executes the
+    Wireless InSite ray-tracing simulation if requested in the configuration.
+
+    Args:
+        c: Runtime configuration object containing all mobility, ray-tracing,
+            file path, and output settings required by the simulation pipeline.
+
+    Returns:
+        None.
+    """
     # copy base files to output to modify them eventualy
     copytree_base_files(c)
 

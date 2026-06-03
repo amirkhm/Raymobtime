@@ -15,7 +15,22 @@ from src.modules.postprocessing import (
     save5gmdata_IsolatedSim as fgdbIS,
     sumoOutputFile)
 
-def set_angle_range(angle,range=[180,-180]):
+def set_angle_range(angle, range=[180, -180]):
+    """
+    Normalize an angle to the interval [-180, 180].
+
+    This function adjusts angles outside the range [-180, 180] by adding or
+    subtracting 360 degrees. It is mainly used to keep azimuth angles consistent
+    after applying vehicle orientation corrections.
+
+    Args:
+        angle: Angle in degrees to be normalized.
+        range: Angle range reference. This argument is currently unused and kept
+            for compatibility with previous versions.
+
+    Returns:
+        The normalized angle in degrees.
+    """
     if angle<=-180:
         angle+=360
     if angle>180:
@@ -23,6 +38,23 @@ def set_angle_range(angle,range=[180,-180]):
     return angle
 
 def count_model_paths(dir):
+    """
+    Count Wireless InSite path files in a directory tree.
+
+    This function recursively walks through the given directory and counts all
+    files whose names start with ``model.paths``. It is used mainly for isolated
+    simulations, where multiple receiver path files may exist in the same
+    simulation result folder.
+
+    Args:
+        dir: Root directory where Wireless InSite path files should be searched.
+
+    Returns:
+        Number of files whose names start with ``model.paths``.
+
+    Raises:
+        FileNotFoundError: If the provided directory does not exist.
+    """
     c = 0
     base_isolated_sim_dir = os.path.join(dir)
 
@@ -33,6 +65,40 @@ def count_model_paths(dir):
     return c
 
 def gen_database(c):
+    """
+    Generate a structured SQLite database from Raymobtime simulation outputs.
+
+    This function reads Wireless InSite ray-tracing results, SUMO vehicle
+    information, simulation metadata, and object geometry files, then stores the
+    processed data in a SQLite database. The database includes episodes, scenes,
+    objects, receivers, transmitters, and propagation rays.
+
+    The function supports two execution modes:
+        - isolated simulation mode, where receiver ray information is extracted
+          directly from isolated Wireless InSite path files;
+        - full Raymobtime simulation mode, where each run folder contains object
+          files, path files, SUMO output files, and simulation metadata.
+
+    In full simulation mode, the function also corrects arrival and departure
+    azimuth angles according to vehicle orientation, stores object geometry and
+    positions, links receivers and transmitters to their corresponding objects,
+    and appends ray information to each receiver.
+
+    Args:
+        c: Runtime configuration object containing simulation paths, output
+            folder names, Wireless InSite project metadata, vehicle template
+            options, V2V settings, and execution mode flags.
+
+    Returns:
+        None. The generated database is written to disk.
+
+    Raises:
+        FileNotFoundError: If required simulation files, object files, path files,
+            SUMO output files, or metadata files are missing.
+        ValueError: If scene ordering, episode information, or object data is
+            inconsistent with the expected simulation structure.
+        FormatError: If stored geometric arrays do not match the required shape.
+    """
     last_simulation_info = None
     simulation_info = None
     database_folder = c.results_dir_postprocessed
@@ -128,7 +194,6 @@ def gen_database(c):
 
     else:
         while True:
-        #for run_i in range(100): # use the number of examples in config.py
             run_dir = os.path.join(results_dir, format_run_name(run_i))
             object_file_name = os.path.join(
                 run_dir, 

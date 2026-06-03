@@ -7,6 +7,14 @@ from Cheetah.NameMapper import (valueForName,
                                 valueFromSearchList, 
                                 valueFromFrameOrSearchList)
 
+"""
+Cheetah-generated Python module for the Wireless InSite vehicle template.
+
+This module is generated from ``vehicles_template.tmpl`` and should generally
+not be edited manually. It renders a Wireless InSite object file containing
+vehicle, pedestrian, and material definitions.
+"""
+
 ##################################################
 ## MODULE CONSTANTS
 VFFSL=valueFromFrameOrSearchList
@@ -27,14 +35,27 @@ if __CHEETAH_versionTuple__ < RequiredCheetahVersionTuple:
       ' %s. Templates compiled before version %s must be recompiled.'%(
          __CHEETAH_version__, RequiredCheetahVersion))
 
-##################################################
-## CLASSES
 
 class vehicles_template(Template):
+    """
+    Cheetah-generated template for Wireless InSite vehicle and pedestrian objects.
 
-    ##################################################
-    ## CHEETAH GENERATED METHODS
+    This template generates a Wireless InSite object file containing predefined
+    materials for pedestrians, glass, cars, buses, trucks, and drones. It also
+    injects externally generated object geometry and geographic reference data
+    through the Cheetah search list.
 
+    Expected template variables:
+        long: Longitude value used in the Wireless InSite reference block.
+        lat: Latitude value used in the Wireless InSite reference block.
+        a: Serialized Wireless InSite object geometry to be inserted into the
+            generated object file.
+
+    Notes:
+        This class is automatically generated from ``vehicles_template.tmpl`` by
+        the Cheetah template engine. Manual edits may be overwritten if the
+        template is regenerated.
+    """
 
     def __init__(self, *args, **KWs):
 
@@ -48,10 +69,24 @@ class vehicles_template(Template):
         
 
     def respond(self, trans=None):
+        """
+        Render the Wireless InSite vehicle object template.
 
+        This method generates the complete text content of the Wireless InSite object
+        file. It writes the project header, geographic reference block, material
+        definitions, injected object geometry, control vector settings, and closing
+        object tag.
 
+        Args:
+            trans: Optional Cheetah transaction object used to capture the generated
+                output. If ``None``, a dummy transaction is created internally.
 
-        ## CHEETAH: main method generated for this template
+        Returns:
+            Rendered template content as a string when a dummy transaction is used;
+            otherwise, returns an empty string according to Cheetah's transaction
+            behavior.
+        """
+
         if (not trans and not self._CHEETAH__isBuffering and not callable(self.transaction)):
             trans = self.transaction # is None unless self.awake() was called
         if not trans:
@@ -62,7 +97,6 @@ class vehicles_template(Template):
         SL = self._CHEETAH__searchList
         _filter = self._CHEETAH__currentFilter
         
-        ########################################
         ## START - generated method body
         
         write('''Format type:keyword version: 1.1.0
@@ -233,12 +267,10 @@ end_<ControlVectors>
 end_<object>
 ''')
         
-        ########################################
         ## END - generated method body
         
         return _dummyTrans and trans.response().getvalue() or ""
         
-    ##################################################
     ## CHEETAH GENERATED ATTRIBUTES
 
 
@@ -271,8 +303,6 @@ if not hasattr(vehicles_template, '_initCheetahAttributes'):
 # with code, advice and input from many other volunteers.
 # For more information visit http://cheetahtemplate.org/
 
-##################################################
-## if run from command line:
 if __name__ == '__main__':
     from Cheetah.TemplateCmdLineIface import CmdLineIface
     CmdLineIface(templateObj=vehicles_template()).run()

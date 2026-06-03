@@ -11,43 +11,48 @@ def add_opt(opt, formatter):
         return ''
 
 class InSiteProject:
+    """
+    Wrapper for executing Wireless InSite projects from Python.
 
+    This class stores the Wireless InSite project name and command-line binary
+    used to execute ray-tracing simulations. It provides a method to run an X3D
+    project file through the Wireless InSite batch interface.
 
-    '''
-    Pedro had a constructor in class InSiteProject that would keep the same files for running all simulations.
-    Better to first copy the files to the run folder and then invoke from there.
-    def __init__(self, setup_path, xml_path, output_dir, project_name='model', calcprop_bin=CALCPROP_BIN,
-                 wibatch_bin=None):
-        """InSite project
-        :param setup_path: path to the .setup file
-        :param xml_path: path to the X3D xml path
-        :param output_dir: where the .setup will store the results (normally the Study Area name)
-        :param calcprop_bin: the path to InSite's calcprop binary
-        """
-        self._setup_path = setup_path
-        self._xml_path = xml_path
-        self._output_dir = output_dir
-        self._project_name = project_name
-        self._calcprop_bin = calcprop_bin
-        self._wibatch_bin = wibatch_bin
-    '''
+    Attributes:
+        _project_name: Wireless InSite project name used in the command-line call.
+        _wibatch_bin: Path or command string for the Wireless InSite batch
+            executable.
+    """
 
-    def __init__(self, project_name='model', calcprop_bin=CALCPROP_BIN,
+    def __init__(self, project_name='model',
                  wibatch_bin=None):
         """InSite project
         :param calcprop_bin: the path to InSite's calcprop binary
         """
         self._project_name = project_name
-        self._calcprop_bin = calcprop_bin
         self._wibatch_bin = wibatch_bin
 
 
     def run_x3d(self, xml_path, output_dir):
-        '''
-        :param setup_path: path to the .setup file
-        :param xml_path: path to the X3D xml path
-        :param output_dir: where the .setup will store the results (normally the Study Area name)
-        '''
+        """
+        Run a Wireless InSite X3D project using the batch executable.
+
+        This method builds a command-line call using the configured Wireless InSite
+        batch binary, output directory, X3D XML file path, and project name. The
+        command is logged and then executed through ``subprocess.run``.
+
+        Args:
+            xml_path: Path to the X3D XML project file to be executed.
+            output_dir: Directory where Wireless InSite should store the simulation
+                results.
+
+        Returns:
+            None.
+
+        Raises:
+            subprocess.CalledProcessError: If the Wireless InSite command returns a
+                non-zero exit status.
+        """
         cmd = ''
         cmd += self._wibatch_bin
         cmd += add_opt(output_dir, ' -out {opt}')
@@ -55,39 +60,3 @@ class InSiteProject:
         cmd += add_opt(self._project_name, ' -p {opt}')
         logging.info('Running CMD: "{}"'.format(cmd))
         subprocess.run(cmd, shell=True, check=True)
-
-    def run_calcprop(self, setup_path, calc_mode=None, clean_run=None, delete_temp=None, memory=None):
-        """Run InSite simulation and store the results in output_dir
-
-        :param calc_mode: New, AddTransmitters, AddReceivers, ChangeHeights,
-                       ChangeFrequency, ChangeAntennas, ChangeMaterials,
-                       ChangeWalltypes, AddOutput, ConsolidateClusterRun
-        :param clean_run: clean and then recalculate all data files
-        :param delete_temp: after running, delete temporary data files
-        :param memory: <n+>[.[<n+>]]K/M/G e.g. 450.5M
-        :param output_dir: Move InSite's result to this path
-        :return: None
-        """
-        cmd = ''
-        cmd += self._calcprop_bin
-        cmd += add_opt(calc_mode, ' --calc-mode={opt}')
-        cmd += add_opt(clean_run, ' --clean-run')
-        cmd += add_opt(delete_temp, ' --delete-temp')
-        cmd += add_opt(memory, ' --memory={opt}')
-        cmd += add_opt(setup_path, ' --project={opt}')
-        logging.info('Running CMD: "{}"'.format(cmd))
-        subprocess.run(cmd, shell=True, check=True)
-        #if output_dir is not None:
-        #    shutil.move(self._output_dir, output_dir)
-
-if __name__=='__main__':
-    logging.basicConfig(level=logging.INFO)
-    path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                        'SimpleFunciona', 'model.setup')
-    project_output_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                      'SimpleFunciona', 'study')
-    output_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                              'oi')
-    output_dir = None
-    project = InSiteProject()
-    project.run_calcprop(path)

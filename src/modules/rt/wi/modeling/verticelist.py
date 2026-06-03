@@ -4,6 +4,20 @@ from src.modules.rt.wi.modeling.errors import FormatError
 from src.modules.rt.wi.modeling.utils import match_or_error
 
 class BaseVerticeList:
+    """
+    Base class for storing and manipulating 3D vertex lists.
+
+    This class provides common operations for geometric objects represented by
+    vertices, including adding vertices, translating all vertices, rotating them
+    around the z-axis, clearing the list, and controlling the floating-point
+    precision used during serialization.
+
+    Attributes:
+        vertice_float_precision: Number of decimal places used when formatting
+            vertex coordinates.
+        vertice_array: NumPy array containing the stored vertices with shape
+            ``(N, 3)``.
+    """
     def __init__(self):
         self._vertice_array = None
         self.vertice_float_precision = 10
@@ -62,7 +76,6 @@ class BaseVerticeList:
 
 
 class VerticeList(BaseVerticeList):
-
     _begin_re = r'\s*nVertices\s+(?P<nv>\d+)\s*$'
 
     def __init__(self):
@@ -77,7 +90,8 @@ class VerticeList(BaseVerticeList):
         for v in self._vertice_array:
             mstr += self._vertice_format_string.format(*v)
         return mstr
-
+    
+    @staticmethod
     def from_file(infile, inst=None):
         if inst is None:
             inst = VerticeList()

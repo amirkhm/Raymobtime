@@ -5,6 +5,21 @@ from src.modules.rt.wi.modeling.basecontainerobject import BaseContainerObject
 from src.modules.rt.wi.modeling.utils import match_or_error
 
 class MimoElement:
+    """
+    Representation of a Wireless InSite MIMO antenna element.
+
+    A MIMO element stores position, antenna reference, rotation, name, and an
+    identifier assigned during parsing. The class supports parsing from a
+    Wireless InSite setup file block and serializing back to the same text
+    format.
+
+    Attributes:
+        rotation: Rotation string associated with the MIMO element.
+        antenna: Antenna identifier or reference used by the MIMO element.
+        position: Position string of the MIMO element.
+        name: Element name.
+        ID: Sequential identifier assigned when parsing MIMO elements.
+    """
     _begin_re = r'^\s*begin_<MimoElement>\s*$'
     _position = r'^\s*position\s+(?P<Mposition>.*)\s*$'
     _antenna = r'^\s*antenna\s+(?P<Mantenna>.*)\s*$'
@@ -59,9 +74,7 @@ class MimoElement:
         inst.ID = str(mimo_id)
 
         match_or_error(MimoElement._begin_re, infile)
-        #begin_match = match_or_error(MimoElement._begin_re, infile)
-        #inst.name = begin_match.group('Mname')
-
+        
         position_match = match_or_error(MimoElement._position, infile)
         inst.position = position_match.group('Mposition')
 
@@ -84,11 +97,21 @@ class MimoElement:
         return mstr
 
 class Antenna(BaseContainerObject):
+    """
+    Container representing a Wireless InSite antenna block.
+
+    This class stores a list of ``MimoElement`` objects and provides parsing and
+    serialization support for ``begin_<antenna>`` blocks in Wireless InSite setup
+    files.
+
+    Attributes:
+        name: Antenna block name.
+        mimo_list: List of MIMO elements associated with this antenna.
+    """
 
     def __init__(self, name=''):
         BaseContainerObject.__init__(self, MimoElement, name=name)
         self.__begin_re = r'^\s*begin_<antenna>\s+(?P<name>.*)\s*$'
-        #self._begin_re = r'^\s*description\s+(?P<name>.*)\s*$'
         self._end_header_re = r'^\s*begin_<MimoElement>\s*$'
         # the tail starts if the "content" is not a location
         self._begin_tail_re = r'^(?!begin_<MimoElement>).*$'
@@ -124,6 +147,15 @@ class Antenna(BaseContainerObject):
 
 
 class SetupFile(BaseContainerObject):
+    """
+    Container representing a Wireless InSite setup file.
+
+    This class stores antenna blocks from a setup file and provides parsing and
+    serialization support for project-level setup content.
+
+    Attributes:
+        name: Optional setup file name.
+    """
     _default_head = (
         'Format type:keyword version: 1.1.0\n' +
         'begin_<project> Untitled Project\n'
@@ -144,29 +176,3 @@ class SetupFile(BaseContainerObject):
         inst = SetupFile()
         BaseContainerObject.from_file(inst, infile)
         return inst
-
-if __name__=='__main__':
-    #with open('../base_v2/base.setup') as infile:
-    with open('../example/model.setup') as infile: 
-        #print(antenna.from_file(infile).serialize())
-        #print(TxRx.from_file(infile).serialize())
-        txrx = SetupFile.from_file(infile)
-        angle = np.radians(90 - 60) #graus
-        delta_y = np.sin(angle)
-        delta_x = np.cos(angle)
-        offset = 0.02
-        for child in txrx._child_list:
-            x = 0
-            y = 0
-            Xoffset = round((delta_x*offset),5)
-            Yoffset = round((delta_y*offset),5)
-            for mimo in child._child_list:
-                position = '{} {} {}'.format(x,y,0)
-                mimo.position=position
-                x = x + Xoffset
-                y = y + Yoffset
-        #setup_path = os.path.join('../base_v2', 'model.setup')
-        #txrx.write(setup_path)
-        print(txrx.serialize())
-        print('////')
-        #print(txrx['Rx'].location_list[0].__dict__)
