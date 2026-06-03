@@ -1,6 +1,6 @@
 import os
 import bpy
-import src.modules.blensor as blensor
+import blensor
 import shutil
 from bpy import data as D
 from mathutils import *
@@ -147,7 +147,7 @@ def doScan(vPosition, pathdir, scans_output):
         ValueError: If position or height values cannot be converted to floats.
         FileNotFoundError: If expected scan files are missing during cleanup.
     """
-    
+
     for camera in vPosition.items():
         if camera[1]['isRx'] or camera[1]['isTx']:
             os.mkdir(pathdir)

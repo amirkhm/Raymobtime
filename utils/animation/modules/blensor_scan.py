@@ -1,5 +1,5 @@
 import bpy
-import raymobtime.src.modules.blensor as blensor
+import blensor
 import os
 from math import radians
 from .helpers import do_zip 

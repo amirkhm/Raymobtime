@@ -1,7 +1,7 @@
 import sys
 import os
 import bpy
-import src.modules.blensor as blensor
+import blensor
 from bpy import data as D
 from mathutils import *
 from math import *

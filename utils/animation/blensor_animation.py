@@ -3,7 +3,7 @@ import os
 import bpy
 import csv
 import sqlite3
-import src.modules.blensor as blensor
+import blensor
 import shutil
 import copy
 import numpy as np

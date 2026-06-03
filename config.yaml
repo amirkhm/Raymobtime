@@ -23,15 +23,15 @@ pipeline:
   blensor:
     enabled: true 
     outputs: 
-      # - lidar
-      - image
+      - lidar
+      # - image
 
   post_processing:
     enabled: false  
     which: "selected"                               # all | selected
     outputs:                                        # ["db", "coord", "rays", "beams", "image", "lidar"]
-       - db                                       # database (sqlite/postgres/hdf5)
-       - "coord"                                   # coordenadas
+      # - db                                       # database (sqlite/postgres/hdf5)
+      # - "coord"                                   # coordenadas
       # - "rays"
       # - "beams"
       # - "image"

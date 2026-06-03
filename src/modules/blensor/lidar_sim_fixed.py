@@ -2,7 +2,7 @@ import sys
 import os
 import bpy
 import csv
-import src.modules.blensor as blensor
+import blensor
 import numpy as np
 from bpy import data as D
 from mathutils import *
@@ -118,7 +118,7 @@ def getInfoVehicles(sumo_info_file):
             deltaX = (float(row['length'])/2.0) * np.sin(thisAngleInRad)
             deltaY = (float(row['length'])/2.0) * np.cos(thisAngleInRad)
             #Added height because fixed simulation does not save the height value
-            vPosition[row['veh']] = {'xinsite':str(float(row['xinsite']) - deltaX),'yinsite':str(float(row['yinsite']) - deltaY),'height':float(row[' height'])+4,'angle':row['angle'],'isRx':isRx, 'z3':row['z3']}
+            vPosition[row['object_id']] = {'xinsite':str(float(row['xinsite']) - deltaX),'yinsite':str(float(row['yinsite']) - deltaY),'height':float(row[' height'])+4,'angle':row['angle'],'isRx':isRx, 'z3':row['z3']}
 
     return vPosition
 
