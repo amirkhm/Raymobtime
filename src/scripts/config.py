@@ -4,7 +4,6 @@ import yaml
 from pathlib import Path
 from types import SimpleNamespace
 import logging
-#logging.basicConfig(level=logging.DEBUG)
 
 # simulators
 from src.modules.blensor.blensor_src import blensor_simulation
@@ -149,6 +148,23 @@ class parameters:
         self.setparameters()
 
     def setparameters(self):
+        if self.base_config.logging_level:
+            level = self.base_config.logging_level.upper()
+            if level == "DEBUG":
+                logging.basicConfig(level=logging.DEBUG)
+            elif level == "INFO":
+                logging.basicConfig(level=logging.INFO)
+            elif level == "WARNING":
+                logging.basicConfig(level=logging.WARNING)
+            elif level == "ERROR":
+                logging.basicConfig(level=logging.ERROR)
+            elif level == "CRITICAL":
+                logging.basicConfig(level=logging.CRITICAL)
+            elif level == "NONE":
+                logging.disable(logging.CRITICAL)
+            else:
+                raise ValueError(f"Invalid logging level: {self.base_config.logging_level}")
+            
         self.working_directory = find_project_root()
         #os.path.dirname(os.path.realpath(__file__))
 
@@ -158,7 +174,7 @@ class parameters:
         
         self.use_pedestrians = self.ray_tracing.use_pedestrians
         self.drone_simulation = self.ray_tracing.use_drone
-        self.V2V = self.ray_tracing.v2v.enable
+        self.V2V = self.ray_tracing.v2v.enabled
         
         self.base_insite_project_path = os.path.join(
             self.working_directory,

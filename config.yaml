@@ -3,6 +3,7 @@ base_config:
   scenario: "rosslyn"                      # scenario name
   resume: false                                # skip steps already concluded (not implemented, necessary logging of concluded steps)
   clean_previous: true                       # remove result folders before running
+  logging_level: info                       # logging level: debug, info, warning, error, critical, NONE
 
 pipeline:
   mobility:
@@ -14,7 +15,7 @@ pipeline:
       min_lim: [660, 334]                     # [x, y] study area limits for placement of Tx and Rx
   
   ray_tracing:                                # parsing automático
-    enabled: true 
+    enabled: false 
     #tool: "wireless_insite"                  # wireless_insite | none
     jump: true   
   
@@ -36,13 +37,13 @@ pipeline:
       # - "lidar"
   
   validation:
-    run_checkup: true  
+    run_checkup: false
 
 rmt:
   enabled: true                               # false for isolated simulation
   scenes_per_episode: 2 
   time_between_episodes: 35                   # This time needs to be multiple of scene time step
-  sampling_parameters: [0, 6, 0.5]          # start, end, step
+  sampling_parameters: [0, 6, 0.5]            # start, end, time_step
   features:
     fixed_receivers: false  
     vehicles_template: false 
@@ -55,7 +56,7 @@ sumo:
 ray_tracing:
   use_pedestrians: false
   use_drone: false
-  receivers_per_episode: 1
+  receivers_per_episode: 2
   transmitters_per_episode: 1
   v2v:
     enabled: true
