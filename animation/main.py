@@ -31,6 +31,7 @@ from modules.blender_anim import (
 
 from modules.blensor_scan import run_scan
 from modules.video_export import create_video
+from modules.saveImg_utils import copy_and_rename_frame  # add JK
 
 def get_config_prio(project_root):
     """
@@ -77,6 +78,9 @@ def get_config_prio(project_root):
 
             if 'video' in batch_data:
                 config['video'].update(batch_data['video'])
+
+            if 'image' in batch_data:
+                config['image'].update(batch_data['image'])
 
     return config
 
@@ -263,7 +267,11 @@ def main():
         
         # Chamada para Legenda - add JK
         process_subtitles(frame_path, scene, cam_ativa, position_data, run, config)
-        # --- Varredura (Opcional) ---
+
+        # Salvar imagens e renomear - add JK
+        copy_and_rename_frame(frame_path, run, run, config)     # um frame corresponde a uma cena/uma run
+
+        # --- Varredura ---
         if use_scan:
             scan_output_dir = os.path.join(saida_dir, base_run_dir_fn(run))
             run_scan(position_data, scan_output_dir, zip_results)
@@ -271,14 +279,19 @@ def main():
         frame_num += frame_step
         video_frame_index += 1  # add JK
 
-    # --- 5. Exportação de Vídeo ---
-    print("\n🎬 Todas as runs processadas. Gerando vídeo final...")
-    
-    # O orquestrador espera que o vídeo se chame exatamente 'video_final.mp4' na pasta 'saida'
-    video_path = os.path.join(saida_dir, "video_final.mp4")
-    
-    create_video(tmp_frame_dir, video_path, cfg_video)
+    # --- Exportação de Vídeo ---
+    video_config = config.get('video', {})  # add JK
+    generate_video_str = str(video_config.get('genarete_video', "true")).lower()
 
+    if generate_video_str == "true":
+        print("\n🎬 Todas as runs processadas. Gerando vídeo final...")
+    
+        # O orquestrador espera que o vídeo se chame exatamente 'video_final.mp4' na pasta 'saida'
+        video_path = os.path.join(saida_dir, "video_final.mp4")
+    
+        create_video(tmp_frame_dir, video_path, cfg_video)
+    else:
+        print("\n Todas as runs processadas. Video não gerado")
 
 if __name__ == '__main__':
     main()

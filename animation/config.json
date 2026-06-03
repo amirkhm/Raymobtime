@@ -26,9 +26,14 @@
         "tx_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/Tx.blend"
     },
     "video": {
+        "genarete_video": "true",
         "framerate": 10,
         "codec": "libx264",
         "pixel_format": "yuv420p"
+    },
+    "image": {
+        "save_image": "true",
+        "save_img_pathFile": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/imagens/t003_Rosslyn_05MobileRx_60GHz"
     },
     "visualization_settings": {
         "show_overlay": true,

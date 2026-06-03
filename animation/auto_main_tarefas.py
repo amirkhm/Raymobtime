@@ -81,6 +81,10 @@ def rodar_automacao():
                     "scenario_blend_file": t['config_especifica'].get('scenario_blend_file', ""),
                     "pedestrian_file_name": t['config_especifica'].get('pedestrian_file_name', "")
                 },
+                "video": {
+                    "genarete_video": t['video'].get('genarete_video', "")
+                },
+                "image": t.get('imagem', {}),
                 "visualization_settings": t.get('visualization', {}),
                 "camera_settings": t.get('camera', {})
             }

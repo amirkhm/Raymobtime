@@ -13,15 +13,18 @@ O objetivo principal é criar animações e datasets de nuvens de pontos (`.pcd`
   * **Varredura LiDAR:** Utiliza o Blensor para realizar varreduras de sensor, gerando arquivos de nuvem de pontos (`.pcd`) para cada *run*.
   * **Exportação de Vídeo:** Renderiza a animação completa e a compila automaticamente em um vídeo `.mp4` usando FFmpeg.
   * **Modularidade:** O código é totalmente modular, facilitando a manutenção e a adição de novas funcionalidades.
-  * **Configuração Centralizada:** Todas as configurações são gerenciadas através de um único arquivo `config.json`.
+  * **Configuração Centralizada:** Todas as configurações são gerenciadas através do arquivo `config.json` para tarefas gerais ou para rodar com poucas runs.
   * **Processamento em Lote (Batching):** Divide simulações longas em blocos menores (ex: de 10 em 10 ou 500 em 500 runs). O Blender é reiniciado a cada bloco, limpando a memória RAM.
   * **Fila de Datasets:** Permite listar vários cenários no ficheiro (`tarefas.json`) para serem processados em sequência sem intervenção manual.
 
   * **Retomada:** Se o processo for interrompido, o script identifica os blocos já renderizados e retoma exatamente de onde parou.
 
-  * **Gestão de Ficheiros Temporários:** Cria automaticamente uma pasta (`temp_processing`) para organizar partes parciais e limpa tudo ao final.
+  * **Gestão de Ficheiros Temporários:** Cria automaticamente uma pasta (`temp_processing`) para organizar partes parciais dos videos e limpa tudo ao final.
 
   * **Saída Customizada:** Possibilidade de definir caminhos absolutos diferentes para o vídeo final de cada dataset.
+  * **Salvar imagens:** Possibilidade de salvar apenas as imagens
+  * **Legenda:** Adiciona legenda (ID e coordenadas de Rx/Tx) nas animações do dataset
+  * **Camera:** É possivel escolher a camera do cenário o qual quer gerar o video e/ou a imagem
 
 -----
 
@@ -76,6 +79,7 @@ project_root/
 │   └── video_export.py   # Exportação de vídeo (chamada FFmpeg)
 |   └── subtitle_utils.py # Lógica de legendas (Cena, Ep, Tx, Rx)
 |   └── camera_utils.py   # Módulo para gerenciamento das Câmeras
+|   └── saveImg_utils.py  # Módulo para salvar e renomear as imagens em pasta definida
 │
 ├── vehicles.blend      # Arquivo .blend com os modelos 3D (Carro, Pedestre, etc.)
 └── Rx.blend             # Arquivo .blend com objeto para posicionar nos receptores
@@ -102,12 +106,14 @@ O arquivo `config.json` controla todos os aspectos da simulação.
     },
     "dataset_config": {
         "name": "s006 Rosslyn 10FixedRx 28GHz",         // Nome do dataset na legenda
-        "scenes_per_episode": 10                        // Define o número de cenas por episódio
+        "scenes_per_episode": 10,                       // Define o número de cenas por episódio
+        "use_fixed_receivers": true                     // Determina se o receptor é fixo ou mobile
 
     },
     "paths": {
         "output_dir": "saida",                      // Pasta para salvar .pcd e .zip.
         "temp_frames_dir": "blensor_frames",        // Pasta temporária para frames .png.
+        "scenario_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/s006_Rosslyn_10FixedRx_28GHz/teste4rosslyn.blend", // Pasta do cenário
         "video_output_name": "blensor_animation.mp4", // Nome do vídeo final.
         "pedestrian_file_name": "sumoOutputInfoFileName_PedPed.txt",
         "vehicle_file_name": "sumoOutputInfoFileName.txt",
@@ -117,9 +123,14 @@ O arquivo `config.json` controla todos os aspectos da simulação.
         "tx_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/Tx.blend"       // Indicar onde está o Tx.blend
     },
     "video": {
+        "genarete_video": "true",   // Habilitação do video
         "framerate": 10,          // Taxa de quadros do vídeo final.
         "codec": "libx264",       // Codec de vídeo.
         "pixel_format": "yuv420p" // Formato de pixel (para compatibilidade).
+    },
+    "image": {
+        "save_image": "true",   // Habilitação de salvar as imagens
+        "save_img_pathFile": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/imagens/t003_Rosslyn_05MobileRx_60GHz"  // Indicar onde quer salvar as imagens
     },
     "visualization_settings": {
         "show_overlay": true,            // (true/false) Ativa ou desativa a legenda - Episódio e cena
@@ -164,6 +175,13 @@ O arquivo `config.json` controla todos os aspectos da simulação.
             "scenario_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/s004_Rosslyn_10MobileRx_60GHz_5000episodes_scenes1_Ts1s_InSite3.2/teste4rosslyn.blend",
             "pedestrian_file_name": "sumoOutputInfoFileName_PedPed.txt"
         },
+        "video": {
+            "genarete_video": "true"
+        },
+        "imagem": {
+            "save_image": "false",
+            "save_img_pathFile": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/imagens/t003_Rosslyn_05MobileRx_60GHz"
+        },
         "visualization": {
             "show_overlay": true,
             "show_rx_coordinates": true,
@@ -185,7 +203,7 @@ O arquivo `config.json` controla todos os aspectos da simulação.
         }
     }, // Fim do comando da configuração da primeira tarefa - 1° Dataset
 
-    // Pode adicionar mais {} depois do fim da configuração da primeira tarefa
+    // Pode adicionar mais {} depois do fim da configuração da primeira tarefa/Dataset
 ]
 ```
 
