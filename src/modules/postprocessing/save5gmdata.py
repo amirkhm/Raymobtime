@@ -1,5 +1,6 @@
 import numpy as np
 import os.path
+import logging
 from termcolor import colored
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -415,10 +416,19 @@ def create_database(dataBaseFileName='episodedata.db'):
     
     if os.path.isfile(dataBaseFileName):
         os.remove(dataBaseFileName)
-        print(colored(f'Removed old database: {dataBaseFileName}', color='red'))
+        logging.warning(
+            '\033[31m'
+            f'Removed old database:\n'
+            '\033[90m'
+            f'   {dataBaseFileName}'
+            '\033[0m')
     else:
-        print('Created a empty database: ', dataBaseFileName)
-    print('##############################')
+        logging.info(
+            '\033[92m'
+            f'Created a empty database:\n'
+            '\033[90m'
+            f'   {dataBaseFileName}'
+            '\033[0m')
     engine = create_engine('sqlite:///' + dataBaseFileName)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)

@@ -51,11 +51,13 @@ ray_tracing:
   receivers_per_episode: null
   transmitters_per_episode: null
   v2v:
-    enable: null
-    close_vehicles: null
-    n_of_vehicles: null
-    chose_vehicle: null
-    chosen_vehicle: null
+    enabled: null
+    closest_vehicles: 
+      enabled: null
+      n_of_vehicles: null
+    #chose_vehicle: not implemented at all
+    #  enabled: false
+    #  chosen: Truck
   wireless_insite:
     software_paths: null
     LICENSE_FILE: null

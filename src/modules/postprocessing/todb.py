@@ -7,6 +7,7 @@ import os
 import json
 import numpy as np
 import csv
+import logging
 from src.scripts.helpers import format_run_name
 from src.modules.rt.wi.modeling import objects
 from src.modules.rt.wi.parsing import P2mPaths
@@ -83,7 +84,12 @@ def gen_database(c):
 
             abs_paths_file_name = os.path.join(simulation_dir, project_output_dirBaseName, paths_file_name)
             if os.path.exists(abs_paths_file_name) == False:
-                print('\nWarning: could not find file ', abs_paths_file_name, ' Stopping...')
+                logging.warning(
+                    '\033[35m'
+                    f'Stopping, file not found:\n'
+                    '\033[30m'
+                    f'   {abs_paths_file_name}'
+                    '\033[0m')
 
             paths = P2mPaths(abs_paths_file_name)
 
@@ -139,7 +145,12 @@ def gen_database(c):
                 project_output_dirBaseName, 
                 paths_file_name)
             if os.path.exists(abs_paths_file_name) == False:
-                print('\nWarning: could not find file ', abs_paths_file_name, ' Stopping...')
+                logging.debug(
+                    '\033[36m'
+                    f'Stopping, file not found:\n'
+                    '\033[30m'
+                    f'   {abs_paths_file_name}'
+                    '\033[0m')
                 break
 
             abs_simulation_info_file_name = os.path.join(
@@ -152,7 +163,6 @@ def gen_database(c):
                 run_dir, 
                 sumo_file_name)
             sumo_info = sumoOutputFile.read_csv_sumo(abs_sumo_info_file_name)
-            print(sumo_info)
             
             # start of episode
             if simulation_info['scene_i'] == 0:
@@ -208,8 +218,8 @@ def gen_database(c):
             scene.study_area = ((0, 0, 0), (0, 0, 0))
             
             # This fixes car angle variation for Tx in case of V2V
-            if 'cars_with_Tx' in simulation_info.keys():
-                angleTx = sumo_info[simulation_info['veh_with_Tx'][0]]['angle']
+            if 'Tx_veh' in simulation_info.keys():
+                angleTx = sumo_info[simulation_info['Tx_veh'][0]]['angle']
                 
             rec_i = 0
             for structure_group in obj_file:
@@ -266,23 +276,28 @@ def gen_database(c):
                             object.receivers.append(receiver)
                             rec_i += 1
                         if c.V2V:
-                            if structure.name.rstrip() in simulation_info['cars_with_Tx']:
+                            if structure.name.rstrip() in simulation_info['Tx_veh']:
                                 transmitter = fgdb.InsiteTransmitter()
                                 transmitter.position = object.position
                                 object.transmitter.append(transmitter)
                     scene.objects.append(object)
 
             episode.scenes.append(scene)
-            print('Processed episode: {:4d} scene: {:2d}, total {:5d} '.format(ep_i, this_scene_i, sc_i + 1))
+            logging.debug(
+                '\033[36m'
+                f'Processed episode: {ep_i:4d} scene: {this_scene_i:2d}, total {sc_i + 1:5d} '
+                '\033[0m')
             sc_i += 1
             this_scene_i += 1
             run_i += 1 #increment loop counter
 
-        print()
         if episode == None:
             print('Warning: last episode == None')
         else:
             session.add(episode)
             session.commit()
         session.close()
-        print('Processed ', run_i, ' scenes (RT simulations)')
+        logging.info(
+            '\033[92m'
+            f'Processed {run_i} runs'
+            '\033[0m')

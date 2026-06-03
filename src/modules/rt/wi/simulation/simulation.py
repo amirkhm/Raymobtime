@@ -38,9 +38,12 @@ def wireless_insite_simulation(c):
         #calcprop_bin=c.calcprop_bin,
         wibatch_bin=c.wibatch_bin)
 
-    logging.info('Simulation started')
+    logging.info(
+        '\033[92m'
+        'Simulation started'
+        '\033[0m')
 
-    logging.debug('Simulation of ray-tracing will start. It is assumed all files have been placed')
+    logging.debug('Ray-tracing will start.')
 
     if c.isolated_sim:
         run_dir = os.path.join(c.isolated_results_dir)
@@ -73,7 +76,10 @@ def wireless_insite_simulation(c):
             else: 
                 raise Exception(f'{p2mpaths_file} already exists')
             
-    logging.info('Finished running ray-tracing')
+    logging.info(
+        '\033[92m'
+        'Finished running ray-tracing'
+        '\033[0m')
 
 def copytree_base_files(c):
     #copy files from initial (source folder) to results base folder
@@ -298,6 +304,7 @@ def mobility_sumo(c):
                             c.n_Tx_per_episode, 
                             replace=False)
                         traci_vehicle_IDList = [x for x in traci_vehicle_IDList if x not in Tx_veh]
+                        # chooses a minor number of Rx vehicles closest to Tx to remain receivers
                         if c.close_vehicles: # Only works for 1 Tx
                             x, y = traci.vehicle.getPosition(Tx_veh[0])
                             pos_Tx = np.array(traci.simulation.convertGeo(x, y))
@@ -310,12 +317,13 @@ def mobility_sumo(c):
                                 Rx_name[dist] = veh
                                 all_distances.append(dist)
                             all_distances = np.sort(all_distances)[:c.n_of_vehicles]
-
                             traci_vehicle_IDList = [Rx_name[i] for i in all_distances]
-                            veh_with_antenna = np.random.choice(
-                                traci_vehicle_IDList, 
-                                c.receivers_per_episode, 
-                                replace=False)
+                            c.receivers_per_episode = c.n_of_vehicles
+
+                        veh_with_antenna = np.random.choice(
+                            traci_vehicle_IDList, 
+                            c.receivers_per_episode, 
+                            replace=False)
 
                         antenna_Tx = txrxFile[c.insite_tx_name].location_list[0]
                     else:
