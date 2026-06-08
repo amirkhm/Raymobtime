@@ -6,11 +6,7 @@ base_config:
   resume: true                               # skip steps already concluded
   clean_previous:                             # remove result folders before running
     #- mobility 
-<<<<<<< HEAD
-    #- rt
-=======
     - 'rt'
->>>>>>> ee4d7cc713ed9d21ae9f9dbc158f7dd250c90748
     #- db
     #- csv
     #- hdf5
