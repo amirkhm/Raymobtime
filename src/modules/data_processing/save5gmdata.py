@@ -2,9 +2,9 @@ import numpy as np
 import os.path
 import logging
 from termcolor import colored
+import sqlalchemy as db
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-import sqlalchemy as db
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 from src.modules.rt.wi.modeling.errors import FormatError

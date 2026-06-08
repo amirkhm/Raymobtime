@@ -2,7 +2,7 @@
 import os
 import numpy as np
 from shapely import geometry
-from src.modules.postprocessing import save5gmdata as fgdb
+from src.modules.data_processing import save5gmdata as fgdb
 
 def gen_csv_file(c):
     '''

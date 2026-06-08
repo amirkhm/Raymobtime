@@ -2,8 +2,8 @@ import os
 import json
 import numpy as np
 from src.modules.blensor.blensor_src import export_cam_info
+from src.modules.data_processing import save5gmdata as fgdb
 from src.modules.postprocessing import (
-    save5gmdata as fgdb, 
     global2pixels, 
     gen_K)
     

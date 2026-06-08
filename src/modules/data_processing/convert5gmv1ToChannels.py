@@ -5,9 +5,8 @@ import h5py
 import os
 import gc
 from itertools import islice
-
-from src.modules.postprocessing import (
-    save5gmdata as fgdb,
+from src.modules.data_processing import save5gmdata as fgdb
+from src.modules.data_processing import (
     save5gmdata_IsolatedSim as fgdbIS
 )
 

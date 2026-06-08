@@ -4,7 +4,7 @@ base_config:
   resume: false                               # skip steps already concluded (not implemented, necessary logging of concluded steps)
   clean_previous: true                        # remove result folders before running
   logging_level: info                         # logging level: debug, info, warning, error, critical, NONE
-  yaml_output: false
+  yaml_output: true
 
 pipeline:
   mobility:
@@ -18,24 +18,29 @@ pipeline:
   ray_tracing:                                # parsing automático
     enabled: true 
     #tool: wireless_insite                    # wireless_insite | none
-    jump: false   
+    jump: true
+
+  data_processing:
+    enabled: true
+    which: selected                               # all | selected
+    outputs:                                        # ["db", "coord", "rays"]
+      - db                                          # database (sqlite/postgres/hdf5)
+      - coord                                       # coordenadas
+      - rays
   
   blensor:
     enabled: false 
     outputs: 
-       - lidar
-       - image
+      - lidar
+      - image
 
   post_processing:
     enabled: false  
-    which: "selected"                                        # all | selected
-    outputs:                                        # ["db", "coord", "rays", "beams", "image", "lidar"]
-       - db                                       # database (sqlite/postgres/hdf5)
-       - coord                                   # coordenadas
-       - rays
-       - beams
-      #  - image
-      #  - lidar
+    which: selected                               # all | selected
+    outputs:                                        # ["beams", "image", "lidar"]
+      - beams
+      # - image
+      # - lidar
   
   validation:
     run_checkup: true
@@ -65,7 +70,7 @@ ray_tracing:
       enabled: false
       n_of_vehicles: 5 # Overrites receivers_per_episode
   wireless_insite:
-    software_path: /home/fritz/RMT/Softwares/Wireless_Insite/remcom
+    software_path: "/home/gabriel/softwares/wireless-insite/remcom"
     LICENSE_FILE: REMCOMINC_LICENSE_FILE=2501@10.10.80.6
     base_files_names:
       study_area_name: study
@@ -75,9 +80,9 @@ ray_tracing:
       vehicles_name: random-line
   
 blensor_options:
-  path_to_scenario_blend: /home/fritz/RMT/raymobtime/data/rosslyn/base/blender/rosslyn1.blend
-  path_to_vehicles_blend: /home/fritz/RMT/raymobtime/data/rosslyn/base/blender/vehicles.blend
-  path_blensor_image: /home/fritz/RMT/raymobtime/utils/animation/Blensor-x64.AppImage
+  path_to_scenario_blend: /home/gabriel/Repositorios/rmt2/raymobtime/data/rosslyn/base/blender/rosslyn1.blend
+  path_to_vehicles_blend: /home/gabriel/Repositorios/rmt2/raymobtime/data/rosslyn/base/blender/vehicles.blend
+  path_blensor_image: /home/gabriel/softwares/blensor/Blensor-x64.AppImage
   image_options:
     BS_camera: true
     UE_camera: true

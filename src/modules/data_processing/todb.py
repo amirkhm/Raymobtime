@@ -11,10 +11,8 @@ import logging
 from src.scripts.helpers import format_run_name
 from src.modules.rt.wi.modeling import objects
 from src.modules.rt.wi.parsing import P2mPaths
-from src.modules.postprocessing import (
-    save5gmdata as fgdb,
-    save5gmdata_IsolatedSim as fgdbIS,
-    sumoOutputFile)
+from src.modules.data_processing import save5gmdata as fgdb, sumoOutputFile
+from src.modules.data_processing import save5gmdata_IsolatedSim as fgdbIS
 
 def set_angle_range(angle, range=[180, -180]):
     """

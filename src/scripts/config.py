@@ -9,14 +9,15 @@ import shutil
 # simulators
 from src.modules.blensor.blensor_src import blensor_simulation
 from src.modules.rt.wi.simulation.simulation import main as simulation_main
-from src.modules.postprocessing import (
+from src.modules.data_processing import (
     gen_database,
     gen_csv_file, 
-    gen_rays_dataset, 
+    gen_rays_dataset,
+    sanity_check_up)
+from src.modules.postprocessing import ( 
     gen_beam_output_file,
-   gen_lidar_matrix,
-   image_refinement,
-   sanity_check_up)
+    gen_lidar_matrix,
+    image_refinement)
 
 def copy_yaml_to_output(c):
     """
@@ -630,6 +631,7 @@ class parameters:
         self.mobility = self.pipeline.mobility
         self.ray_tracing = self.pipeline.ray_tracing
         self.jump = self.ray_tracing.jump
+        self.data_processing = self.pipeline.data_processing
         self.post_processing = self.pipeline.post_processing
         self.blensor = self.pipeline.blensor
         self.validation = self.pipeline.validation
@@ -657,32 +659,51 @@ def raymobtime():
     if c.mobility.enabled or c.ray_tracing.enabled:
         simulation_main(c)
 
-    postprocessing_modules = {
-       "db": gen_database,
-       "coord": gen_csv_file,
-       "rays": gen_rays_dataset,
-       "beams": gen_beam_output_file,
-       "lidar": gen_lidar_matrix,
-       "image": image_refinement,
-    }
+    if c.data_processing.enabled:
+        data_processing_functions = {
+            "db": gen_database,
+            "coord": gen_csv_file,
+            "rays": gen_rays_dataset,
+        }
+        logging.info(
+            '\033[92m'
+            'Starting data processing'
+            '\033[0m')
+        if c.data_processing.which == "all":
+            for func in [gen_database, gen_csv_file, gen_rays_dataset]:
+                func(c)
+        elif c.data_processing.which == "selected":
+            data_processing_pipeline = ["db", "coord", "rays"]
+            for element in data_processing_pipeline:
+                if element in c.data_processing.outputs:
+                    last = element
+            last_from_data_pipeline = data_processing_pipeline.index(last)
+            for output in data_processing_pipeline[:last_from_data_pipeline + 1]:
+                func = data_processing_functions[output]
+                func(c)
 
-    if c.post_processing.enabled: 
-       logging.info(
-           '\033[92m'
-           'Starting post-processing'
-           '\033[0m')
-       if c.post_processing.which == "all":
-           for func in [gen_database, gen_csv_file, gen_rays_dataset, gen_beam_output_file]:
-               func(c)
-
-       for output in c.post_processing.outputs:
-           if output in postprocessing_modules:
-               func = postprocessing_modules[output]
-               func(c)
-    
     # Simulation using blensor for image/lidar database
     if (c.blensor.enabled):
         blensor_simulation(c)
+
+    if c.post_processing.enabled: 
+        postprocessing_modules = {
+            "beams": gen_beam_output_file,
+            "lidar": gen_lidar_matrix,
+            "image": image_refinement,
+        }
+        logging.info(
+            '\033[92m'
+            'Starting post-processing'
+            '\033[0m')
+        if c.post_processing.which == "all":
+            for func in [gen_beam_output_file, gen_lidar_matrix, image_refinement]:
+                func(c)
+        elif c.post_processing.which == "selected":
+            for output in c.post_processing.outputs:
+                if output in postprocessing_modules:
+                    func = postprocessing_modules[output]
+                    func(c)
         
     # Saving the blensor simulation from pcd files to matrix type data
     CoordSystem = c.CoordSystem

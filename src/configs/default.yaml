@@ -20,6 +20,11 @@ pipeline:
     tool: null
     jump: null
 
+  data_processing:
+    enabled: null
+    which: null
+    outputs: null
+
   post_processing:
     enabled: null
     which: null
