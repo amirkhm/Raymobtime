@@ -160,7 +160,7 @@ def sanity_check_up(c):
             missing.
     """
     
-    main_folder = c.results_dir_postprocessed
+    main_folder = c.result_dir_processed_data
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
     df, df_val = csv_check(main_folder)

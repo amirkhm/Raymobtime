@@ -100,7 +100,7 @@ def gen_database(c):
     """
     last_simulation_info = None
     simulation_info = None
-    database_folder = c.results_dir_postprocessed
+    database_folder = c.result_dir_processed_data
     if not os.path.exists(database_folder):
         os.makedirs(database_folder)
     database_path = os.path.join(

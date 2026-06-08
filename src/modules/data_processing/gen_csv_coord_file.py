@@ -12,7 +12,7 @@ def gen_csv_file(c):
     Look at save5gmdata.py to understand the information stored in the database.
     '''
     
-    main_folder = c.results_dir_postprocessed
+    main_folder = c.result_dir_processed_data
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
     database_path = os.path.join(main_folder, f'{c.base_config.output_name}.db')

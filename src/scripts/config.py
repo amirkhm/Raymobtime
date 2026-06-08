@@ -373,6 +373,14 @@ class parameters:
             self.base_config.scenario,
             'out',
             self.base_config.output_name,
+            'postprocessed')
+        
+        self.result_dir_processed_data = os.path.join(
+            self.working_directory,
+            'data',
+            self.base_config.scenario,
+            'out',
+            self.base_config.output_name,
             'processed_data')
 
         self.resume = self.base_config.resume

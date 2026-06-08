@@ -5,7 +5,7 @@ from pathlib import Path
 def check_sql_exists(c):
     arquivo = Path(
         os.path.join(
-            c.results_dir_postprocessed,
+            c.result_dir_processed_data,
             c.base_config.output_name+'.db'))
     if arquivo.exists():
         logging.info(
@@ -23,7 +23,7 @@ def check_sql_exists(c):
 def check_csv_exists(c):
     arquivo = Path(
         os.path.join(
-            c.results_dir_postprocessed,
+            c.result_dir_processed_data,
             'CoordVehicleTxRx.csv'))
     if arquivo.exists():
         logging.info(

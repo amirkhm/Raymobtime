@@ -54,7 +54,7 @@ def export_blensor_runtime_config(c, run_id):
 
         "paths": {
             "rt_simulations_dir": str(c.results_dir),
-            "processed_data_dir": str(c.results_dir_postprocessed),
+            "processed_data_dir": str(c.result_dir_processed_data),
 
             "images_dir": os.path.join(
                 project_root,
@@ -62,6 +62,7 @@ def export_blensor_runtime_config(c, run_id):
                 c.base_config.scenario,
                 "out",
                 c.base_config.output_name,
+                'processed_data',
                 "images"
             ),
 
@@ -71,6 +72,7 @@ def export_blensor_runtime_config(c, run_id):
                 c.base_config.scenario,
                 "out",
                 c.base_config.output_name,
+                'processed_data',
                 "scans"
             ),
 

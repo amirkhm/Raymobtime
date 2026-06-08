@@ -1,6 +1,7 @@
 import bpy
 import math
-
+import os
+import json
 
 def get_camera_details(camera_name="Camera"):
     """
@@ -73,3 +74,24 @@ def get_camera_details(camera_name="Camera"):
     }
 
     return camera_details
+
+
+if __name__ == "__main__":
+
+    with open('config.json', 'r') as file:
+        cfg = json.load(file)
+
+    cur_dir = os.curdir
+    n_cameras = cfg['blensor_options']['img_simulation_options']['n_camera_BS']
+    data_info_path = os.path.join(cur_dir, 'sim_data', cfg['simulation_paths']['results_dir_path'], 'blend_info')
+    if not os.path.exists(data_info_path):
+        os.makedirs(data_info_path)
+
+    cameras_info = {}
+    for cam in range(n_cameras):
+        cam_name = f"Camera{cam}"
+        cam_info = get_camera_details(cam_name)
+        cameras_info[cam_name] = cam_info
+    
+    with open(os.path.join(data_info_path, 'cam_info.json'), 'w') as file:
+        json.dump(cameras_info, file, indent=4)

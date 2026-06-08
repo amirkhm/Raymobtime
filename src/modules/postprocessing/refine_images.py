@@ -189,7 +189,7 @@ def image_refinement(c):
             valid bounding box.
     """
 
-    main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
+    main_folder = c.result_dir_processed_data
     if not os.path.exists(main_folder):
         raise FileNotFoundError(f"ERROR: folder {main_folder} not found")
     
@@ -198,16 +198,23 @@ def image_refinement(c):
         raise FileNotFoundError(f"ERROR: csv file {csv_path} not found")
     df = csv_to_df(csv_path, c.n_run)
     
-    refined_img_path = os.path.join(main_folder, 'refined_images')
+    refined_img_path = os.path.join(
+        c.results_dir_postprocessed, 
+        'refined_images')
     if not os.path.exists(refined_img_path):
         os.makedirs(refined_img_path)
 
-    database_path = os.path.join(main_folder, f'{c.base_config.output_name}.db')
+    database_path = os.path.join(
+        main_folder, 
+        f'{c.base_config.output_name}.db')
     session = fgdb.open_database(database_path)
     objcs = session.query(fgdb.InsiteObject)
 
     # Check for camera info
-    cam_info_path = os.path.join(main_folder, 'blend_info', 'cam_info.json')
+    cam_info_path = os.path.join(
+        main_folder, 
+        'blend_info', 
+        'cam_info.json')
     if not os.path.exists(cam_info_path):
         export_cam_info(c) # Export and generate the json file
     with open(cam_info_path, 'r') as file:

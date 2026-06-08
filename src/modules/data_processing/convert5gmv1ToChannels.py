@@ -35,7 +35,7 @@ def gen_rays_dataset(c):
         (c.analysis_area[2], c.analysis_area[3]),
         (c.analysis_area[0], c.analysis_area[3])])
     
-    database_folder = c.results_dir_postprocessed
+    database_folder = c.result_dir_processed_data
     if not os.path.exists(database_folder):
         os.makedirs(database_folder)
     database_path = os.path.join(database_folder, f'{c.base_config.output_name}.db')
