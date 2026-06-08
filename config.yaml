@@ -5,8 +5,8 @@ base_config:
   logging_level: info                         # logging level: debug, info, warning, error, critical, NONE
   resume: true                               # skip steps already concluded
   clean_previous:                             # remove result folders before running
-    #- mobility 
-    - 'rt'
+    - mobility 
+    - rt
     #- db
     #- csv
     #- hdf5

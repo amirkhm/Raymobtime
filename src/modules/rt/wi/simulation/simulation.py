@@ -82,7 +82,7 @@ def wireless_insite_simulation(c):
 
     logging.info(
         '\033[92m'
-        'Simulation started'
+        'Ray traing simulation started'
         '\033[0m')
 
     logging.debug('Ray-tracing will start.')
@@ -592,15 +592,6 @@ def main(c):
                 # check okay
                 mobility_okay = check_sumo_simulation_status(c)
 
-    # if rt enabled
-    # if clean previous
-    #   clean
-    #   execute
-    # check
-    # else
-    # if okay and resume
-    #   skip
-
     if c.ray_tracing.enabled:
         if 'rt' in c.clean_previous:
             # remove study folder of every run
@@ -621,4 +612,3 @@ def main(c):
             if not (rt_okay and c.resume):
                 wireless_insite_simulation(c)
                 rt_okay = check_wi_run_status(c)
-        return
