@@ -608,7 +608,6 @@ def main(c):
             rt_okay = check_wi_run_status(c)
         else:
             rt_okay = check_wi_run_status(c)
-            print("i heve been here")
             if not (rt_okay and c.resume):
                 wireless_insite_simulation(c)
                 rt_okay = check_wi_run_status(c)

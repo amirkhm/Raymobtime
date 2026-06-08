@@ -4,9 +4,9 @@ base_config:
   yaml_output: true
   logging_level: info                         # logging level: debug, info, warning, error, critical, NONE
   resume: true                               # skip steps already concluded
-  clean_previous:                             # remove result folders before running
-    - mobility 
-    - rt
+  clean_previous: []                            # remove result folders before running
+    #- mobility 
+    #- rt
     #- db
     #- csv
     #- hdf5
@@ -42,12 +42,12 @@ pipeline:
       - image
 
   post_processing:
-    enabled: false  
+    enabled: true
     which: selected                               # all | selected
     outputs:                                        # ["beams", "image", "lidar"]
-      - beams
-      # - image
-      # - lidar
+      #- beams
+       - image
+       - lidar
   
   validation:
     run_checkup: false
