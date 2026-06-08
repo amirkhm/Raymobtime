@@ -6,7 +6,7 @@ base_config:
   resume: false                               # skip steps already concluded
   clean_previous:                             # remove result folders before running
     #- mobility 
-    - rt
+    #- rt
     #- db
     #- csv
     #- hdf5
@@ -23,7 +23,7 @@ pipeline:
       min_lim: [660, 334]                     # [x, y] study area limits for placement of Tx and Rx
   
   ray_tracing:                                # parsing automático
-    enabled: true
+    enabled: false
     #tool: wireless_insite                    # wireless_insite | none
     jump: true
 
@@ -36,8 +36,7 @@ pipeline:
       - rays
   
   blensor:
-    enabled: false 
-    enabled: false 
+    enabled: false  
     outputs: 
       - lidar
       - image
