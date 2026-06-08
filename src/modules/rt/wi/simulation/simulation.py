@@ -569,16 +569,14 @@ def main(c):
     if c.mobility.enabled and c.mobility.tool == 'sumo':
         if 'mobility' in c.clean_previous:
             # clean folder
-            shutil.rmtree(c.results_dir)
-            logging.info(
-                '\033[92m'  # green
-                f'Cleanning output folder.\n'
-                '\033[90m'  # black
-                f'   Removed folder: {c.results_dir}'
-                '\033[0m')  # default collor
-            shutil.copytree(
-                c.base_insite_project_path, 
-                c.results_base_model_dir, )
+            if os.path.exists(c.results_dir):
+                shutil.rmtree(c.results_dir)
+                logging.info(
+                    '\033[92m'  # green
+                    f'Cleanning output folder.\n'
+                    '\033[90m'  # black
+                    f'   Removed folder: {c.results_dir}'
+                    '\033[0m')  # default collor
             # execute
             copytree_base_files(c)
             mobility_sumo(c)
@@ -612,11 +610,14 @@ def main(c):
                     c.results_dir, 
                     format_run_name(run), 
                     c.insite_study_area_name)
-                shutil.rmtree(folder)
+                if os.path.exists(folder):
+                    shutil.rmtree(folder)
             # execute rt
             wireless_insite_simulation(c)
+            rt_okay = check_wi_run_status(c)
         else:
             rt_okay = check_wi_run_status(c)
+            print("i heve been here")
             if not (rt_okay and c.resume):
                 wireless_insite_simulation(c)
                 rt_okay = check_wi_run_status(c)
