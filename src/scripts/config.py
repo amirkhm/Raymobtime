@@ -657,10 +657,6 @@ def raymobtime():
     if c.mobility.enabled or c.ray_tracing.enabled:
         simulation_main(c)
 
-    # Simulation using blensor for image/lidar database
-    if (c.blensor.enabled):
-        blensor_simulation(c)
-
     postprocessing_modules = {
        "db": gen_database,
        "coord": gen_csv_file,
@@ -683,6 +679,10 @@ def raymobtime():
            if output in postprocessing_modules:
                func = postprocessing_modules[output]
                func(c)
+    
+    # Simulation using blensor for image/lidar database
+    if (c.blensor.enabled):
+        blensor_simulation(c)
         
     # Saving the blensor simulation from pcd files to matrix type data
     CoordSystem = c.CoordSystem

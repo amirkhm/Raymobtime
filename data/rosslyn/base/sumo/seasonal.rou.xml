@@ -9,7 +9,16 @@
         <vType id="Bus" accel="2.0" decel="4" length="9" width="2.4" height="3.2" maxSpeed="17.88" speedDev="0.1" sigma="0.2" minGap="0.3" probability="0.2"/>
   </vTypeDistribution>
 
-  
+    <vType id="Pedestrian" vClass="pedestrian" speedFactor="1.0" speedDev="0.1" length="0.5" width="0.5" height="1.7" color="1,0,0"/>
+    <vType id="Drone" accel="2.0" decel="2.0" length="0.5" width="0.5" height="0.2" maxSpeed="10.0" speedDev="0.1" sigma="0.1" minGap="0.1" color="0,1,0"/>
+
+      <personFlow id="pedFlow0" begin="0" end="50" probability="0.01" type="Pedestrian">
+          <walk edges="E0"/>
+      </personFlow>
+    
+      <flow id="droneFlow0" begin="0" end="50" probability="0.42" type="Drone"> 
+          <route edges="H1 H2"/>
+      </flow>
       <flow id="flow0" color="0,0,1" begin="10" end= "15" probability="0.41"  type="typeVehicleDistribution">
           <route edges="H1 H2"/>
       </flow>    

@@ -135,19 +135,19 @@ def blensor_simulation(c):
     blensor_scenario_path = c.blensor_scenario_path
     blensor_runfile = c.blensor_runfile_path
 
+    main_simulator_python_file = []
+
     if "lidar" in c.blensor.outputs:
-        main_simulator_python_file = ["src/modules/blensor/lidar_sim.py"]
+        main_simulator_python_file.append("src/modules/blensor/lidar_sim.py")
 
-    elif "image" in c.blensor.outputs:
-        main_simulator_python_file = []
-
+    if "image" in c.blensor.outputs:
         if c.sim_BS_img:
             main_simulator_python_file.append("src/modules/blensor/img_bs_sim.py")
 
         if c.sim_UE_img:
             main_simulator_python_file.append("src/modules/blensor/img_sim.py")
 
-    else:
+    if not main_simulator_python_file:
         raise ValueError(f"Invalid Blensor output type: {c.blensor.outputs}")
 
     RED = "\033[91m"
