@@ -183,7 +183,7 @@ def animateVehiclesBlender(vPosition, vehicles_blend_path):
     # Pre-process the scene by hiding all existing vehicle objects that are not present in the current simulation step.    objects_in_scene = []
     for x in range(0, len(bpy.context.scene.objects)):
         obj_name = bpy.context.scene.objects[x].name
-        if obj_name.startswith('flow') or obj_name.startswith('dflow') or obj_name.startswith('ped'): # Add to list
+        if obj_name.startswith('flow') or obj_name.startswith('droneFlow') or obj_name.startswith('ped'): # Add to list
 
             if not obj_name in vPosition:
                 bpy.data.objects[obj_name].hide_render = True

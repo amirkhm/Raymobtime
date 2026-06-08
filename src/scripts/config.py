@@ -341,7 +341,8 @@ class parameters:
         self.isolated_sim = not self.rmt.enabled
         
         self.use_pedestrians = self.ray_tracing.use_pedestrians
-        self.drone_simulation = self.ray_tracing.use_drone
+        self.drone_simulation = self.ray_tracing.use_drone.enabled
+        self.drone_altitude = self.ray_tracing.use_drone.altitude
         self.V2V = self.ray_tracing.v2v.enabled
         
         self.base_insite_project_path = os.path.join(

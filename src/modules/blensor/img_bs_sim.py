@@ -350,7 +350,7 @@ def animateVehiclesBlender(vPosition, vehicles_blend_path):
     objects_in_scene = []
     for x in range(0, len(bpy.context.scene.objects)):
         obj_name = bpy.context.scene.objects[x].name
-        if obj_name.startswith('flow') or obj_name.startswith('dflow') or obj_name.startswith('ped'): # Add to list
+        if obj_name.startswith('flow') or obj_name.startswith('droneFlow') or obj_name.startswith('ped'): # Add to list
 
             if not obj_name in vPosition:
                 bpy.data.objects[obj_name].hide_render = True

@@ -290,7 +290,7 @@ def animateVehiclesBlender(vPosition,frame_num,frame_step,step):
     for x in range(0, len(bpy.context.scene.objects)):
         
         obj_name = bpy.context.scene.objects[x].name
-        if obj_name.startswith('flow') or obj_name.startswith('dflow') or obj_name.startswith('ped'): # Add to list
+        if obj_name.startswith('flow') or obj_name.startswith('droneFlow') or obj_name.startswith('ped'): # Add to list
             #objects_in_scene.append(obj_name)
             #if not obj_name in vPosition:
             i = i + 1

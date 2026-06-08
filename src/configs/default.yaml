@@ -53,7 +53,9 @@ sumo:
 
 ray_tracing:
   use_pedestrians: null
-  use_drone: null
+  use_drone:
+    enabled: null
+    altitude: null
   receivers_per_episode: null
   transmitters_per_episode: null
   v2v:

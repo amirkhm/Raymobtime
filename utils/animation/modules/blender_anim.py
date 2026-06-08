@@ -168,7 +168,7 @@ def animate_vehicles(vPosition, frame_num, frame_step, step, DEBUG_ANIM=False):
 
     for obj in scene.objects:
         # Foca apenas em objetos gerenciáveis (evita câmeras, luzes, etc.)
-        if obj.name.startswith(('flow', 'dflow', 'ped', '_ped')):
+        if obj.name.startswith(('flow', 'droneFlow', 'ped', '_ped')):
             if obj.name not in active_obj_names and not obj.name.startswith('_'):
                 obj.hide = True
                 obj.hide_render = True
