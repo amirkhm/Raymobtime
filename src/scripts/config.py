@@ -9,6 +9,7 @@ import shutil
 # simulators
 from src.modules.blensor.blensor_src import blensor_simulation
 from src.modules.rt.wi.simulation.simulation import main as simulation_main
+from src.modules.rt.wi import check_wi_run_status
 from src.modules.data_processing import (
     gen_database,
     gen_csv_file, 
@@ -717,6 +718,9 @@ def raymobtime():
 
     if c.validation.run_checkup:
        sanity_check_up(c)
+
+    check_wi_run_status(c)
+    
     
 if __name__ == "__main__":    
     raymobtime()
