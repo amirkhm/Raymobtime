@@ -7,6 +7,7 @@ import logging
 import shutil
 
 # simulators
+from src.modules.mobility.sumo.check_sumo import check_sumo_simulation_status
 from src.modules.blensor.blensor_src import blensor_simulation
 from src.modules.rt.wi.simulation.simulation import main as simulation_main
 from src.modules.rt.wi import check_wi_run_status
@@ -14,6 +15,8 @@ from src.modules.data_processing import (
     gen_database,
     gen_csv_file, 
     gen_rays_dataset,
+    check_sql_exists,
+    check_csv_exists,
     sanity_check_up)
 from src.modules.postprocessing import ( 
     gen_beam_output_file,
@@ -720,8 +723,10 @@ def raymobtime():
     if c.validation.run_checkup:
        sanity_check_up(c)
 
-    check_wi_run_status(c)
-    
+    #check_wi_run_status(c)
+    #check_sumo_simulation_status(c)
+    #check_sql_exists(c)
+    #check_csv_exists(c)
     
 if __name__ == "__main__":    
     raymobtime()

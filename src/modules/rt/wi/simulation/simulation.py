@@ -5,6 +5,8 @@ import logging
 import json
 import traci
 from src.scripts.helpers import format_run_name
+from src.modules.mobility.sumo.check_sumo import check_sumo_simulation_status
+from src.modules.rt.wi import check_wi_run_status
 from src.modules.rt.wi.modeling import  X3dXmlFile3_3
 from src.modules.rt.wi.simulation.tools import *
 from src.modules.rt.wi.modeling import (
@@ -92,7 +94,7 @@ def wireless_insite_simulation(c):
         project_output_dir = os.path.join(run_dir, c.insite_study_area_name) #output InSite folder
 
         p2mpaths_file = os.path.join(project_output_dir, c.insite_setup_name + '.paths.t001_01.r002.p2m')
-        if not os.path.exists(p2mpaths_file) or c.base_config.clean_previous:
+        if not os.path.exists(p2mpaths_file) or ('rt' in c.base_config.clean_previous):
             xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
             xml_full_path=xml_full_path.replace(' ', '\ ')
             insite_project.run_x3d(xml_full_path, project_output_dir)
@@ -107,7 +109,7 @@ def wireless_insite_simulation(c):
             project_output_dir = os.path.join(run_dir, c.insite_study_area_name) #output InSite folder
 
             p2mpaths_file = os.path.join(project_output_dir, c.insite_setup_name + '.paths.t001_01.r002.p2m')
-            if not os.path.exists(p2mpaths_file) or c.base_config.clean_previous:
+            if not os.path.exists(p2mpaths_file) or ('rt' in c.base_config.clean_previous):
                 xml_full_path = os.path.join(run_dir, c.dst_x3d_xml_file_name) #input InSite folder
                 xml_full_path=xml_full_path.replace(' ', '\ ')
                 insite_project.run_x3d(xml_full_path, project_output_dir)
@@ -151,27 +153,13 @@ def copytree_base_files(c):
     try:
         shutil.copytree(c.base_insite_project_path, c.results_base_model_dir, )
     except FileExistsError:
-        if c.base_config.clean_previous:
-            shutil.rmtree(c.results_dir)
-            logging.info(
-                '\033[92m'  # green
-                f'Cleanning output folder.\n'
-                '\033[90m'  # black
-                f'   Removed folder: {c.results_dir}'
-                '\033[0m')  # default collor
-            shutil.copytree(
-                c.base_insite_project_path, 
-                c.results_base_model_dir, )
-        else:
-            if c.mobility.enabled:
-                logging.error(
-                    '\033[91m'
-                    f'Folder/file already exists:\n'
-                    '\033[90m'
-                    f'{c.results_base_model_dir}. \n'
-                    '\033[0m')
-                raise FileExistsError
-            return
+        logging.error(
+            '\033[91m'
+            f'Folder/file already exists:\n'
+            '\033[90m'
+            f'{c.results_base_model_dir}. \n'
+            '\033[0m')
+        raise FileExistsError
     logging.info(
         '\033[92m'
         f'Copying scnario to output folder. \n'
@@ -577,26 +565,59 @@ def main(c):
     Returns:
         None.
     """
-    # copy base files to output to modify them eventualy
-    copytree_base_files(c)
-
-    # if mobility enabled and check != ok execute
-        # this make the positions
-        # output them at file
-
+        
     if c.mobility.enabled and c.mobility.tool == 'sumo':
-        mobility_sumo(c)
-    
-    # if ray tracing enabled and check != ok execute
-        # this copy the base files to the output folder
-        # this take positions for parsing
-        # this execute ray tracing
+        if 'mobility' in c.clean_previous:
+            # clean folder
+            shutil.rmtree(c.results_dir)
+            logging.info(
+                '\033[92m'  # green
+                f'Cleanning output folder.\n'
+                '\033[90m'  # black
+                f'   Removed folder: {c.results_dir}'
+                '\033[0m')  # default collor
+            shutil.copytree(
+                c.base_insite_project_path, 
+                c.results_base_model_dir, )
+            # execute
+            copytree_base_files(c)
+            mobility_sumo(c)
+            # check okay
+            mobility_okay = check_sumo_simulation_status(c)
+        else:
+            # Check
+            mobility_okay = check_sumo_simulation_status(c)
+            if not (mobility_okay and c.resume):
+                # execute
+                copytree_base_files(c)
+                mobility_sumo(c)
+                # check okay
+                mobility_okay = check_sumo_simulation_status(c)
+
+    # if rt enabled
+    # if clean previous
+    #   clean
+    #   execute
+    # check
+    # else
+    # if okay and resume
+    #   skip
 
     if c.ray_tracing.enabled:
-        wireless_insite_simulation(c)
+        if 'rt' in c.clean_previous:
+            # remove study folder of every run
+            runs = c.rmt.sampling_parameters[1]
+            for run in range(runs):
+                folder = os.path.join(
+                    c.results_dir, 
+                    format_run_name(run), 
+                    c.insite_study_area_name)
+                shutil.rmtree(folder)
+            # execute rt
+            wireless_insite_simulation(c)
+        else:
+            rt_okay = check_wi_run_status(c)
+            if not (rt_okay and c.resume):
+                wireless_insite_simulation(c)
+                rt_okay = check_wi_run_status(c)
         return
-    
-    
-    
-    
-

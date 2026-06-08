@@ -2,9 +2,9 @@ base_config:
   scenario: null
   output_name: null
   resume: null
-  clean_previous: null
   logging_level: none                       # logging level: debug, info, warning, error, critical
   yaml_output: null
+  clean_previous: []                             # remove result folders before running
 
 pipeline:
   mobility:

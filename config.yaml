@@ -1,10 +1,17 @@
 base_config:     
   output_name: sim_a                          # Simulation identifier name
-  scenario: rosslyn                            # scenario name
-  resume: false                               # skip steps already concluded (not implemented, necessary logging of concluded steps)
-  clean_previous: true                        # remove result folders before running
-  logging_level: info                         # logging level: debug, info, warning, error, critical, NONE
+  scenario: rosslyn                           # scenario name
   yaml_output: true
+  logging_level: info                         # logging level: debug, info, warning, error, critical, NONE
+  resume: false                               # skip steps already concluded
+  clean_previous:                             # remove result folders before running
+    #- mobility 
+    - rt
+    #- db
+    #- csv
+    #- hdf5
+    #- lidar
+    #- images
 
 pipeline:
   mobility:
@@ -16,7 +23,7 @@ pipeline:
       min_lim: [660, 334]                     # [x, y] study area limits for placement of Tx and Rx
   
   ray_tracing:                                # parsing automático
-    enabled: false 
+    enabled: true
     #tool: wireless_insite                    # wireless_insite | none
     jump: true
 
@@ -29,6 +36,7 @@ pipeline:
       - rays
   
   blensor:
+    enabled: false 
     enabled: false 
     outputs: 
       - lidar
