@@ -28,7 +28,7 @@ pipeline:
     jump: true
 
   data_processing:
-    enabled: false
+    enabled: true
     which: selected                               # all | selected
     outputs:                                        # ["db", "coord", "rays"]
       - db                                          # database (sqlite/postgres/hdf5)
@@ -36,7 +36,7 @@ pipeline:
       - rays
   
   blensor:
-    enabled: false  
+    enabled: true  
     outputs: 
       - lidar
       - image
@@ -45,12 +45,12 @@ pipeline:
     enabled: true
     which: selected                               # all | selected
     outputs:                                        # ["beams", "image", "lidar"]
-      #- beams
+       - beams
        - image
        - lidar
   
   validation:
-    run_checkup: false
+    run_checkup: true
 
 rmt:
   enabled: true                               # false for isolated simulation
@@ -79,7 +79,7 @@ ray_tracing:
       enabled: false
       n_of_vehicles: 5 # Overrites receivers_per_episode
   wireless_insite:
-    software_path: /home/gabriel/softwares/wireless-insite/remcom
+    software_path: /home/fritz/RMT/Softwares/Wireless_Insite/remcom
     LICENSE_FILE: REMCOMINC_LICENSE_FILE=2501@10.10.80.6
     base_files_names:
       study_area_name: study
