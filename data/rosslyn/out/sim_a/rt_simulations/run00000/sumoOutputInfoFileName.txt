@@ -1,0 +1,3 @@
+episode_i,scene_i,object_class,receiverIndex,transmitterIndex,object_id,object_i,typeID,xinsite,yinsite,x3,y3,z3,lane_id,angle,speed,length,width,height,distance,waitTime,currentTime(ms)=10.5,Ts(s)=0.5
+0,0,vehicle,0,-1,flow10.0,0,Car,839.2728131032134,365.4604678096968,180.45281310321334,6.700467809696832,0.0,H10_0,307.8367518525778,0.0,4.645,1.775,1.59,0.0,0.0
+0,0,vehicle,-1,-1,flow2.0,1,Car,663.5250000000001,671.0624278416346,4.705000000000001,312.3024278416347,0.0,H1_0,90.45367357471864,0.0,4.645,1.775,1.59,0.0,0.0

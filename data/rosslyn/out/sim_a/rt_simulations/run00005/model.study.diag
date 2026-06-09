@@ -1,0 +1,249 @@
+2026.06.08 17:04:28.507 
+
+wibatch version 3.3.0.4 - r60246
+  Built with gcc 4.4.7
+  Built with Qt 4.8.4
+  Using Qt 4.8.4
+
+2026.06.08 17:04:28.508 Mon Jun 8 17:04:28 2026
+
+2026.06.08 17:04:28.522 Detecting GPU Information..
+2026.06.08 17:04:28.522 OptiX Runtime version = 40100
+2026.06.08 17:04:28.522 CUDA Runtime version = 8.0
+2026.06.08 17:04:28.523 CUDA Driver version  = 13.2
+2026.06.08 17:04:28.523 GPU device #0: [NVIDIA GeForce RTX 3060], 8.6 capability, 28 total cores, 1024 threads per block
+2026.06.08 17:04:28.764 Initializing Wireless InSite X3D model
+2026.06.08 17:04:28.764 Monte Carlo parameters not detected.
+2026.06.08 17:04:28.764 ============ GEOMETRY ============
+2026.06.08 17:04:28.764 Building geometry
+2026.06.08 17:04:28.915  ============ TRANSMITTER/RECEIVER SETS ============
+2026.06.08 17:04:28.915 Generating transmitter and receiver sets
+2026.06.08 17:04:28.923 Antenna: Isotropic
+Cable loss (dB): 0
+Polarization: Vertical
+Power threshold (dBm): -250
+Temperature (K): 293
+VSWR: 1
+
+2026.06.08 17:04:28.923 Waveform: Sinusoid
+Amplitude: 1
+Carrier frequency (MHz): 60000
+Phase (degrees): 0
+
+2026.06.08 17:04:28.923 Bandwidth (MHz): 1
+Dispersive: no
+
+2026.06.08 17:04:28.923 Set number: 1
+Type: PointSet
+Number of points: 1
+APG Accelerated: no
+Fit to terrain: yes
+
+2026.06.08 17:04:28.923 Antenna: Isotropic
+Cable loss (dB): 0
+Polarization: Vertical
+Power threshold (dBm): -250
+Temperature (K): 293
+VSWR: 1
+
+2026.06.08 17:04:28.923 Waveform: Sinusoid
+Amplitude: 1
+Carrier frequency (MHz): 60000
+Phase (degrees): 0
+
+2026.06.08 17:04:28.923 Bandwidth (MHz): 1
+Dispersive: no
+
+2026.06.08 17:04:28.923 Set number: 2
+Type: PointSet
+Number of points: 1
+APG Accelerated: no
+Fit to terrain: yes
+
+2026.06.08 17:04:28.923 Receiver collection radius (m): auto
+
+2026.06.08 17:04:28.923 Auto Collection Radius = 4.35553
+2026.06.08 17:04:28.924 Scene information: 
+    Number of facets: 18634
+    Number of spheres: 1
+
+BSPTree information: 
+    Number of superfacets: 1298
+    Number of subfacets: 18634
+    Maximum depth: 29
+    Bounding box: 
+      Minimum: (269.176, 187.673, -0.206079)
+      Maximum: (962.962, 897.147, 100.95)
+
+CompleteEdgeSet information: 
+    Number of superedges: 1009
+    Number of subedges: 1610
+Maximum Scene Distance: 1996.43
+
+2026.06.08 17:04:28.924 ============ MATERIALS ============
+2026.06.08 17:04:28.924 Diffuse Scattering: Enabled, Refl:2, Diff:1, Trans:0, FinalOnly:true
+2026.06.08 17:04:28.924 Material number: 11
+Type: LayeredDielectric
+Thickness (m): 0
+
+2026.06.08 17:04:28.924 Layer 0: 
+2026.06.08 17:04:28.924     Relative permittivity: 5.31
+    Conductivity (S/m): 0.8967
+    Thickness (m): 0.3
+    Roughness (m): 0
+
+2026.06.08 17:04:28.924 Material number: 0
+Type: LayeredDielectric
+Thickness (m): 0
+
+2026.06.08 17:04:28.924 Layer 0: 
+2026.06.08 17:04:28.924     Relative permittivity: 7.9753
+    Conductivity (S/m): 36.4
+    Thickness (m): 0
+    Roughness (m): 0
+
+2026.06.08 17:04:28.924 Material number: 1
+Type: LayeredDielectric
+Thickness (m): 0
+
+2026.06.08 17:04:28.924 Layer 0: 
+2026.06.08 17:04:28.924     Relative permittivity: 6.27
+    Conductivity (S/m): 0.5674
+    Thickness (m): 0.003
+    Roughness (m): 0
+
+2026.06.08 17:04:28.924 Material number: 2
+Type: PEC
+Thickness (m): 0
+
+2026.06.08 17:04:28.924 Roughness (m): 0
+
+2026.06.08 17:04:28.924 Material number: 3
+Type: PEC
+Thickness (m): 0
+
+2026.06.08 17:04:28.924 Roughness (m): 0
+
+2026.06.08 17:04:28.924 Material number: 4
+Type: PEC
+Thickness (m): 0
+
+2026.06.08 17:04:28.924 Roughness (m): 0
+
+2026.06.08 17:04:28.924 Material number: 5
+Type: PEC
+Thickness (m): 0
+
+2026.06.08 17:04:28.924 Roughness (m): 0
+
+2026.06.08 17:04:28.924 Material number: 6
+Type: LayeredDielectric
+Thickness (m): 0
+
+2026.06.08 17:04:28.924 Layer 0: 
+2026.06.08 17:04:28.924     Relative permittivity: 5.31
+    Conductivity (S/m): 0.8967
+    Thickness (m): 0.3
+    Roughness (m): 0
+
+2026.06.08 17:04:28.924 ============ ATMOSPHERE ============
+2026.06.08 17:04:28.924 Pressure = 1013.25
+2026.06.08 17:04:28.925 Temperature = 22.2
+2026.06.08 17:04:28.925 Humidity = 50
+2026.06.08 17:04:29.136 ============ MODEL ============
+2026.06.08 17:04:29.145 Starting X3D ray tracing for Tx set 1, point 1 (point 1 of 1 total)
+2026.06.08 17:04:29.145   Initializing 12 threads
+2026.06.08 17:04:29.145   Diffraction cone ray angle=0.25
+2026.06.08 17:04:29.145   Using 1 GPU ray tracer
+2026.06.08 17:04:29.286   Ray tracing ranges: 
+2026.06.08 17:04:29.286     Minimum phi: 0
+2026.06.08 17:04:29.286     Maximum phi: 360
+2026.06.08 17:04:29.286     Minimum theta: 0
+2026.06.08 17:04:29.286     Maximum theta: 180
+2026.06.08 17:04:29.286   Model parameters: 
+2026.06.08 17:04:29.286     Reflections:         6
+2026.06.08 17:04:29.286     Transmissions:       0
+2026.06.08 17:04:29.286     Diffractions:        1
+2026.06.08 17:04:29.286     Ray spacing (degrees): 0.25
+2026.06.08 17:04:29.288   Advanced model parameters:
+2026.06.08 17:04:29.289     Maximum reflections before first diffraction: 3
+2026.06.08 17:04:29.289     Maximum reflections between two diffractions: 0
+2026.06.08 17:04:29.289     Maximum reflections after last diffraction: 3
+2026.06.08 17:04:29.289   Detected 1 GPU devices.
+2026.06.08 17:04:29.296   Licensed 1 GPU devices.
+2026.06.08 17:04:29.297   Running on 1 GPU devices.
+2026.06.08 17:04:29.297     Device ID's: [ 0 ]
+2026.06.08 17:04:29.490   Optimized concurrent GPU rays: 65536
+2026.06.08 17:04:29.505 Initial Ray Generation: Phi/theta sweep mode
+
+2026.06.08 17:04:31.564   Beginning next round of queued diffractions
+
+2026.06.08 17:04:55.635   Total Number of Rays shot: 47781576
+2026.06.08 17:04:55.635   Total Number of active rays shot: 45359681
+2026.06.08 17:04:55.635   Total Initial Rays shot: 663228
+2026.06.08 17:04:55.635   Total cones: 0... cone rays shot: 0
+2026.06.08 17:04:55.635   837 unique paths found.
+2026.06.08 17:04:55.635   68087 diffuse scattering facets hit.
+2026.06.08 17:04:55.734 Ray tracing additional diffuse scatter paths point 1 of 1
+2026.06.08 17:04:55.750   Advanced model parameters:
+2026.06.08 17:04:55.750     Maximum reflections before first diffraction: 0
+2026.06.08 17:04:55.750     Maximum reflections between two diffractions: 0
+2026.06.08 17:04:55.750     Maximum reflections after last diffraction: 0
+2026.06.08 17:04:55.750   Detected 1 GPU devices.
+2026.06.08 17:04:55.757   Licensed 1 GPU devices.
+2026.06.08 17:04:55.757   Running on 1 GPU devices.
+2026.06.08 17:04:55.757     Device ID's: [ 0 ]
+2026.06.08 17:04:55.955   Optimized concurrent GPU rays: 65536
+2026.06.08 17:04:55.956 Initial Ray Generation: Phi/theta sweep mode
+2026.06.08 17:04:56.431   GPU ray tracing (65544/65544 active): 25% complete
+2026.06.08 17:04:56.457   GPU ray tracing (65544/65544 active): 40% complete
+2026.06.08 17:04:56.499   GPU ray tracing (65544/65544 active): 42% complete
+2026.06.08 17:04:56.519   GPU ray tracing (65544/65544 active): 50% complete
+2026.06.08 17:04:56.560   GPU ray tracing (65544/65544 active): 50% complete
+2026.06.08 17:04:56.581   GPU ray tracing (65544/65544 active): 54% complete
+2026.06.08 17:04:56.622   GPU ray tracing (65544/65544 active): 53% complete
+2026.06.08 17:04:56.647   GPU ray tracing (65544/65544 active): 56% complete
+2026.06.08 17:04:56.689   GPU ray tracing (65544/65544 active): 56% complete
+2026.06.08 17:04:56.715   GPU ray tracing (65544/65544 active): 57% complete
+2026.06.08 17:04:56.753   GPU ray tracing (65544/65544 active): 56% complete
+2026.06.08 17:04:56.830   GPU ray tracing (65544/65544 active): 60% complete
+2026.06.08 17:04:56.936   GPU ray tracing (7788/65544 active): 66% complete
+2026.06.08 17:04:56.945   Total Number of Rays shot: 1441968
+2026.06.08 17:04:56.945   Total Number of active rays shot: 1326456
+2026.06.08 17:04:56.945   Total Initial Rays shot: 663228
+2026.06.08 17:04:56.945   Total cones: 0... cone rays shot: 0
+2026.06.08 17:04:56.945   108 diffuse scattering facets hit.
+
+2026.06.08 17:04:56.946   Calculating E-fields and generating output
+
+2026.06.08 17:04:57.004     ============ ATMOSPHERE ============
+
+2026.06.08 17:04:57.004     Frequency = 6e+10
+2026.06.08 17:04:57.004     Attenuation (db/km) = 14.1681
+2026.06.08 17:05:00.303      Paths    Channels  Database
+2026.06.08 17:05:00.303        0.00%     0.00%     0.00%
+2026.06.08 17:05:00.407      100.00%   100.00%   100.00%
+2026.06.08 17:05:00.426     Original interaction chains:         15247
+2026.06.08 17:05:00.426     Interaction chains eliminated:       11965
+2026.06.08 17:05:00.427     Physical paths generated:             3282
+2026.06.08 17:05:00.427     High power paths retained:             250
+2026.06.08 17:05:00.427     Low power paths eliminated:           3032
+
+2026.06.08 17:05:00.592 Total Diffraction Cones: 0
+2026.06.08 17:05:00.593 Output file location: /home/gabriel/Repositorios/rmt2/raymobtime/data/rosslyn/out/sim_a/rt_simulations/run00005/study/
+2026.06.08 17:05:00.593 Output prefix: model
+2026.06.08 17:05:00.633 Check for any far zone requests, non-partitioned job
+
+2026.06.08 17:05:00.637 Writing output files
+2026.06.08 17:05:00.639 Finished writing output files
+
+2026.06.08 17:05:00.640 Mon Jun 8 17:05:00 2026
+
+2026.06.08 17:05:00.641 Geometry Processing Time: : 00:00:00.151
+2026.06.08 17:05:00.641 TxRx Set Generation Time: : 00:00:00.008
+2026.06.08 17:05:00.641 Path Discovery Time: : 00:00:27.546
+2026.06.08 17:05:00.641 Path Generation Time: : 00:00:03.482
+2026.06.08 17:05:00.641 Writing Binary Output Time: : 00:00:00.000
+2026.06.08 17:05:00.641 Writing P2M Output Time: : 00:00:00.002
+
+2026.06.08 17:05:00.641 Total Runtime: : 00:00:32.134
