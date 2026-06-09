@@ -1,15 +1,6 @@
-/simulations
-/sim_data
 *.pyc
-/base_files
-/augmented
-augmentation.ipynb
-/base_files
-/rwisimulation.egg-info
 *.egg
 *.db
 .venv
 /utils/animation/Blensor-x64.AppImage
 /rmt.egg-info
-/data/rosslyn
-/data/indoor

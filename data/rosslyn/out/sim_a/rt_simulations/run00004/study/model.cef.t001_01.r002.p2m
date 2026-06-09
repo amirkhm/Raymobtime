@@ -1,0 +1,32 @@
+# <Transmitter Set: Tx: 1 Tx - Point 1> 
+# <Receiver Set: Rx: 2 Rx > 
+# <number of receiver points>
+# <receiver point number> <number of paths for this point>
+# <path number> <E_phi mag(V/m)> <E_phi phase(deg)> <E_theta mag(V/m)> <E_theta phase(deg)> <E_x mag(V/m)> <E_x phase(deg)> <E_y mag(V/m)> <E_y phase(deg)> <E_z mag(V/m)> <E_z phase(deg)> 
+ 1
+1 25
+1 inf -135 inf -135 inf -135 inf -135 inf -135
+2 inf -135 inf -135 inf -135 inf -135 inf -135
+3 inf -135 inf -135 inf -135 inf -135 inf -135
+4 inf -135 inf -135 inf -135 inf -135 inf -135
+5 inf -135 inf -135 inf -135 inf -135 inf -135
+6 inf -135 inf -135 inf -135 inf -135 inf -135
+7 2.86241e-11 -104.71 6.30939e-06 -151.33 6.89935e-09 -151.288 1.73936e-09 28.0055 6.30938e-06 28.6695
+8 inf -135 inf -135 inf -135 inf -135 inf -135
+9 1.80951e-08 23.5912 5.44342e-06 -156.489 6.64988e-08 23.5166 1.71535e-09 24.3285 5.44304e-06 23.5112
+10 inf -135 inf -135 inf -135 inf -135 inf -135
+11 inf -135 inf -135 inf -135 inf -135 inf -135
+12 inf -135 inf -135 inf -135 inf -135 inf -135
+13 inf -135 inf -135 inf -135 inf -135 inf -135
+14 inf -135 inf -135 inf -135 inf -135 inf -135
+15 inf -135 inf -135 inf -135 inf -135 inf -135
+16 inf -135 inf -135 inf -135 inf -135 inf -135
+17 inf -135 inf -135 inf -135 inf -135 inf -135
+18 inf -135 inf -135 inf -135 inf -135 inf -135
+19 1.06386e-10 -103.555 2.10672e-06 77.43 2.15826e-09 77.4423 6.74217e-10 -102.72 2.10672e-06 -102.57
+20 inf -135 inf -135 inf -135 inf -135 inf -135
+21 inf -135 inf -135 inf -135 inf -135 inf -135
+22 6.47839e-09 43.7988 1.82292e-06 -136.591 2.13557e-08 43.4393 1.11343e-09 45.6014 1.8228e-06 43.4095
+23 inf -135 inf -135 inf -135 inf -135 inf -135
+24 inf -135 inf -135 inf -135 inf -135 inf -135
+25 inf -135 inf -135 inf -135 inf -135 inf -135
