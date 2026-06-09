@@ -152,48 +152,110 @@ def doScan(vPosition, pathdir, scans_output):
     """
     Perform LiDAR scans for receiver and transmitter vehicles.
 
-    This function iterates over the vehicle position dictionary and performs a
-    Blensor LiDAR scan for each vehicle marked as receiver or transmitter. For
-    each selected vehicle, the scanner is placed above the vehicle, configured
-    for a 360-degree scan, and used to generate a PCD point cloud. The scan
-    directory is then compressed and removed.
+    Temporary scan files are generated inside the LiDAR output directory.
+    For each receiver or transmitter, the scanner is positioned above the
+    corresponding object and performs a 360-degree LiDAR scan. The generated
+    temporary directory is then compressed into the LiDAR output directory.
 
     Args:
         vPosition: Dictionary containing vehicle position data. Each entry must
             include adjusted x and y coordinates, height, receiver/transmitter
             flags, and z coordinate.
-        pathdir: Temporary directory where generated scan files will be stored.
-        scans_output: Directory where the compressed scan output should be saved.
+        pathdir: Name or original path of the temporary scan directory. Only its
+            final directory name is used, and the directory is created inside
+            ``scans_output``.
+        scans_output: Directory where LiDAR outputs and temporary scan files are
+            generated.
 
     Raises:
         KeyError: If required vehicle fields are missing.
         ValueError: If position or height values cannot be converted to floats.
-        FileNotFoundError: If expected scan files are missing during cleanup.
     """
 
-    for camera in vPosition.items():
-        if camera[1]['isRx'] or camera[1]['isTx']:
-            os.mkdir(pathdir)
-            car_to_hide = bpy.data.objects[camera[0]]
-            car_to_hide.hide_render = True
-            car_to_hide.keyframe_insert(data_path="hide_render", index=-1)
-            height = float(camera[1]['height']) + 1; # one meter above the car
+    # Ensure that the LiDAR output directory exists.
+    os.makedirs(scans_output, exist_ok=True)
+
+    # Keep only the final directory name so that the temporary directory is
+    # always created inside scans_output.
+    temp_dir_name = os.path.basename(os.path.normpath(pathdir))
+
+    if not temp_dir_name:
+        temp_dir_name = "temp_scans"
+
+    pathdir = os.path.join(scans_output, temp_dir_name)
+    os.makedirs(pathdir, exist_ok=True)
+
+    for vehicle_id, vehicle_data in vPosition.items():
+        if not (vehicle_data["isRx"] or vehicle_data["isTx"]):
+            continue
+
+        car_to_hide = bpy.data.objects[vehicle_id]
+        car_to_hide.hide_render = True
+        car_to_hide.keyframe_insert(
+            data_path="hide_render",
+            index=-1
+        )
+
+        try:
+            # One meter above the vehicle.
+            vehicle_z = float(vehicle_data.get("z", 0.0))
+            vehicle_height = float(vehicle_data["height"])
+            scanner_height = vehicle_z + vehicle_height + 1.0
+
             scanner = bpy.data.objects["Camera"]
-            scanner.location.xyz = float(camera[1]['xinsite']),float(camera[1]['yinsite']),height # X,Y,Z
-            scanner.rotation_euler = (radians(90), radians(0), radians(0))
-            pcd_file_name = os.path.join(pathdir, f'{camera[0]}.pcd')
-            blensor.blendodyne.scan_advanced(scanner, rotation_speed = 10.0, 
-                                simulation_fps=24, angle_resolution = 0.1728, 
-                                max_distance = 120, evd_file= pcd_file_name,
-                                noise_mu=0.0, noise_sigma=0.03, start_angle = 0.0, 
-                                end_angle = 360.0, evd_last_scan=True, 
-                                add_blender_mesh = False, 
-                                add_noisy_blender_mesh = False, world_transformation=scanner.matrix_world)
-            car_to_hide.hide_render = False
-            os.remove(pathdir+'/'+camera[0])
+
+            scanner.location.xyz = (
+                float(vehicle_data["xinsite"]),
+                float(vehicle_data["yinsite"]),
+                scanner_height
+            )
+
+            scanner.rotation_euler = (
+                radians(90),
+                radians(0),
+                radians(0)
+            )
+
+            pcd_file_name = os.path.join(
+                pathdir,
+                "{}.pcd".format(vehicle_id)
+            )
+
+            blensor.blendodyne.scan_advanced(
+                scanner,
+                rotation_speed=10.0,
+                simulation_fps=24,
+                angle_resolution=0.1728,
+                max_distance=120,
+                evd_file=pcd_file_name,
+                noise_mu=0.0,
+                noise_sigma=0.03,
+                start_angle=0.0,
+                end_angle=360.0,
+                evd_last_scan=True,
+                add_blender_mesh=False,
+                add_noisy_blender_mesh=False,
+                world_transformation=scanner.matrix_world
+            )
+
+            generated_file = os.path.join(pathdir, vehicle_id)
+
+            if os.path.exists(generated_file):
+                os.remove(generated_file)
+
             doZip(pathdir, scans_output)
-            myfile = pathdir+'/'+camera[0]
-            '''doClean(myfile)'''
+
+            myfile = os.path.join(pathdir, vehicle_id)
+            # doClean(myfile)
+
+        finally:
+            # Ensure that the vehicle becomes visible again even when the scan
+            # fails.
+            car_to_hide.hide_render = False
+            car_to_hide.keyframe_insert(
+                data_path="hide_render",
+                index=-1
+            )
 
 if __name__ == "__main__":
     simulator()
