@@ -5,6 +5,7 @@ import shutil
 from bpy import data as D
 from mathutils import *
 from math import *
+import gc
 from datetime import datetime
 from src.modules.blensor.utils import *
 from src.scripts.helpers import format_run_name
@@ -65,7 +66,6 @@ def simulator():
         for obj in D.objects:
             if obj.name.startswith('flow') or obj.name.startswith('_flow'):
                 obj.select = True
-                bpy.ops.object.delete()
                 bpy.data.objects.remove(obj, do_unlink=True)
         bpy.ops.blensor.delete_scans()
         run += 1
@@ -79,29 +79,52 @@ def simulator():
 
 def cleanup_scene():
     """
-    Remove Blender scene data and purge unused resources.
+    Remove Blender scene data and unused resources.
 
-    This function deletes all objects from the current Blender scene, removes
-    unused meshes, materials, and textures, forces Python garbage collection,
-    and purges orphaned Blender data blocks. It is intended to reduce memory
-    usage after a Blensor simulation run.
-
-    Raises:
-        RuntimeError: If Blender fails to remove or purge scene data.
+    This function deletes all objects from the current Blender scene and
+    removes unused data blocks without relying on context-dependent Blender
+    operators. It is compatible with Blender/Blensor 2.79.
     """
 
-    # Unlink all objects
-    for obj in bpy.data.objects:
+    # Remove all objects safely.
+    for obj in list(bpy.data.objects):
         bpy.data.objects.remove(obj, do_unlink=True)
-    
-    # Purge orphaned data blocks
-    for block in [bpy.data.meshes, bpy.data.materials, bpy.data.textures]:
-        for item in block:
-            block.remove(item)
-    
-    # Force garbage collection
+
+    # Remove unused meshes.
+    for mesh in list(bpy.data.meshes):
+        if mesh.users == 0:
+            bpy.data.meshes.remove(mesh)
+
+    # Remove unused materials.
+    for material in list(bpy.data.materials):
+        if material.users == 0:
+            bpy.data.materials.remove(material)
+
+    # Remove unused textures.
+    for texture in list(bpy.data.textures):
+        if texture.users == 0:
+            bpy.data.textures.remove(texture)
+
+    # Remove unused images.
+    for image in list(bpy.data.images):
+        if image.users == 0:
+            bpy.data.images.remove(image)
+
+    # Remove unused curves.
+    for curve in list(bpy.data.curves):
+        if curve.users == 0:
+            bpy.data.curves.remove(curve)
+
+    # Remove unused cameras.
+    for camera in list(bpy.data.cameras):
+        if camera.users == 0:
+            bpy.data.cameras.remove(camera)
+    # Remove unused light
+    for lamp in list(bpy.data.lamps):
+        if lamp.users == 0:
+            bpy.data.lamps.remove(lamp)
+
     gc.collect()
-    bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
 
 def doZip(pathdir, scans_output):
     """

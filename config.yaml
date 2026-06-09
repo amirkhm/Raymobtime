@@ -28,7 +28,7 @@ pipeline:
     jump: true
 
   data_processing:
-    enabled: true
+    enabled: false
     which: selected                               # all | selected
     outputs:                                        # ["db", "coord", "rays"]
       - db                                          # database (sqlite/postgres/hdf5)
@@ -39,10 +39,10 @@ pipeline:
     enabled: true  
     outputs: 
       - lidar
-      - image
+      #- image
 
   post_processing:
-    enabled: true
+    enabled: false
     which: selected                               # all | selected
     outputs:                                        # ["beams", "image", "lidar"]
        - beams
@@ -50,7 +50,7 @@ pipeline:
        - lidar
   
   validation:
-    run_checkup: true
+    run_checkup: false
 
 rmt:
   enabled: true                               # false for isolated simulation

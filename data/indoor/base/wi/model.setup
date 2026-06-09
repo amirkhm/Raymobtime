@@ -1,0 +1,290 @@
+Format type:keyword version: 1.1.0
+begin_<project> Untitled Project
+project_id 19
+begin_<globals> 
+longitude 0
+latitude 0
+end_<globals>
+FirstAvailableUnknownLayoutNumber 0
+FirstAvailableStudyAreaNumber 1
+begin_<caches> 
+begin_<cache> 
+type X3DGeometry
+filename ./model.X3DGeometry.cache
+valid false
+end_<cache>
+end_<caches>
+begin_<studyarea> study
+StudyAreaNumber 0
+active
+begin_<partitioning> 
+partitioning_type disabled
+queuing_type disabled
+max_threads 0
+num_partitions 2
+end_<partitioning>
+begin_<apg_acceleration> 
+enabled no
+workflow_mode full
+binary_output_mode per_path_utm
+binary_rate 0 active
+database_mode write
+path_depth 25
+adjacency_distance 10
+end_<apg_acceleration>
+begin_<diffuse_scattering> 
+enabled no
+diffuse_reflections 2
+diffuse_diffractions 1
+diffuse_transmissions 0
+final_interaction_only yes
+end_<diffuse_scattering>
+autoboundary 0
+begin_<model> 
+x3d
+num_threads 6
+initial_ray_mode uniform_sweep
+foliage_model 2
+foliage_attenuation 1
+plane_wave_phase_reference automatic
+-0.764859 0.18284 14.95
+begin_<OutputRequests> 
+CEF yes
+ComplexImpulseResponse yes
+DelaySpread yes
+DirectionOfArrival yes
+DirectionOfDeparture yes
+ElectroMagneticFields no
+FSPathloss no
+FSPower no
+MeanDirectionOfArrival no
+MeanDirectionOfDeparture no
+MeanTimeOfArrival no
+Pathloss yes
+Paths yes
+Power yes
+TimeOfArrival yes
+XPathloss no
+end_<OutputRequests>
+end_<model>
+begin_<boundary> 
+begin_<reference> 
+cartesian
+longitude -8.5781576083919e-05
+latitude 2.58174664562492e-05
+visible no
+terrain
+end_<reference>
+zmin -0.100000001490116
+zmax 3.44000005722046
+nVertices 7
+0 0 0
+-0.263912313625575 -9.96386892130426 0
+14.3765614998504 -9.91938692126429 0
+13.8152198670202 6.38505255457817 0
+6.71791312574416 6.51896924485118 0
+6.51101409858444 -1.11293473700219 0
+-0.0329035340843316 0.0164031994586731 0
+end_<boundary>
+begin_<MonteCarlo> 
+monte_carlo_updated no
+monte_carlo_active no
+monte_carlo_mean yes
+monte_carlo_min no
+monte_carlo_max no
+monte_carlo_median no
+monte_carlo_sdev no
+monte_carlo_iterations 10
+monte_carlo_seed 1
+end_<MonteCarlo>
+begin_<MPE> 
+mpe_is_active inactive
+mpestandard controlled
+mpe_averaging_time 300
+mpe_averaging_time_short 0.1
+mpe_user_efield_peak 100000
+mpe_user_efield_rms 61.4
+mpe_user_hfield_rms 0.163
+mpe_user_power_short 10
+mpe_user_power 2
+end_<MPE>
+end_<studyarea>
+begin_<feature> 
+feature 0
+object
+active
+filename ./blackout_tril.object
+end_<feature>
+begin_<feature> 
+feature 1
+object
+active
+filename ./chairs_001.object
+end_<feature>
+begin_<feature> 
+feature 2
+object
+active
+filename ./floor.object
+end_<feature>
+begin_<feature> 
+feature 3
+object
+active
+filename ./lamps.object
+end_<feature>
+begin_<feature> 
+feature 4
+object
+active
+filename ./metal_door.object
+end_<feature>
+begin_<feature> 
+feature 5
+object
+active
+filename ./metal_loockers.object
+end_<feature>
+begin_<feature> 
+feature 6
+object
+active
+filename ./metal_tables.object
+end_<feature>
+begin_<feature> 
+feature 7
+object
+active
+filename ./monitors_006.object
+end_<feature>
+begin_<feature> 
+feature 8
+object
+active
+filename ./outdoor_ap.object
+end_<feature>
+begin_<feature> 
+feature 9
+object
+active
+filename ./PCs_006.object
+end_<feature>
+begin_<feature> 
+feature 10
+object
+active
+filename ./spliters.object
+end_<feature>
+begin_<feature> 
+feature 11
+object
+active
+filename ./walls.object
+end_<feature>
+begin_<feature> 
+feature 12
+object
+active
+filename ./window_frame.object
+end_<feature>
+begin_<feature> 
+feature 13
+object
+active
+filename ./window_glass.object
+end_<feature>
+begin_<feature> 
+feature 14
+object
+active
+filename ./wood_table_parts.object
+end_<feature>
+begin_<feature> 
+feature 15
+object
+active
+filename ./random-line.object
+end_<feature>
+begin_<txrx_sets> 
+filename ./model.txrx
+FirstAvailableTxRxNumber 3
+end_<txrx_sets>
+FirstAvailableCommSystemNumber 0
+begin_<antenna> Isotropic
+antenna 0
+type isotropic
+waveform 0
+polarization vertical
+power_threshold -250
+cable_loss 0
+VSWR 1
+component TotalGain
+gain_range 40
+show_arrow no
+is_sphere no
+end_<antenna>
+begin_<Waveform> Sinusoid
+Sinusoid
+waveform 0
+frequencyDistribution Uniform 500.000 1500.000 inactive nosampling 10
+CarrierFrequency 60000000000.000
+phase 0.000
+bandwidth 1000000.000
+end_<Waveform>
+FirstAvailableFilterNumber 0
+begin_<requests> 
+cartesian
+sealevel
+local
+CalculationMode New
+MaxRenderedPaths 100
+FieldAnimationIncrement 10
+FieldAnimationTimeAveraged yes
+CEF yes
+ComplexImpulseResponse yes
+DelaySpread yes
+FieldAnimation no
+DirectionOfArrival yes
+DirectionOfDeparture yes
+ElectricFieldVsFrequency no
+ElectricFieldVsTime no
+EMFields no
+FSPathloss no
+FSPower no
+InputData yes
+MeanDirectionOfArrival no
+MeanDirectionOfDeparture no
+MeanTimeOfArrival no
+Pathloss yes
+Paths yes
+Power yes
+PowerDelayProfile no
+TimeOfArrival yes
+XPathloss no
+TerrainProfile no
+end_<requests>
+begin_<Scales> 
+begin_<MpeThreshhold> 
+AutoScaling 0
+DrawValues 0
+AutoUpdating 0
+Discrete 1
+UseGlobalOpacity 1
+ManualValuesSet 1
+ClampedHigh 1
+ClampedLow 1
+Alpha 1.000e+00
+ManualMin 0.000e+00
+ManualMax 2.000e+02
+TextColor 1.000 1.000 1.000
+Colors 4
+0.300 0.000 0.500
+0.000 1.000 0.000
+1.000 1.000 0.000
+1.000 0.000 0.000
+PartitionValues 
+3
+0.001 50.000 100.000 
+end_<MpeThreshhold>
+end_<Scales>
+end_<project>

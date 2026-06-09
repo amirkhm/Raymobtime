@@ -1,0 +1,18 @@
+<connections>
+
+    <!-- PATH 1 -->
+    <connection from="edge_p1_1" to="edge_p1_2" fromLane="0" toLane="0"/>
+
+    <connection from="edge_p1_2" to="edge_p1_3" fromLane="0" toLane="0"/>
+	
+	<connection from="edge_p1_3" to="edge_p1_4" fromLane="0" toLane="0"/>
+
+    <!-- PATH 2 -->
+    
+    <connection from="edge_p2_1" to="edge_p2_2" fromLane="0" toLane="0"/>
+
+    <connection from="edge_p2_2" to="edge_p2_3" fromLane="0" toLane="0"/>
+	
+	<connection from="edge_p2_3" to="edge_p2_4" fromLane="0" toLane="0"/>
+
+ </connections>
