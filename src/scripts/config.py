@@ -17,6 +17,7 @@ from src.modules.data_processing import (
     gen_rays_dataset,
     check_sql_exists,
     check_csv_exists,
+    check_hdf5_exists,
     sanity_check_up)
 from src.modules.postprocessing import ( 
     gen_beam_output_file,
@@ -70,7 +71,12 @@ def copy_yaml_to_output(c):
 
     shutil.copy2(user_yaml_path, output_yaml_path)
 
-    print(f"YAML configuration copied to: {output_yaml_path}")
+    logging.debug(
+        '\033[36m'
+        f'YAML configuration\n'
+        '\033[90m'
+        f'   copied to path: {output_yaml_path}'
+        '\033[0m')
 
 def dict_to_namespace(obj):
     """
@@ -302,6 +308,8 @@ class parameters:
         self.blensor_options = self.cfg.blensor_options
         self.post_processing = self.cfg.post_processing
 
+        self.check = {}
+
         self.setparameters()
 
     def setparameters(self):
@@ -385,7 +393,9 @@ class parameters:
             'processed_data')
 
         self.resume = self.base_config.resume
-        self.clean_previous = self.base_config.clean_previous 
+        self.clean_previous = self.base_config.clean_previous
+        if self.clean_previous == None:
+            self.clean_previous = []
         
         self.isolated_results_dir = os.path.join(
             self.results_dir,
@@ -673,32 +683,65 @@ def raymobtime():
     if c.mobility.enabled or c.ray_tracing.enabled:
         simulation_main(c)
 
-    if c.data_processing.enabled:
-        data_processing_functions = {
-            "db": gen_database,
-            "coord": gen_csv_file,
-            "rays": gen_rays_dataset,
-        }
-        logging.info(
-            '\033[92m'
-            'Starting data processing'
-            '\033[0m')
+    if c.data_processing.enabled:       
+        if c.data_processing.outputs == None:
+            c.data_processing.outputs = []
+            
         if c.data_processing.which == "all":
-            for func in [gen_database, gen_csv_file, gen_rays_dataset]:
-                func(c)
-        elif c.data_processing.which == "selected":
-            data_processing_pipeline = ["db", "coord", "rays"]
-            for element in data_processing_pipeline:
-                if element in c.data_processing.outputs:
-                    last = element
-            last_from_data_pipeline = data_processing_pipeline.index(last)
-            for output in data_processing_pipeline[:last_from_data_pipeline + 1]:
-                func = data_processing_functions[output]
-                func(c)
+            c.data_processing.outputs = ['db', 'csv', 'hdf5']
+
+        if 'db' in c.clean_previous:
+            arquivo = Path(
+                os.path.join(
+                    c.result_dir_processed_data,
+                    c.base_config.output_name+'.db'))
+            if os.path.exists(arquivo):
+                os.remove(arquivo)
+            gen_database(c)
+            c.check['sql_okay'] = check_sql_exists(c)
+        else:
+            c.check['sql_okay'] = check_sql_exists(c)
+            if not (c.check.get('sql_okay') and c.resume):
+                gen_database(c)
+                c.check['sql_okay'] = check_sql_exists(c)
+        
+
+        if 'coord' in c.clean_previous:
+            arquivo = Path(
+                os.path.join(
+                    c.result_dir_processed_data,
+                    'CoordVehicleTxRx.csv'))
+            if os.path.exists(arquivo):
+                os.remove(arquivo)
+            gen_csv_file(c)
+            c.check['csv_okay'] = check_csv_exists(c)
+        else:
+            c.check['csv_okay'] = check_csv_exists(c)
+            if not (c.check.get('csv_okay') and c.resume):
+                gen_csv_file(c)
+                c.check['csv_okay'] = check_csv_exists(c)
+
+
+        if 'hdf5' in c.clean_previous:
+            hdf5_path = Path(
+                os.path.join(
+                    c.result_dir_processed_data,
+                    'rays',))
+            if os.path.exists(hdf5_path):
+                shutil.rmtree(hdf5_path)
+            gen_rays_dataset(c)
+            c.check['hdf5_okay'] = check_hdf5_exists(c)
+        else:
+            c.check['hdf5_okay'] = check_hdf5_exists(c)
+            if not (c.check.get('hdf5_okay') and c.resume):
+                gen_rays_dataset(c)
+                c.check['hdf5_okay'] = check_hdf5_exists(c)
+
 
     # Simulation using blensor for image/lidar database
     if (c.blensor.enabled):
         blensor_simulation(c)
+
 
     if c.post_processing.enabled: 
         postprocessing_modules = {

@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, Float, Text, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 import os.path
+import logging
 from termcolor import colored
 
 Base = declarative_base()
@@ -91,7 +92,6 @@ def create_database(dataBaseFileName='episodedata.db'):
         print(colored(f'Removed old database: {dataBaseFileName}', color='red'))
     else:
         print('Created a empty database: ', dataBaseFileName)
-    print('##############################')
     engine = create_engine('sqlite:///' + dataBaseFileName)
     
     Base.metadata.create_all(engine)
@@ -121,11 +121,15 @@ def open_database(dataBaseFileName='episodedata.db'):
             created.
     """
     if os.path.isfile(dataBaseFileName):
-        print(f'Found database file: {dataBaseFileName}')
+        logging.debug(
+            '\033[36m'
+            f'Found database file: '
+            '\033[90m'
+            f'{dataBaseFileName}'
+            '\033[0m')
     else:
         print(colored(f'File: {dataBaseFileName} no found', 'red'))
         exit(-1)
-    print('##############################')
     engine = create_engine('sqlite:///' + dataBaseFileName)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
