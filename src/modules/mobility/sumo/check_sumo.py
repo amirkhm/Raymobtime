@@ -17,7 +17,7 @@ def check_sumo_simulation_status(c):
         else:
             logging.warning(
                 '\033[35m'
-                f"[SUMO check] Satatus: Incomplete, there is no 'sumoOutputInfoFileName.txt at run {format_run_name(run)}."
+                f"[SUMO check] Satatus: Incomplete, there is no sumoOutputInfoFileName.txt at run {format_run_name(run)}."
                 '\033[0m')
             break
     logging.info(

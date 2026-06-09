@@ -474,11 +474,15 @@ def open_database(dataBaseFileName='episodedata.db'):
     """
     
     if os.path.isfile(dataBaseFileName):
-        print(f'Found database file: {dataBaseFileName}')
+        logging.debug(
+            '\033[36m'
+            'Found database'
+            '\033[90m'
+            f'{dataBaseFileName}'
+            '\033[0m')
     else:
         print(colored(f'File: {dataBaseFileName} no found', 'red'))
         exit(-1)
-    print('##############################')
     engine = create_engine('sqlite:///' + dataBaseFileName)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)

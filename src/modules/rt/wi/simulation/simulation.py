@@ -582,16 +582,16 @@ def main(c):
             copytree_base_files(c)
             mobility_sumo(c)
             # check okay
-            mobility_okay = check_sumo_simulation_status(c)
+            c.check['mobility_okay'] = check_sumo_simulation_status(c)
         else:
             # Check
-            mobility_okay = check_sumo_simulation_status(c)
-            if not (mobility_okay and c.resume):
+            c.check['mobility_okay'] = check_sumo_simulation_status(c)
+            if not (c.check.get('mobility_okay') and c.resume):
                 # execute
                 copytree_base_files(c)
                 mobility_sumo(c)
                 # check okay
-                mobility_okay = check_sumo_simulation_status(c)
+                c.check['mobility_okay'] = check_sumo_simulation_status(c)
 
     if c.ray_tracing.enabled:
         if 'rt' in c.clean_previous:
@@ -606,9 +606,9 @@ def main(c):
                     shutil.rmtree(folder)
             # execute rt
             wireless_insite_simulation(c)
-            rt_okay = check_wi_run_status(c)
+            c.check['rt_okay'] = check_wi_run_status(c)
         else:
-            rt_okay = check_wi_run_status(c)
-            if not (rt_okay and c.resume):
+            c.check['rt_okay'] = check_wi_run_status(c)
+            if not (c.check.get('rt_okay') and c.resume):
                 wireless_insite_simulation(c)
-                rt_okay = check_wi_run_status(c)
+                c.check['rt_okay'] = check_wi_run_status(c)

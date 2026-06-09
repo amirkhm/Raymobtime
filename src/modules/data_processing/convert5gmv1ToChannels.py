@@ -120,9 +120,9 @@ def gen_rays_dataset(c):
     else:
         for ep in session.query(fgdb.Episode): #go over all episodes
             outputFileName = fileNamePrefix + str(numEpisode) + matlabExtension
-            print('Processing ', ep.number_of_scenes, ' scenes in episode ', ep.insite_pah,)
-            print('Start time = ', ep.simulation_time_begin, ' and sampling period = ', ep.sampling_time, ' seconds')
-            print('Episode: ' + str(numEpisode) + ' out of ' + str(totalNumEpisodes))
+            #print('Processing ', ep.number_of_scenes, ' scenes in episode ', ep.insite_pah,)
+            #print('Start time = ', ep.simulation_time_begin, ' and sampling period = ', ep.sampling_time, ' seconds')
+            #print('Episode: ' + str(numEpisode) + ' out of ' + str(totalNumEpisodes))
 
             #initialization
             #Ns x [Tx_index x Rx_index x numberRays] and 7 numbers, the following for each ray
@@ -203,11 +203,11 @@ def gen_rays_dataset(c):
                 perc_done = ((sc_i + 1) / ep.number_of_scenes) * 100
                 elapsed_time = datetime.datetime.today() - start
                 time_p_perc = elapsed_time / perc_done
-                print('\r Done: {:.2f}% Scene: {} time per scene: {} time to finish: {}'.format(
-                    perc_done,
-                    sc_i + 1,
-                    elapsed_time / (sc_i + 1),
-                    time_p_perc * (100 - perc_done)), end='')
+                #print('\r Done: {:.2f}% Scene: {} time per scene: {} time to finish: {}'.format(
+                #    perc_done,
+                #    sc_i + 1,
+                #    elapsed_time / (sc_i + 1),
+                #    time_p_perc * (100 - perc_done)), end='')
 
             if use_npz:
                 print()
@@ -216,7 +216,7 @@ def gen_rays_dataset(c):
                 print('==> Wrote file ' + outputFileName)
 
             outputFileName = fileNamePrefix +  str(numEpisode) + matlabExtension
-            print('==> Wrote file ' + outputFileName)
+            #print('==> Wrote file ' + outputFileName)
             f = h5py.File(outputFileName, 'w')
             f['allEpisodeData'] = allEpisodeData
             f.close()
@@ -225,7 +225,3 @@ def gen_rays_dataset(c):
 
             del ep, obj, ray, sc, rec, f, allEpisodeData, obj_polygon
             gc.collect()
-
-    print('numLOS = ', numLOS)
-    print('numNLOS = ', numNLOS)
-    print('Sum = ', numLOS + numNLOS)

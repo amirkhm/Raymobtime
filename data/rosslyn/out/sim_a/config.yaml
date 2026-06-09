@@ -3,15 +3,18 @@ base_config:
   scenario: rosslyn                           # scenario name
   yaml_output: true
   logging_level: info                         # logging level: debug, info, warning, error, critical, NONE
-  resume: false                               # skip steps already concluded
+  resume: true                               # skip steps already concluded
   clean_previous:                            # remove result folders before running
-    - mobility 
+    #- mobility 
     #- rt
     #- db
-    #- csv
+    #- coord
     #- hdf5
-    #- lidar
-    #- images
+    #- blensor_lidar
+    #- blensor_images
+    #- post_lidar
+    #- post_images
+    #- beams
 
 pipeline:
   mobility:
@@ -28,7 +31,7 @@ pipeline:
     jump: true
 
   data_processing:
-    enabled: false
+    enabled: true
     which: selected                               # all | selected
     outputs:                                        # ["db", "coord", "rays"]
       - db                                          # database (sqlite/postgres/hdf5)
@@ -46,8 +49,8 @@ pipeline:
     which: selected                               # all | selected
     outputs:                                         # ["beams", "image", "lidar"]
        #- beams
-       - image
-       - lidar
+       #- image
+       #- lidar
   
   validation:
     run_checkup: false

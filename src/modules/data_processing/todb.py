@@ -362,5 +362,5 @@ def gen_database(c):
         session.close()
         logging.info(
             '\033[92m'
-            f'Processed {run_i} runs'
+            f'[SQL] Processed {run_i} runs'
             '\033[0m')

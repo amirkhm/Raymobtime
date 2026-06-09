@@ -36,7 +36,7 @@ def gen_csv_file(c):
     file = open(coord_file_name, 'w')
     file.writelines("Val,EpisodeID,SceneID,TxID,RxID,VehicleName,x,y,z,angles,rays,LOS\n")
     for ep_i, ep in enumerate(session.query(fgdb.Episode)):  # go over all episodes
-        print(f"Processing ep {ep_i}...")
+        #print(f"Processing ep {ep_i}...")
         # process each scene in this episode
         # count # of ep.scenes
         for sc_i, sc in enumerate(ep.scenes):
@@ -159,10 +159,10 @@ def gen_csv_file(c):
                 file.writelines(f'{thisString}\n')
                 
         numEpisode += 1  # increment episode counter
-    print('numValidChannels = ', numValidChannels)
-    print('numInvalidChannels = ', numInvalidChannels)
-    print('Sum = ', numInvalidChannels + numValidChannels)
+    #print('numValidChannels = ', numValidChannels)
+    #print('numInvalidChannels = ', numInvalidChannels)
+    #print('Sum = ', numInvalidChannels + numValidChannels)
 
-    print('numLOS = ', numLOS)
-    print('numNLOS = ', numNLOS)
-    print('Sum = ', numNLOS + numLOS)
+    #print('numLOS = ', numLOS)
+    #print('numNLOS = ', numNLOS)
+    #print('Sum = ', numNLOS + numLOS)

@@ -241,7 +241,6 @@ if os.path.isfile(dataBaseFileName):
     print('Successfully opened ', dataBaseFileName)
 else:
     print('ERROR: Could not find ', dataBaseFileName, ' I then created an empty database!')
-print('##############################')
 engine = create_engine('sqlite:///' + dataBaseFileName)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
