@@ -3,9 +3,9 @@ base_config:
   scenario: rosslyn                           # scenario name
   yaml_output: true
   logging_level: info                         # logging level: debug, info, warning, error, critical, NONE
-  resume: true                               # skip steps already concluded
-  clean_previous: []                            # remove result folders before running
-    #- mobility 
+  resume: false                               # skip steps already concluded
+  clean_previous:                            # remove result folders before running
+    - mobility 
     #- rt
     #- db
     #- csv
@@ -23,7 +23,7 @@ pipeline:
       min_lim: [660, 334]                     # [x, y] study area limits for placement of Tx and Rx
   
   ray_tracing:                                # parsing automático
-    enabled: true
+    enabled: false
     #tool: wireless_insite                    # wireless_insite | none
     jump: true
 
@@ -42,7 +42,7 @@ pipeline:
       - image
 
   post_processing:
-    enabled: true
+    enabled: false
     which: selected                               # all | selected
     outputs:                                         # ["beams", "image", "lidar"]
        #- beams
@@ -69,7 +69,7 @@ sumo:
 ray_tracing:
   use_pedestrians: false
   use_drone:
-    enabled: false
+    enabled: true
     altitude: 5                       #meters
   receivers_per_episode: 1
   transmitters_per_episode: 1
@@ -79,7 +79,7 @@ ray_tracing:
       enabled: false
       n_of_vehicles: 5 # Overrites receivers_per_episode
   wireless_insite:
-    software_path: /home/gabriel/softwares/wireless-insite/remcom
+    software_path: /home/fritz/RMT/Softwares/Wireless_Insite/remcom
     LICENSE_FILE: REMCOMINC_LICENSE_FILE=2501@10.10.80.6
     base_files_names:
       study_area_name: study

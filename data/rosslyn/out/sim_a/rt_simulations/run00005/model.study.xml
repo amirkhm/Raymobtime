@@ -701,7 +701,7 @@
                   <remcom::rxapi::Boolean Value="true"></remcom::rxapi::Boolean>
                 </ConformToTerrain>
                 <ControlPoints>
-                  <remcom::rxapi::ProjectedPointList><ProjectedPoint><remcom::rxapi::CartesianPoint><X><remcom::rxapi::Double Value="668.005520499624481"></remcom::rxapi::Double></X><Y><remcom::rxapi::Double Value="451.853765871175710"></remcom::rxapi::Double></Y><Z><remcom::rxapi::Double Value="3.300000000000000"></remcom::rxapi::Double></Z></remcom::rxapi::CartesianPoint></ProjectedPoint></remcom::rxapi::ProjectedPointList></ControlPoints>
+                  <remcom::rxapi::ProjectedPointList><ProjectedPoint><remcom::rxapi::CartesianPoint><X><remcom::rxapi::Double Value="779.085296160854000"></remcom::rxapi::Double></X><Y><remcom::rxapi::Double Value="670.521070320529702"></remcom::rxapi::Double></Y><Z><remcom::rxapi::Double Value="4.900000000000000"></remcom::rxapi::Double></Z></remcom::rxapi::CartesianPoint></ProjectedPoint></remcom::rxapi::ProjectedPointList></ControlPoints>
                 <OutputID>
                   <remcom::rxapi::Integer Value="2"></remcom::rxapi::Integer>
                 </OutputID>

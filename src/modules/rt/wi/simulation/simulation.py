@@ -22,7 +22,7 @@ def onlyDronesList(idList):
     """
     Filter a SUMO vehicle ID list to keep only drone vehicles.
 
-    This function removes all vehicle IDs that do not start with ``"dflow"``.
+    This function removes all vehicle IDs that do not start with ``"drone"`` ID.
     It is used when the simulation should consider only drone mobility flows.
 
     Args:
@@ -32,7 +32,8 @@ def onlyDronesList(idList):
         The filtered list containing only drone vehicle identifiers.
     """
     for v_id, veh in enumerate(idList[:]):
-        if not veh.startswith('dflow'):
+        idList=list(idList)
+        if not veh.startswith('drone'):
             idList.remove(veh)
     return idList
 

@@ -82,12 +82,20 @@ def place_by_sumo(
 
     if use_pedestrians:
         for ped_i, ped in enumerate(traci.person.getIDList()):
-            (x, y), angle, length, width = [f(ped) for f in [
+            (
+                (x, y),
+                angle,
+                length,
+                width,
+                pedestrian_type,
+            ) = [f(ped) for f in [
                 traci.person.getPosition,
-                traci.person.getAngle, #Returns the angle of the named vehicle within the last step [degrees]
+                traci.person.getAngle,
                 traci.person.getLength,
-                traci.person.getWidth
+                traci.person.getWidth,
+                traci.person.getTypeID,
             ]]
+
             xinsite, yinsite = traci.simulation.convertGeo(x, y)
             pedestrian = objects.RectangularPrism(length, width, 1.72, material=car_material_id)
             pedestrian.translate((-length/2, -width/2, 0))
@@ -104,19 +112,41 @@ def place_by_sumo(
 
             # 1.72 size of a perdestrian
             if c.vehicles_template:
-                str_vehicles = get_model(c,str_vehicles,ped,xinsite-deltaX,yinsite-deltaY,0,90-angle,1.72) 
+                str_vehicles = get_model(
+                                    c=c,
+                                    str_vehicles=str_vehicles,
+                                    name=ped,
+                                    model_type=pedestrian_type,
+                                    x=xinsite - deltaX,
+                                    y=yinsite - deltaY,
+                                    z=0,
+                                    angle=90 - angle,
+                                    height=1.72,
+                                    length=length,
+                                    width=width,
+                                ) 
 
     for veh_i, veh in enumerate(traci.vehicle.getIDList()):
-        (x, y), (x3,y3,z3), angle, lane_id, length, width, height = [f(veh) for f in [
+        (
+            (x, y),
+            (x3, y3, z3),
+            angle,
+            lane_id,
+            length,
+            width,
+            height,
+            vehicle_type,
+        ) = [f(veh) for f in [
             traci.vehicle.getPosition,
-            traci.vehicle.getPosition3D, #Returns the 3D-position(three doubles) of the named vehicle (center of the front bumper) within the last step [m,m,m]
+            traci.vehicle.getPosition3D,
             traci.vehicle.getAngle,
             traci.vehicle.getLaneID,
             traci.vehicle.getLength,
             traci.vehicle.getWidth,
-            traci.vehicle.getHeight
+            traci.vehicle.getHeight,
+            traci.vehicle.getTypeID,
         ]]
-
+        
         x, y = traci.simulation.convertGeo(x, y)
 
         #the prism is draw using the first coordinate aligned with x, then y and z. Length is initially along x
@@ -134,29 +164,51 @@ def place_by_sumo(
         thisAngleInRad = np.radians(angle) #*np.pi/180
         deltaX = (length/2.0) * np.sin(thisAngleInRad)
         deltaY = (length/2.0) * np.cos(thisAngleInRad)
-        car.translate((x-deltaX, y-deltaY, z3)) #now can translate
+
+        is_drone = veh.startswith("droneFlow")
+
+        if is_drone:
+            drone_altitude = getattr(c, "drone_altitude", 10.0)
+            z_obj = z3 + drone_altitude
+        else:
+            z_obj = z3
+
+        car.translate((x-deltaX, y-deltaY, z_obj)) #now can translate
 
         car_structure = objects.Structure(name=veh)
         car_structure.add_sub_structures(car)
         structure_group.add_structures(car_structure)
 
         if c.vehicles_template:
-            str_vehicles = get_model(c, str_vehicles,veh,x-deltaX,y-deltaY,z3,90-angle,height,length,width) 
+            str_vehicles = get_model(
+                                c=c,
+                                str_vehicles=str_vehicles,
+                                name=veh,
+                                model_type=vehicle_type,
+                                x=x - deltaX,
+                                y=y - deltaY,
+                                z=z_obj,
+                                angle=90 - angle,
+                                height=height,
+                                length=length,
+                                width=width,
+                            ) 
 
         #antenna_vertice
         if veh in veh_with_antenna:
             c_present = True
-            if ( veh.startswith('dflow') ):
-                antenna.add_vertice((x-deltaX, y-deltaY, z3 - 0.1))
+            
+            if ( veh.startswith('droneFlow') ):
+                antenna.add_vertice((x-deltaX, y-deltaY, z_obj - 0.1))
             else:
-                antenna.add_vertice((x-deltaX, y-deltaY, z3 + height + 0.1))
+                antenna.add_vertice((x-deltaX, y-deltaY, z_obj + height + 0.1))
         if V2V:     
             if veh in Tx_veh:
                 c_tx_present = True
-                if ( veh.startswith('dflow') ):
-                    antenna_Tx.add_vertice((x-deltaX, y-deltaY, z3 - 0.1))
+                if ( veh.startswith('droneFlow') ):
+                    antenna_Tx.add_vertice((x-deltaX, y-deltaY, z_obj - 0.1))
                 else:
-                    antenna_Tx.add_vertice((x-deltaX, y-deltaY, z3 + height + 0.1))
+                    antenna_Tx.add_vertice((x-deltaX, y-deltaY, z_obj + height + 0.1))
 
 
     if c.vehicles_template:
@@ -308,80 +360,164 @@ def rotate(vertice, angle):
 
     return vertice_array
 
-def get_model(c, str_vehicles, name, x, y, z, angle, height, length=1, width=1):
+def get_model(
+        c,
+        str_vehicles,
+        name,
+        model_type,
+        x,
+        y,
+        z,
+        angle,
+        height,
+        length=1,
+        width=1):
     """
-    Load, transform, and append a detailed vehicle model to a serialized object string.
+    Load, transform, and append a detailed Wireless InSite object model.
 
-    This function selects a detailed Wireless InSite object model according to
-    the object height, reads its vertices, rotates them by the given angle,
-    translates them to the target position, and appends the transformed geometry
-    to the accumulated vehicle object string.
-
-    The object height is currently used as a classification rule to select the
-    model type, such as car, bus, truck, pedestrian, or drone.
+    The model is selected using the SUMO object type instead of its physical
+    height. The vertices read from the selected object file are rotated and
+    translated to the object's position in the Wireless InSite scenario.
 
     Args:
-        c: Runtime configuration object containing the project working directory.
-        str_vehicles: Accumulated serialized Wireless InSite vehicle geometry.
+        c: Runtime configuration object containing the project working
+            directory.
+        str_vehicles: Accumulated serialized Wireless InSite geometry.
         name: Name assigned to the generated structure group.
+        model_type: SUMO type identifier, such as ``Car``, ``Truck``, ``Bus``,
+            ``Pedestrian`` or ``Drone``.
         x: Target x coordinate.
         y: Target y coordinate.
         z: Target z coordinate.
-        angle: Rotation angle in degrees applied to the model vertices.
-        height: Object height used to select the corresponding model file.
-        length: Optional object length. Currently not used directly. Defaults to 1.
-        width: Optional object width. Currently not used directly. Defaults to 1.
+        angle: Rotation angle in degrees.
+        height: Physical object height. Retained for compatibility and possible
+            future model scaling.
+        length: Physical object length. Retained for possible future scaling.
+        width: Physical object width. Retained for possible future scaling.
 
     Returns:
-        Updated serialized Wireless InSite vehicle geometry string.
+        str: Updated serialized Wireless InSite geometry string.
 
     Raises:
-        SystemExit: If no detailed model is available for the provided height.
-        FileNotFoundError: If the selected model object file does not exist.
-        ValueError: If vertex coordinates cannot be converted to numeric values.
+        ValueError: If the SUMO object type has no configured model or if a
+            vertex line is invalid.
+        FileNotFoundError: If the selected Wireless InSite model does not exist.
     """
 
-    # The height here is utilized as trick to choose which model will be utilized .
-    # TODO: Find a new way to classify the models, instead of height.
-    if (height == 4.3):
-        model_object = open(os.path.join(c.working_directory,'assets/wi_objects/truck.object'), 'r')
-    elif (height == 3.2):               
-        model_object = open(os.path.join(c.working_directory,'assets/wi_objects/bus.object'), 'r')
-    elif (height == 1.59):              
-        model_object = open(os.path.join(c.working_directory,'assets/wi_objects/car.object'), 'r')
-    elif (height == 1.72):              
-        model_object = open(os.path.join(c.working_directory,'assets/wi_objects/pedestrian.object'), 'r')
-    elif (height == 0.295): 
-        model_object = open(os.path.join(c.working_directory,'assets/wi_objects/drone.object'), 'r')
-    else:
-        print('There is no model object ready for this object')
-        exit(1)
+    model_type_normalized = str(model_type).strip().lower()
 
-    cn_points = False
-    
-    for line in model_object:
-        if 'begin_<structure_group>' in line:
-            tmp = line.split(' ')
-            tmp[1] = str(name+ ' ')
-            line = ' '.join(tmp)
-            str_vehicles += line + "\n"
-            continue
-        if 'nVertices' in line:
-            cn_points = int(line.split(' ')[1]) 
+    model_files = {
+        "car": "car.object",
+        "truck": "truck.object",
+        "bus": "bus.object",
+        "pedestrian": "pedestrian.object",
+        "drone": "drone.object",
+    }
+
+    if model_type_normalized not in model_files:
+        raise ValueError(
+            "No Wireless InSite model is configured for SUMO type "
+            "'{}' used by object '{}'.".format(model_type, name)
+        )
+
+    model_path = os.path.join(
+        str(c.working_directory),
+        "assets",
+        "wi_objects",
+        model_files[model_type_normalized],
+    )
+
+    if not os.path.isfile(model_path):
+        raise FileNotFoundError(
+            "Wireless InSite model file was not found: {}".format(model_path)
+        )
+
+    remaining_vertices = 0
+
+    with open(model_path, "r", encoding="utf-8") as model_object:
+        for line_number, line in enumerate(model_object, start=1):
+
+            # Replace the original structure name with the SUMO object ID.
+            if "begin_<structure_group>" in line:
+                parts = line.split()
+
+                if len(parts) >= 2:
+                    parts[1] = str(name)
+                    line = " ".join(parts) + "\n"
+
+                str_vehicles += line
+                continue
+
+            # Detect the number of vertex lines that follow.
+            if "nVertices" in line:
+                parts = line.split()
+
+                if len(parts) < 2:
+                    raise ValueError(
+                        "Invalid nVertices declaration in '{}', line {}: {}"
+                        .format(model_path, line_number, line.strip())
+                    )
+
+                try:
+                    remaining_vertices = int(parts[1])
+                except ValueError as exc:
+                    raise ValueError(
+                        "Invalid vertex count in '{}', line {}: {}"
+                        .format(model_path, line_number, parts[1])
+                    ) from exc
+
+                str_vehicles += line
+                continue
+
+            # Rotate and translate each vertex.
+            if remaining_vertices > 0:
+                parts = line.split()
+
+                if len(parts) < 3:
+                    raise ValueError(
+                        "Invalid vertex in '{}', line {}: {}"
+                        .format(model_path, line_number, line.strip())
+                    )
+
+                try:
+                    vertex = np.asarray(
+                        [
+                            float(parts[0]),
+                            float(parts[1]),
+                            float(parts[2]),
+                        ],
+                        dtype=float,
+                    )
+                except ValueError as exc:
+                    raise ValueError(
+                        "Non-numeric vertex in '{}', line {}: {}"
+                        .format(model_path, line_number, line.strip())
+                    ) from exc
+
+                rotated_vertex = np.asarray(
+                    rotate(vertex, angle),
+                    dtype=float,
+                )
+
+                transformed_vertex = [
+                    rotated_vertex[0] + float(x),
+                    rotated_vertex[1] + float(y),
+                    rotated_vertex[2] + float(z),
+                ]
+
+                # Preserve any additional fields after x, y and z.
+                transformed_parts = [
+                    str(transformed_vertex[0]),
+                    str(transformed_vertex[1]),
+                    str(transformed_vertex[2]),
+                ]
+
+                if len(parts) > 3:
+                    transformed_parts.extend(parts[3:])
+
+                line = " ".join(transformed_parts) + "\n"
+                remaining_vertices -= 1
+
             str_vehicles += line
-            continue
-        if cn_points:
-            tmp = line.split(' ')
-            tmp[0] = float(tmp[0])
-            tmp[1] = float(tmp[1])
-            tmp[2] = float(tmp[2])
-            myarray = np.asarray(tmp)
-            rotated_v = list(rotate(myarray,angle))
-            rotated_v[0] = str(rotated_v[0] + x)
-            rotated_v[1] = str(rotated_v[1] + y)
-            rotated_v[2] = str(rotated_v[2] + z) + "\n"
-            line = ' '.join(rotated_v)
-            cn_points -= 1
-        str_vehicles += line
 
     return str_vehicles

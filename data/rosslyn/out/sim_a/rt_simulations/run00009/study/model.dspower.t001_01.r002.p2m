@@ -1,5 +1,0 @@
-#Transmitter Set: Tx: 1 Tx - Point 1
-#Receiver Set: Rx: 2 Rx
-#Rx    	          	          	          	          	Specular	        	Diffuse 	        	DiffusePSum	Total   	        	TotalPSum
-#      	X(m)      	Y(m)      	Z(m)      	Distance(m)	Pow(dBm)	Phase(deg)	Pow(dBm)	Phase(deg)	Pow(dBm)	Pow(dBm)	Phase(deg)	Pow(dBm)
-1      	810.317   	379.856   	3.300     	191.459   	-117.463	-141.572	-132.289	39.060  	-131.066	-119.201	-141.711	-117.277
