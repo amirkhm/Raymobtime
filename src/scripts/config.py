@@ -20,7 +20,8 @@ from src.modules.data_processing import (
     sanity_check_up)
 from src.modules.postprocessing import ( 
     gen_beam_output_file,
-    gen_lidar_matrix,
+    cart_lidar_matrix,
+    sph_lidar_matrix,
     image_refinement)
 
 def copy_yaml_to_output(c):
@@ -702,7 +703,8 @@ def raymobtime():
     if c.post_processing.enabled: 
         postprocessing_modules = {
             "beams": gen_beam_output_file,
-            "lidar": gen_lidar_matrix,
+            "lidar_car": cart_lidar_matrix,
+            "lidar_sph": sph_lidar_matrix,
             "image": image_refinement,
         }
         logging.info(
@@ -710,7 +712,7 @@ def raymobtime():
             'Starting post-processing'
             '\033[0m')
         if c.post_processing.which == "all":
-            for func in [gen_beam_output_file, gen_lidar_matrix, image_refinement]:
+            for func in [gen_beam_output_file, cart_lidar_matrix, sph_lidar_matrix, image_refinement]:
                 func(c)
         elif c.post_processing.which == "selected":
             for output in c.post_processing.outputs:
@@ -721,8 +723,10 @@ def raymobtime():
     # Saving the blensor simulation from pcd files to matrix type data
     CoordSystem = c.CoordSystem
     if (c.post_processing.enabled) and ("lidar" in c.post_processing.outputs):
-       if CoordSystem.lower() == 'spherical' or CoordSystem.lower() == 'cartesian':
-           gen_lidar_matrix(c)
+       if CoordSystem.lower() == 'spherical':
+           sph_lidar_matrix(c)
+       elif CoordSystem.lower() == 'cartesian':
+           cart_lidar_matrix(c)
        else:
            raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.yaml')
     elif (c.post_processing.enabled) and ("image" in c.post_processing.outputs):

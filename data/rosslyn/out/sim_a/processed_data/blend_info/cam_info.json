@@ -1,0 +1,74 @@
+{
+    "Camera0": {
+        "name": "Camera0",
+        "location": {
+            "x": 745.2420654296875,
+            "y": 559.915283203125,
+            "z": 4.0
+        },
+        "rotation_euler": {
+            "x": 1.1093189716339111,
+            "y": 0.0,
+            "z": 0.3349626660346985
+        },
+        "focal_length_mm": 35.0,
+        "sensor_size_mm": {
+            "width": 32.0,
+            "height": 18.0
+        },
+        "pixel_resolution": {
+            "width": 960,
+            "height": 540
+        },
+        "clip_start": 0.10000000149011612,
+        "clip_end": 100.0
+    },
+    "Camera1": {
+        "name": "Camera1",
+        "location": {
+            "x": 745.2420654296875,
+            "y": 559.915283203125,
+            "z": 4.0
+        },
+        "rotation_euler": {
+            "x": 1.1093189716339111,
+            "y": 0.0,
+            "z": -1.207908272743225
+        },
+        "focal_length_mm": 35.0,
+        "sensor_size_mm": {
+            "width": 32.0,
+            "height": 18.0
+        },
+        "pixel_resolution": {
+            "width": 960,
+            "height": 540
+        },
+        "clip_start": 0.10000000149011612,
+        "clip_end": 100.0
+    },
+    "Camera2": {
+        "name": "Camera2",
+        "location": {
+            "x": 745.2420654296875,
+            "y": 559.915283203125,
+            "z": 4.0
+        },
+        "rotation_euler": {
+            "x": 1.1093189716339111,
+            "y": 0.0,
+            "z": 3.3596179485321045
+        },
+        "focal_length_mm": 35.0,
+        "sensor_size_mm": {
+            "width": 32.0,
+            "height": 18.0
+        },
+        "pixel_resolution": {
+            "width": 960,
+            "height": 540
+        },
+        "clip_start": 0.10000000149011612,
+        "clip_end": 100.0
+    }
+}

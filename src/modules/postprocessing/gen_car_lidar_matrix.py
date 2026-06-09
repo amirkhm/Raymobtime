@@ -122,7 +122,7 @@ def episodes_dict(csv_path, tmp_dir):
             
     return episodesDict, usersDict, txDict
 
-def gen_lidar_matrix(c):
+def cart_lidar_matrix(c):
     """
     Generate quantized LiDAR occupancy matrices from Blensor point cloud scans.
 
@@ -157,7 +157,7 @@ def gen_lidar_matrix(c):
 
     print('Check Quantization parameters and Tx position before run!')
 
-    main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
+    main_folder = c.result_dir_processed_data
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
         
@@ -217,7 +217,7 @@ def gen_lidar_matrix(c):
             print(f'Processing Episode: {episodeID} and Scene: {s}')
             if not os.path.exists(tmpdir):
                 os.makedirs(tmpdir)
-            scans_dir = os.path.join(scans_path, format_run_name(total_num_scenes) + '.zip')
+            scans_dir = os.path.join(scans_path,'scans_' + format_run_name(total_num_scenes) + '.zip')
             key_dict = str(episodeID) + ',' + str(s)
             try:
                 RxFlow = RX_in_ep[key_dict]
@@ -226,7 +226,6 @@ def gen_lidar_matrix(c):
                 total_num_scenes += 1
                 shutil.rmtree(tmpdir)
                 continue
-
             if not os.path.exists(scans_dir):
                 print('\nWarning: could not find file ', scans_dir, ' Stopping...')
                 should_stop = True

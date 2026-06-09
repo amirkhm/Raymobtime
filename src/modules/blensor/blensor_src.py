@@ -40,7 +40,7 @@ def to_jsonable(obj):
 
     return obj
 
-def export_blensor_runtime_config(c, run_id):
+def export_blensor_runtime_config(c, run_id=0):
     """
     Create a temporary JSON configuration file for Blender/Blensor scripts.
     """
@@ -239,12 +239,28 @@ def run_blensor_safely(cmd, cwd=None):
             except ProcessLookupError:
                 pass
 
-def export_cam_info(c):
+def export_cam_info(c, run_id=0):
     """
-    Run terminal code to export camera blensor information from the Base Station
-    """
-    blensor_scenario_path = c.blensor_scenario_path
-    blensor_runfile = c.blensor_runfile_path
+    Run Blensor to export Base Station camera information.
 
-    cmd = (f'{blensor_runfile} {blensor_scenario_path} --background -P src/modules/blensor/data_extractor.py')
-    os.system(cmd)
+    The temporary runtime configuration is removed by data_extractor.py after
+    the extraction finishes.
+    """
+
+    config_path = export_blensor_runtime_config(c, run_id)
+    cmd = [
+        str(c.blensor_runfile_path),
+        str(c.blensor_scenario_path),
+        "--background",
+        "-P",
+        "src/modules/blensor/data_extractor.py",
+        "--",
+        "--config",
+        config_path,
+    ]
+
+    subprocess.run(
+        cmd,
+        cwd=str(c.working_directory),
+        check=True,
+    )

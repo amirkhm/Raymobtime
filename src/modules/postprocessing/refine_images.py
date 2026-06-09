@@ -214,9 +214,9 @@ def image_refinement(c):
     cam_info_path = os.path.join(
         main_folder, 
         'blend_info', 
-        'cam_info.json')
+        'cam_info.json')   
     if not os.path.exists(cam_info_path):
-        export_cam_info(c) # Export and generate the json file
+        export_cam_info(c) # Export and generate the json file       
     with open(cam_info_path, 'r') as file:
         cam_info = json.load(file)
     cam_info = gen_K(cam_info)
@@ -230,7 +230,6 @@ def image_refinement(c):
         rxs = max(df["RxID"].values)+1
         bs_veh_positions = np.ones((episodes,scenes,rxs,c.n_cameras_blensor_scenario, 3))*np.nan
 
-
     for index, row in df.iterrows():
         run = row["Run"]
         position_Rx = np.array([row["x"],row["y"],row["z"]])
@@ -242,14 +241,14 @@ def image_refinement(c):
                 img_raw_path = os.path.join(raw_dt_path, f'{cam_name}.png')
                 img_raw = cv2.imread(img_raw_path)
 
-                cam_position = np.array([cam_info[cam_name]["position"]["x"],
-                                         cam_info[cam_name]["position"]["y"],
-                                         cam_info[cam_name]["position"]["z"]])
+                cam_position = np.array([cam_info[cam_name]["location"]["x"],
+                                         cam_info[cam_name]["location"]["y"],
+                                         cam_info[cam_name]["location"]["z"]])
                 pixels, p_cam = global2pixels(position_Rx, 
                                               cam_position,
-                                              cam_info[cam_name]["rotation_radians"]["z"],
-                                              cam_info[cam_name]["rotation_radians"]["x"],
-                                              cam_info[cam_name]["rotation_radians"]["y"],
+                                              cam_info[cam_name]["rotation_euler"]["z"],
+                                              cam_info[cam_name]["rotation_euler"]["x"],
+                                              cam_info[cam_name]["rotation_euler"]["y"],
                                               cam_info[cam_name]["K"])
                 img_window_size = np.array([cam_info[cam_name]["pixel_resolution"]["width"],
                                             cam_info[cam_name]["pixel_resolution"]["height"]])

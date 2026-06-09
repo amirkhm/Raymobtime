@@ -1,97 +1,178 @@
-import bpy
-import math
-import os
+import argparse
 import json
+import os
+import sys
 
-def get_camera_details(camera_name="Camera"):
+import bpy
+
+
+def parse_script_arguments():
     """
-    Extracts camera details (position, rotation, focal length, sensor size, etc.).
-    Args:
-        camera_name (str): Name of the camera object in Blender (default: "Camera").
+    Parse arguments passed to this script after Blender's ``--`` separator.
+
     Returns:
-        dict: Camera metadata.
-    OBS:
-        azimuth and elevation are considering a different POV from the blender
-        that will be used in the conversion to pixels
-        POV:{
-            x+: front,
-            y+: left,
-            z+: up
-        }
+        argparse.Namespace: Parsed command-line arguments containing the path
+        to the temporary runtime configuration file.
     """
-    if camera_name not in bpy.data.objects:
-        raise ValueError(f"Camera '{camera_name}' not found in the scene.")
 
-    cam = bpy.data.objects[camera_name]
-    cam_data = cam.data
+    if "--" in sys.argv:
+        script_args = sys.argv[sys.argv.index("--") + 1:]
+    else:
+        script_args = []
 
-    # Convert rotation from radians to degrees
-    rotation_degrees = (
-        math.degrees(cam.rotation_euler.x),
-        math.degrees(cam.rotation_euler.y),
-        math.degrees(cam.rotation_euler.z)
+    parser = argparse.ArgumentParser(
+        description="Export Blensor camera information."
     )
 
-    # Get render resolution (window/sensor size)
-    render = bpy.context.scene.render
-    resolution_x = render.resolution_x
-    resolution_y = render.resolution_y
+    parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to the temporary Blensor runtime configuration JSON.",
+    )
 
-    camera_details = {
-        "name": cam.name,
-        "position": {
-            "x": cam.location.x,
-            "y": cam.location.y,
-            "z": cam.location.z,
+    return parser.parse_args(script_args)
+
+def get_camera_details(camera_name):
+    """
+        Extract camera position, rotation, and optical properties.
+
+        Args:
+            camera_name: Name of the Blender camera object.
+
+        Returns:
+            dict: Camera information that can be serialized to JSON.
+
+        Raises:
+            KeyError: If the camera does not exist in the Blender scene.
+            TypeError: If the named object is not a camera.
+    """
+    
+    camera_object = bpy.data.objects.get(camera_name)
+
+    if camera_object is None:
+        raise KeyError(
+            "Camera object '{}' was not found.".format(camera_name)
+        )
+
+    if camera_object.type != "CAMERA":
+        raise TypeError(
+            "Object '{}' is not a camera.".format(camera_name)
+        )
+
+    camera_data = camera_object.data
+    scene = bpy.context.scene
+
+    resolution_percentage = scene.render.resolution_percentage / 100.0
+    resolution_width = int(
+        scene.render.resolution_x * resolution_percentage
+    )
+    resolution_height = int(
+        scene.render.resolution_y * resolution_percentage
+    )
+
+    return {
+        "name": camera_name,
+
+        "location": {
+            "x": float(camera_object.location.x),
+            "y": float(camera_object.location.y),
+            "z": float(camera_object.location.z),
         },
-        "rotation_radians": {
-            "x": cam.rotation_euler.x,
-            "y": cam.rotation_euler.y,
-            "z": cam.rotation_euler.z,
+
+        "rotation_euler": {
+            "x": float(camera_object.rotation_euler.x),
+            "y": float(camera_object.rotation_euler.y),
+            "z": float(camera_object.rotation_euler.z),
         },
-        "rotation_degrees": {
-            "x": rotation_degrees[0],
-            "y": rotation_degrees[1],
-            "z": rotation_degrees[2],
-        },
-        "angles":{
-            "azimuth":rotation_degrees[2]+90,
-            "elevation":-rotation_degrees[0]+180
-        },
-        "focal_length_mm": cam_data.lens,
+
+        "focal_length_mm": float(camera_data.lens),
+
         "sensor_size_mm": {
-            "width": cam_data.sensor_width,
-            "height": cam_data.sensor_height,
+            "width": float(camera_data.sensor_width),
+            "height": float(camera_data.sensor_height),
         },
+
         "pixel_resolution": {
-            "width": resolution_x,
-            "height": resolution_y,
+            "width": resolution_width,
+            "height": resolution_height,
         },
-        "clip_range": {
-            "near": cam_data.clip_start,
-            "far": cam_data.clip_end,
-        },
+
+        "clip_start": float(camera_data.clip_start),
+        "clip_end": float(camera_data.clip_end),
     }
 
-    return camera_details
+def export_camera_info(config_path):
+    """
+    Read the temporary runtime configuration and export camera information.
+
+    Args:
+        config_path: Path to the temporary JSON configuration file.
+
+    Returns:
+        str: Path to the generated ``cam_info.json`` file.
+    """
+
+    with open(config_path, "r", encoding="utf-8") as file:
+        cfg = json.load(file)
+
+    n_cameras = int(cfg["blensor"]["n_camera_BS"])
+
+    data_info_path = os.path.join(
+        cfg["paths"]["processed_data_dir"],
+        "blend_info",
+    )
+
+    os.makedirs(data_info_path, exist_ok=True)
+
+    cameras_info = {}
+
+    for cam_index in range(n_cameras):
+        camera_name = "Camera{}".format(cam_index)
+        cameras_info[camera_name] = get_camera_details(camera_name)
+
+    output_path = os.path.join(
+        data_info_path,
+        "cam_info.json",
+    )
+
+    with open(output_path, "w", encoding="utf-8") as file:
+        json.dump(cameras_info, file, indent=4)
+
+    return output_path
+
+
+def main():
+    """
+    Execute camera information extraction and remove the temporary config.
+    """
+
+    args = parse_script_arguments()
+    config_path = os.path.abspath(args.config)
+
+    try:
+        output_path = export_camera_info(config_path)
+
+        print(
+            "Camera information exported successfully to: {}".format(
+                output_path
+            )
+        )
+
+    finally:
+        if os.path.isfile(config_path):
+            try:
+                os.remove(config_path)
+                print(
+                    "Temporary configuration removed: {}".format(
+                        config_path
+                    )
+                )
+            except OSError as exc:
+                print(
+                    "Warning: could not remove temporary configuration "
+                    "'{}': {}".format(config_path, exc)
+                )
 
 
 if __name__ == "__main__":
-
-    with open('config.json', 'r') as file:
-        cfg = json.load(file)
-
-    cur_dir = os.curdir
-    n_cameras = cfg['blensor_options']['img_simulation_options']['n_camera_BS']
-    data_info_path = os.path.join(cur_dir, 'sim_data', cfg['simulation_paths']['results_dir_path'], 'blend_info')
-    if not os.path.exists(data_info_path):
-        os.makedirs(data_info_path)
-
-    cameras_info = {}
-    for cam in range(n_cameras):
-        cam_name = f"Camera{cam}"
-        cam_info = get_camera_details(cam_name)
-        cameras_info[cam_name] = cam_info
-    
-    with open(os.path.join(data_info_path, 'cam_info.json'), 'w') as file:
-        json.dump(cameras_info, file, indent=4)
+    main()

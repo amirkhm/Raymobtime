@@ -56,23 +56,35 @@ def car2sph(x, y, z):
     """
     Convert Cartesian coordinates to spherical coordinates.
 
-    This function converts x, y, and z Cartesian coordinates into spherical
-    coordinates using the radial distance, azimuth angle, and polar angle.
-
     Args:
-        x: Cartesian x coordinate or array of x coordinates.
-        y: Cartesian y coordinate or array of y coordinates.
-        z: Cartesian z coordinate or array of z coordinates.
+        x: Cartesian x coordinate or NumPy array.
+        y: Cartesian y coordinate or NumPy array.
+        z: Cartesian z coordinate or NumPy array.
 
     Returns:
-        A tuple containing:
+        Tuple containing:
             - r: Radial distance.
             - phi: Azimuth angle in radians.
             - theta: Polar angle in radians.
     """
+
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    z = np.asarray(z, dtype=float)
+
     r = np.sqrt(x**2 + y**2 + z**2)
-    theta = np.arccos(z / r) if r != 0 else 0  # Avoid division by zero
     phi = np.arctan2(y, x)
+
+    cos_theta = np.divide(
+        z,
+        r,
+        out=np.zeros_like(z, dtype=float),
+        where=r != 0
+    )
+
+    cos_theta = np.clip(cos_theta, -1.0, 1.0)
+    theta = np.arccos(cos_theta)
+
     return r, phi, theta
 
 def episodes_dict(csv_path, tmp_dir):
@@ -143,7 +155,7 @@ def episodes_dict(csv_path, tmp_dir):
             
     return episodesDict, usersDict, txDict
 
-def gen_lidar_matrix(c):
+def sph_lidar_matrix(c):
     """
     Generate spherical LiDAR occupancy matrices from Blensor point cloud scans.
 
@@ -179,7 +191,7 @@ def gen_lidar_matrix(c):
 
     print('Check Quantization parameters and Tx position before run!')
     
-    main_folder = os.path.join(c.working_directory, 'sim_data', c.base_config.output_name)
+    main_folder = c.result_dir_processed_data
 
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
@@ -187,7 +199,7 @@ def gen_lidar_matrix(c):
     fileToRead = os.path.join(main_folder, 'CoordVehicleTxRx.csv')
     
     type_data = c.type_data
-    outputFolder = os.path.join(main_folder, f'./lidar_car_matrix_{type_data}')
+    outputFolder = os.path.join(main_folder, f'./lidar_sph_matrix_{type_data}')
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
 
@@ -200,8 +212,8 @@ def gen_lidar_matrix(c):
 
     # analysis_area = (743, 416, 771, 626) #Rosslyn
     # Quantization guidelines for cartesian and spherical
-    dr = np.arange(QPsph['Rmin'],QPsph['Rmax'],QPsph['Rp'])
-    dphi = np.arange(QPsph['PhiMin'],QPsph['PhiMax'],QPsph['Phip'])
+    dr = np.arange(QPsph.min[0], QPsph.max[0], QPsph.step[0])
+    dphi = np.arange(QPsph.min[1], QPsph.max[1], QPsph.step[1])
     
     #initializing variables
     numScenesPerEpisode = c.scenes_per_episode #number of scenes per episode
@@ -221,7 +233,7 @@ def gen_lidar_matrix(c):
     scenes_in_ep, RX_in_ep, Tx_in_ep = episodes_dict(fileToRead,tmpdir)
     number_of_receivers = c.receivers_per_episode
     if type_data == '3D':
-        dtheta = np.arange(QPsph['ThetaMin'],QPsph['ThetaMax'],QPsph['Thetap'])
+        dtheta = np.arange(QPsph.min[2], QPsph.max[2], QPsph.step[2])
         #Assumes 10 Tx/Rx pairs per scene
         #TO-DO: Support for episodes with more than 1 scene
         zeros_array = np.zeros((numScenesPerEpisode,number_of_receivers, np.size(dr), np.size(dphi), np.size(dtheta)), int)
@@ -240,7 +252,7 @@ def gen_lidar_matrix(c):
             print(f'Processing Episode: {episodeID} and Scene: {s}')
             if not os.path.exists(tmpdir):
                 os.makedirs(tmpdir)
-            scans_dir = os.path.join(scans_path, format_run_name(total_num_scenes) + '.zip')
+            scans_dir = os.path.join(scans_path,'scans_' + format_run_name(total_num_scenes) + '.zip')
             key_dict = str(episodeID) + ',' + str(s)
             try:
                 RxFlow = RX_in_ep[key_dict]
@@ -249,7 +261,6 @@ def gen_lidar_matrix(c):
                 total_num_scenes += 1
                 shutil.rmtree(tmpdir)
                 continue
-
             if not os.path.exists(scans_dir):
                 print('\nWarning: could not find file ', scans_dir, ' Stopping...')
                 should_stop = True
@@ -272,12 +283,25 @@ def gen_lidar_matrix(c):
                 D = dist.cdist(vehicle_position,tmpCloud,'euclidean')
                 ind2 = np.where(D[0] < max_dist_LIDAR) # MaxSizeLIDAR
                 fffCloud = fCloud[ind2]
-
                 
                 # Centrilize matrix in the Rx/Tx car
-                x, y, z = [fffCloud['x'],fffCloud['y'],fffCloud['z']] - np.array(vehicle_position[0])
+                points = np.column_stack((
+                    fffCloud["x"],
+                    fffCloud["y"],
+                    fffCloud["z"],
+                ))
+
+                vehicle_xyz = np.asarray(vehicle_position[0], dtype=float).reshape(3)
+
+                relative_points = points - vehicle_xyz
+
+                x = relative_points[:, 0]
+                y = relative_points[:, 1]
+                z = relative_points[:, 2]
+
                 # Convert to Spherical
                 r, phi, theta = car2sph(x,y,z)
+
                 del x, y, z
                 indr = quantizeJ(r, dr)
                 indr = [int(i) for i in indr]
