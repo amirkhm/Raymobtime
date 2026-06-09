@@ -118,7 +118,7 @@ def export_camera_info(config_path):
     n_cameras = int(cfg["blensor"]["n_camera_BS"])
 
     data_info_path = os.path.join(
-        cfg["paths"]["processed_data_dir"],
+        cfg["paths"]["postprocessed_dir"],
         "blend_info",
     )
 

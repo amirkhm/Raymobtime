@@ -55,6 +55,7 @@ def export_blensor_runtime_config(c, run_id=0):
         "paths": {
             "rt_simulations_dir": str(c.results_dir),
             "processed_data_dir": str(c.result_dir_processed_data),
+            "postprocessed_dir": str(c.results_dir_postprocessed),
 
             "images_dir": os.path.join(
                 project_root,

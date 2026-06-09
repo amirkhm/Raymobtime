@@ -189,11 +189,11 @@ def image_refinement(c):
             valid bounding box.
     """
 
-    main_folder = c.result_dir_processed_data
+    main_folder = c.results_dir_postprocessed
     if not os.path.exists(main_folder):
         raise FileNotFoundError(f"ERROR: folder {main_folder} not found")
     
-    csv_path = os.path.join(main_folder, 'CoordVehicleTxRx.csv')
+    csv_path = os.path.join(c.result_dir_processed_data, 'CoordVehicleTxRx.csv')
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"ERROR: csv file {csv_path} not found")
     df = csv_to_df(csv_path, c.n_run)
@@ -205,7 +205,7 @@ def image_refinement(c):
         os.makedirs(refined_img_path)
 
     database_path = os.path.join(
-        main_folder, 
+        c.result_dir_processed_data, 
         f'{c.base_config.output_name}.db')
     session = fgdb.open_database(database_path)
     objcs = session.query(fgdb.InsiteObject)
@@ -214,7 +214,7 @@ def image_refinement(c):
     cam_info_path = os.path.join(
         main_folder, 
         'blend_info', 
-        'cam_info.json')   
+        'cam_info.json')
     if not os.path.exists(cam_info_path):
         export_cam_info(c) # Export and generate the json file       
     with open(cam_info_path, 'r') as file:
@@ -235,7 +235,7 @@ def image_refinement(c):
         position_Rx = np.array([row["x"],row["y"],row["z"]])
         if c.sim_BS_img:
             # Refine BS images
-            raw_dt_path = os.path.join(main_folder, 'images', 'BS', f'run{run}')
+            raw_dt_path = os.path.join(c.result_dir_processed_data, 'images', 'BS', f'run{run}')
             for cam in range(c.n_cameras_blensor_scenario):
                 cam_name = f'Camera{cam}'
                 img_raw_path = os.path.join(raw_dt_path, f'{cam_name}.png')

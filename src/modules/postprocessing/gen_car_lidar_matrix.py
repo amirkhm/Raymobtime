@@ -157,11 +157,11 @@ def cart_lidar_matrix(c):
 
     print('Check Quantization parameters and Tx position before run!')
 
-    main_folder = c.result_dir_processed_data
+    main_folder = c.results_dir_postprocessed
     if not os.path.exists(main_folder):
         os.makedirs(main_folder)
         
-    fileToRead = os.path.join(main_folder, 'CoordVehicleTxRx.csv')
+    fileToRead = os.path.join(c.result_dir_processed_data, 'CoordVehicleTxRx.csv')
     
     type_data = c.type_data
     outputFolder = os.path.join(main_folder, f'./lidar_car_matrix_{type_data}')
@@ -182,7 +182,7 @@ def cart_lidar_matrix(c):
     
     #initializing variables
     numScenesPerEpisode = c.scenes_per_episode #number of scenes per episode
-    scans_path = os.path.join(main_folder, 'scans')
+    scans_path = os.path.join(c.result_dir_processed_data, 'scans')
     
     runs = c.n_run
     starting_episode = runs[0]/numScenesPerEpisode
@@ -309,6 +309,7 @@ def cart_lidar_matrix(c):
         time_elapsed = datetime.now() - startTime
         print("Total time elapsed: " + str(time_elapsed))
         episodeID += 1
+    os.rmdir('./tmp/')
 
 def quantizeJ(signal, partitions):
     """
