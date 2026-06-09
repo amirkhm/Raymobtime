@@ -16,7 +16,7 @@
           <walk edges="E0"/>
       </personFlow>
     
-      <flow id="droneFlow0" begin="0" end="200" probability="0.9" type="Drone"> 
+      <flow id="droneFlow0" begin="10" end="200" probability="0.9" type="Drone"> 
           <route edges="H1 H2"/>
       </flow>
       <flow id="flow0" color="0,0,1" begin="10" end= "15" probability="0.41"  type="typeVehicleDistribution">

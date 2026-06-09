@@ -113,18 +113,18 @@ def place_by_sumo(
             # 1.72 size of a perdestrian
             if c.vehicles_template:
                 str_vehicles = get_model(
-                                    c=c,
-                                    str_vehicles=str_vehicles,
-                                    name=ped,
-                                    model_type=pedestrian_type,
-                                    x=xinsite - deltaX,
-                                    y=yinsite - deltaY,
-                                    z=0,
-                                    angle=90 - angle,
-                                    height=1.72,
-                                    length=length,
-                                    width=width,
-                                ) 
+                    c=c,
+                    str_vehicles=str_vehicles,
+                    name=ped,
+                    model_type=pedestrian_type,
+                    x=xinsite - deltaX,
+                    y=yinsite - deltaY,
+                    z=0,
+                    angle=90 - angle,
+                    height=1.72,
+                    length=length,
+                    width=width,
+                ) 
 
     for veh_i, veh in enumerate(traci.vehicle.getIDList()):
         (
@@ -165,13 +165,14 @@ def place_by_sumo(
         deltaX = (length/2.0) * np.sin(thisAngleInRad)
         deltaY = (length/2.0) * np.cos(thisAngleInRad)
 
-        is_drone = veh.startswith("droneFlow")
+        if c.drone_simulation:        
+            is_drone = veh.startswith("droneFlow")
 
-        if is_drone:
-            drone_altitude = getattr(c, "drone_altitude", 10.0)
-            z_obj = z3 + drone_altitude
+            if is_drone:
+                drone_altitude = getattr(c, "drone_altitude", 10.0)
+                z_obj = z3 + drone_altitude
         else:
-            z_obj = z3
+                z_obj = z3        
 
         car.translate((x-deltaX, y-deltaY, z_obj)) #now can translate
 
@@ -181,35 +182,54 @@ def place_by_sumo(
 
         if c.vehicles_template:
             str_vehicles = get_model(
-                                c=c,
-                                str_vehicles=str_vehicles,
-                                name=veh,
-                                model_type=vehicle_type,
-                                x=x - deltaX,
-                                y=y - deltaY,
-                                z=z_obj,
-                                angle=90 - angle,
-                                height=height,
-                                length=length,
-                                width=width,
-                            ) 
+                c=c,
+                str_vehicles=str_vehicles,
+                name=veh,
+                model_type=vehicle_type,
+                x=x - deltaX,
+                y=y - deltaY,
+                z=z_obj,
+                angle=90 - angle,
+                height=height,
+                length=length,
+                width=width,
+            ) 
 
-        #antenna_vertice
+        is_drone = str(vehicle_type).strip().lower() == "drone"
+
+        antenna_x = x - deltaX
+        antenna_y = y - deltaY
+
+        if is_drone:
+            antenna_z = z_obj - 0.1
+        else:
+            antenna_z = z_obj + height + 0.1
+
+        # Receiver antenna
         if veh in veh_with_antenna:
-            c_present = True
-            
-            if ( veh.startswith('droneFlow') ):
-                antenna.add_vertice((x-deltaX, y-deltaY, z_obj - 0.1))
+            if is_drone and not c.drone_simulation:
+                # Drone must not be used as a receiver when drone simulation is disabled.
+                pass
             else:
-                antenna.add_vertice((x-deltaX, y-deltaY, z_obj + height + 0.1))
-        if V2V:     
-            if veh in Tx_veh:
-                c_tx_present = True
-                if ( veh.startswith('droneFlow') ):
-                    antenna_Tx.add_vertice((x-deltaX, y-deltaY, z_obj - 0.1))
-                else:
-                    antenna_Tx.add_vertice((x-deltaX, y-deltaY, z_obj + height + 0.1))
+                antenna.add_vertice((
+                    antenna_x,
+                    antenna_y,
+                    antenna_z,
+                ))
+                c_present = True
 
+        # Transmitter antenna
+        if V2V and veh in Tx_veh:
+            if is_drone and not c.drone_simulation:
+                # Drone must not be used as a transmitter when drone simulation is disabled.
+                pass
+            else:
+                antenna_Tx.add_vertice((
+                    antenna_x,
+                    antenna_y,
+                    antenna_z,
+                ))
+                c_tx_present = True
 
     if c.vehicles_template:
         from src.modules.rt.wi.modeling import vehicles_template as vt
