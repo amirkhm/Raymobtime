@@ -212,8 +212,8 @@ def blensor_simulation(c):
                     + f"Memory after: {psutil.virtual_memory().used / 1024 / 1024:.2f} MB"
                     + RESET)
             gc.collect()
-    c.check['blensor_lidar_okay'] = check_blensor_lidar(c)
-    c.check['blensor_images_okay'] = check_blensor_images(c)
+        c.check['blensor_lidar_okay'] = check_blensor_lidar(c)
+        c.check['blensor_images_okay'] = check_blensor_images(c)
 
     
 

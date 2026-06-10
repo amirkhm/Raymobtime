@@ -226,30 +226,7 @@ def mobility_sumo(c):
 
     antenna = txrxFile[c.insite_rx_name].location_list[0]
 
-    if c.mobility.enabled and c.mobility.tool == 'line':
-        # creates a car structure to be placed on the line
-        car = objects.RectangularPrism(*c.car_dimensions, material=c.car_material_id)
-        car_structure = objects.Structure(name=c.car_structure_name)
-        car_structure.add_sub_structures(car)
-        car_structure.dimensions = car.dimensions
-
-        n_runs_wiout_rx = 0 # Number of Runs without
-        for i in c.n_run:
-            run_dir = os.path.join(
-                c.results_dir, 
-                format_run_name(i - n_scenes_without_channels))
-            objFile.clear()
-            structure_group, location = place_on_line(
-                c.line_origin, 
-                c.line_destination, 
-                c.line_dimension,
-                c.car_distances, 
-                car_structure, 
-                antenna, 
-                c.antenna_origin)
-            
-
-    elif c.mobility.enabled and c.mobility.tool == 'sumo':
+    if c.mobility.enabled and c.mobility.tool == 'sumo':
         np.random.seed(c.sumo.seed)
         logging.info(
             '\033[92m'

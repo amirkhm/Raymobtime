@@ -596,9 +596,9 @@ class parameters:
 
         self.tool = self.pipeline.mobility.tool
         if self.isolated_sim:
-            self.use_sumo = False
+            self.use_sumo = None
         else:
-            self.use_sumo = True
+            self.use_sumo = self.tool
 
         # Dimensions of the Mobile Objects, MOBJS, which will be placed on dst_object_file_name
         self.car_dimensions = (2, 6, 1.47)
@@ -618,7 +618,7 @@ class parameters:
         self.insite_rx_name = self.insite_rx_name
 
 
-        if self.use_sumo:
+        if self.use_sumo == 'sumo':
             seed = self.sumo.seed
             np.random.seed(seed)
 
@@ -629,7 +629,7 @@ class parameters:
                 '--step-length',
                 str(self.sampling_interval),
                 '--seed',
-                '{}'.format(seed)]
+                f'{seed}']
 
             # Mapping from SUMO to InSite coordinates.
             # Take only min and max for x and y and put there.
@@ -638,23 +638,8 @@ class parameters:
                 "laneB_0": [[658.82, 460], [747.5, 358.76]],
                 "laneC_0": [[658.82, 460], [752.5, 675.90]],
                 "laneD_0": [[840.08, 460], [755.5, 660]]}
-
         else:
-            # Not sure if this is ancient code used for debugging with use_sumo = False.
-
-            # Origin and destination of the line to place the cars
-            self.line_origin = (
-                (755.25, 470, 0.2),
-                (755.25 + 5, 470, 0.2),)
-
-            # Dimension line_destination is indicating to
-            self.line_destination = 645
-            self.line_dimension = 1
-
-            #! Verificar como essa função vai ser acessada (def entro de objeto) e se é necessário colocar self ou não
-            # Distance between cars
-            def car_distances():
-                return np.random.uniform(1.5, 6)
+            raise NameError(f"mobility module nonexistent: {self.pipeline.mobility.tool}")
         
         self.mobility = self.pipeline.mobility
         self.ray_tracing = self.pipeline.ray_tracing

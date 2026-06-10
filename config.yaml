@@ -19,7 +19,7 @@ base_config:
 pipeline:
   mobility:
     enabled: true
-    tool: sumo                                # null | none
+    tool: sumo                                # sumo
     placement_limits: 
       enabled: false   
       max_lim: [843, 523]                     # [x, y] study area limits for placement of Tx and Rx
