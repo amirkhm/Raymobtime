@@ -686,7 +686,7 @@ def raymobtime():
     if c.data_processing.enabled:       
         if c.data_processing.outputs == None:
             c.data_processing.outputs = []
-            
+
         if c.data_processing.which == "all":
             c.data_processing.outputs = ['db', 'csv', 'hdf5']
 

@@ -7,12 +7,12 @@ def check_sumo_simulation_status(c):
     runs = c.rmt.sampling_parameters[1]
     check = 0
     for run in range(runs):
-        arquivo = Path(
+        file = Path(
             os.path.join(
                 c.results_dir, 
                 format_run_name(run), 
                 'sumoOutputInfoFileName.txt'))
-        if arquivo.exists():
+        if file.exists():
             check += 1
         else:
             logging.warning(

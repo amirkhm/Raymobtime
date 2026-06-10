@@ -7,14 +7,14 @@ def check_wi_run_status(c):
     runs = c.rmt.sampling_parameters[1]
     check = 0
     for run in range(runs):
-        arquivo = Path(
+        file = Path(
             os.path.join(
                 c.results_dir, 
                 format_run_name(run), 
                 c.insite_study_area_name,
                 'status',
                 'runstatus.complete'))
-        if arquivo.exists():
+        if file.exists():
             check += 1
         else:
             logging.warning(

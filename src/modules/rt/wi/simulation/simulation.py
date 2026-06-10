@@ -609,6 +609,6 @@ def main(c):
             c.check['rt_okay'] = check_wi_run_status(c)
         else:
             c.check['rt_okay'] = check_wi_run_status(c)
-            if not (c.check.get('rt_okay') and c.resume):
+            if not (c.check.get('rt_okay') or c.resume):
                 wireless_insite_simulation(c)
                 c.check['rt_okay'] = check_wi_run_status(c)
