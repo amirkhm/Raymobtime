@@ -40,12 +40,10 @@ def check_refined_images(c):
         return False
     
 def check_lidar_matrix(c):
-    coord_type =  c.CoordSystem [:3]
-    geometry_type = c.type_data
     lidar_matrix_folder = Path(
         os.path.join(
             c.results_dir_postprocessed,
-            f'lidar_{coord_type}_matrix_{geometry_type}'))
+            f'lidar_{c.CoordSystem[:3]}_matrix_{c.type_data}'))
     if lidar_matrix_folder.exists():
         logging.info(
             '\033[92m'

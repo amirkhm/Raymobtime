@@ -19,6 +19,10 @@ from src.modules.data_processing import (
     check_csv_exists,
     check_hdf5_exists,
     sanity_check_up)
+from src.modules.postprocessing.check_postprocessing import (
+    check_beams,
+    check_refined_images,
+    check_lidar_matrix)
 from src.modules.postprocessing import ( 
     gen_beam_output_file,
     cart_lidar_matrix,
@@ -689,53 +693,54 @@ def raymobtime():
 
         if c.data_processing.which == "all":
             c.data_processing.outputs = ['db', 'csv', 'hdf5']
-
-        if 'db' in c.clean_previous:
-            arquivo = Path(
-                os.path.join(
-                    c.result_dir_processed_data,
-                    c.base_config.output_name+'.db'))
-            if os.path.exists(arquivo):
-                os.remove(arquivo)
-            gen_database(c)
-            c.check['sql_okay'] = check_sql_exists(c)
-        else:
-            c.check['sql_okay'] = check_sql_exists(c)
-            if not (c.check.get('sql_okay') and c.resume):
+        
+        if 'db' in c.data_processing.outputs:
+            if 'db' in c.clean_previous:
+                arquivo = Path(
+                    os.path.join(
+                        c.result_dir_processed_data,
+                        c.base_config.output_name+'.db'))
+                if os.path.exists(arquivo):
+                    os.remove(arquivo)
                 gen_database(c)
                 c.check['sql_okay'] = check_sql_exists(c)
+            else:
+                c.check['sql_okay'] = check_sql_exists(c)
+                if not (c.check.get('sql_okay') and c.resume):
+                    gen_database(c)
+                    c.check['sql_okay'] = check_sql_exists(c)
         
-
-        if 'coord' in c.clean_previous:
-            arquivo = Path(
-                os.path.join(
-                    c.result_dir_processed_data,
-                    'CoordVehicleTxRx.csv'))
-            if os.path.exists(arquivo):
-                os.remove(arquivo)
-            gen_csv_file(c)
-            c.check['csv_okay'] = check_csv_exists(c)
-        else:
-            c.check['csv_okay'] = check_csv_exists(c)
-            if not (c.check.get('csv_okay') and c.resume):
+        if 'coord' in c.data_processing.outputs:
+            if 'coord' in c.clean_previous:
+                arquivo = Path(
+                    os.path.join(
+                        c.result_dir_processed_data,
+                        'CoordVehicleTxRx.csv'))
+                if os.path.exists(arquivo):
+                    os.remove(arquivo)
                 gen_csv_file(c)
                 c.check['csv_okay'] = check_csv_exists(c)
+            else:
+                c.check['csv_okay'] = check_csv_exists(c)
+                if not (c.check.get('csv_okay') and c.resume):
+                    gen_csv_file(c)
+                    c.check['csv_okay'] = check_csv_exists(c)
 
-
-        if 'hdf5' in c.clean_previous:
-            hdf5_path = Path(
-                os.path.join(
-                    c.result_dir_processed_data,
-                    'rays',))
-            if os.path.exists(hdf5_path):
-                shutil.rmtree(hdf5_path)
-            gen_rays_dataset(c)
-            c.check['hdf5_okay'] = check_hdf5_exists(c)
-        else:
-            c.check['hdf5_okay'] = check_hdf5_exists(c)
-            if not (c.check.get('hdf5_okay') and c.resume):
+        if 'hdf5' in c.data_processing.outputs:
+            if 'hdf5' in c.clean_previous:
+                hdf5_path = Path(
+                    os.path.join(
+                        c.result_dir_processed_data,
+                        'rays',))
+                if os.path.exists(hdf5_path):
+                    shutil.rmtree(hdf5_path)
                 gen_rays_dataset(c)
                 c.check['hdf5_okay'] = check_hdf5_exists(c)
+            else:
+                c.check['hdf5_okay'] = check_hdf5_exists(c)
+                if not (c.check.get('hdf5_okay') and c.resume):
+                    gen_rays_dataset(c)
+                    c.check['hdf5_okay'] = check_hdf5_exists(c)
 
 
     # Simulation using blensor for image/lidar database
@@ -743,44 +748,82 @@ def raymobtime():
         blensor_simulation(c)
 
 
-    if c.post_processing.enabled: 
-        postprocessing_modules = {
-            "beams": gen_beam_output_file,
-            "lidar_car": cart_lidar_matrix,
-            "lidar_sph": sph_lidar_matrix,
-            "image": image_refinement,
-        }
-        logging.info(
-            '\033[92m'
-            'Starting post-processing'
-            '\033[0m')
-        if c.post_processing.which == "all":
-            for func in [gen_beam_output_file, cart_lidar_matrix, sph_lidar_matrix, image_refinement]:
-                func(c)
+    if c.post_processing.enabled:
+        if c.post_processing.outputs == None:
+            c.post_processing.outputs = []
+        elif c.post_processing.which == "all":
+            c.post_processing.outputs = ['beams', 'lidar', 'image']
         elif c.post_processing.which == "selected":
-            for output in c.post_processing.outputs:
-                if output in postprocessing_modules:
-                    func = postprocessing_modules[output]
-                    func(c)
-        
-    # Saving the blensor simulation from pcd files to matrix type data
-    if (c.post_processing.enabled) and ("lidar" in c.post_processing.outputs):
-       if c.CoordSystem == 'spherical':
-           sph_lidar_matrix(c)
-       elif c.CoordSystem == 'cartesian':
-           cart_lidar_matrix(c)
-       else:
-           raise ValueError(f'CoordSystem {c.CoordSystem} not defined or value incorrect, use cartesian or spherical in config.yaml')
-    elif (c.post_processing.enabled) and ("image" in c.post_processing.outputs):
-       image_refinement(c)
+            pass
+        else:
+            raise ValueError(f'Which post processing will you choose {c.post_processing.which} is not defined')
+
+        if 'lidar' in c.post_processing.outputs:
+            if 'post_lidar' in c.clean_previous:
+                # remove folder
+                lidar_matrix_folder = Path(
+                os.path.join(
+                    c.results_dir_postprocessed,
+                    f'lidar_{c.CoordSystem [:3]}_matrix_{c.type_data}'))
+                if lidar_matrix_folder.exists():
+                    shutil.rmtree(lidar_matrix_folder)
+                # execute
+                if c.CoordSystem == 'spherical':
+                    sph_lidar_matrix(c)
+                elif c.CoordSystem == 'cartesian':
+                    cart_lidar_matrix(c)
+                else:
+                    raise ValueError(f'CoordSystem {c.CoordSystem} not defined or value incorrect, use cartesian or spherical in config.yaml')
+                # check
+                c.check['lidar_matrix_okay'] = check_lidar_matrix(c)
+            else:
+                #check
+                c.check['lidar_matrix_okay'] = check_lidar_matrix(c)
+                if not (c.check.get('lidar_matrix_okay') and c.resume):
+                    # execute
+                    if c.CoordSystem == 'spherical':
+                        sph_lidar_matrix(c)
+                    elif c.CoordSystem == 'cartesian':
+                        cart_lidar_matrix(c)
+                    else:
+                        raise ValueError(f'CoordSystem {c.CoordSystem} not defined or value incorrect, use cartesian or spherical in config.yaml')
+                    # check
+                    c.check['lidar_matrix_okay'] = check_lidar_matrix(c)
+
+        if 'image' in c.post_processing.outputs:
+            if 'post_images' in c.clean_previous:
+                post_images_folder = Path(
+                os.path.join(
+                    c.results_dir_postprocessed,
+                    f'refined_images'))
+                if post_images_folder.exists():
+                    shutil.rmtree(post_images_folder)
+                image_refinement(c)
+                c.check['refined_images_okay'] = check_refined_images(c)
+            else:
+                c.check['refined_images_okay'] = check_refined_images(c)
+                if not (c.check.get('refined_images_okay') and c.resume):
+                    image_refinement(c)
+                    c.check['refined_images_okay'] = check_refined_images(c)
+
+        if 'beams' in c.post_processing.outputs:
+            if 'beams' in c.clean_previous:
+                beams_folder = Path(
+                    os.path.join(
+                        c.results_dir_postprocessed,
+                        'beams'))
+                if beams_folder.exists():
+                    shutil.rmtree(beams_folder)
+                gen_beam_output_file(c)
+                c.check['beams_okay'] = check_beams(c)
+            else:
+                c.check['beams_okay'] = check_beams(c)
+                if not (c.check.get('beams_okay') and c.resume):
+                    gen_beam_output_file(c)
+                    c.check['beams_okay'] = check_beams(c)
 
     if c.validation.run_checkup:
        sanity_check_up(c)
-
-    #check_wi_run_status(c)
-    #check_sumo_simulation_status(c)
-    #check_sql_exists(c)
-    #check_csv_exists(c)
     
 if __name__ == "__main__":    
     raymobtime()

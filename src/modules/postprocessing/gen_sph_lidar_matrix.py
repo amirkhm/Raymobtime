@@ -188,8 +188,6 @@ def sph_lidar_matrix(c):
     """
 
     startTime = datetime.now()
-
-    print('Check Quantization parameters and Tx position before run!')
     
     main_folder = c.results_dir_postprocessed
 
@@ -348,12 +346,12 @@ def sph_lidar_matrix(c):
             shutil.rmtree(tmpdir)
 
         npz_name = os.path.join(outputFolder , 'obstacles_e_' + str(episodeID) + '.npz')
-        print('==> Wrote file ' + npz_name)
+        #print('==> Wrote file ' + npz_name)
         np.savez_compressed(npz_name, obstacles_matrix_array=obstacles_matrix_array)
-        print('Saved file ', npz_name)
+        #print('Saved file ', npz_name)
 
         time_elapsed = datetime.now() - startTime
-        print("Total time elapsed: " + str(time_elapsed))
+        #print("Total time elapsed: " + str(time_elapsed))
         episodeID += 1
     os.rmdir('./tmp/')
 

@@ -75,7 +75,7 @@ def process_ep(path, c):
     normalizedAntDistance = c.normalized_antenna_distance #0.5
     numOfInvalidChannels = 0
 
-    print(path)
+    #print(path)
 
     if c.isolated_sim:
         numScenes = 1
@@ -260,7 +260,7 @@ def gen_beam_output_file(c):
             episodes = int((max_runs+1)/c.scenes_per_episode)
         
         for ep in range(episodes):
-            print("Episode # ", ep)
+            #print("Episode # ", ep)
             hmatrix,beamIndex, channel = process_ep(
                 os.path.join(
                     database_folder, 

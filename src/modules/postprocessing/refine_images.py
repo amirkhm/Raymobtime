@@ -294,7 +294,7 @@ def image_refinement(c):
                     cv2.imwrite(os.path.join(rf_img_bb_path, f"Camera{cam}.png"), rf_img_bb)
 
                 bs_veh_positions[row["EpisodeID"], row["SceneID"], row["RxID"], cam, :] = p_cam
-            print(f"Refined images from run {run:5d} and Rx {row['RxID']:2d}")
+            #print(f"Refined images from run {run:5d} and Rx {row['RxID']:2d}")
     
     if c.sim_BS_img:
         np.savez(os.path.join(bs_rf_path, 'RxPosCamraPOV.npz'), position=bs_veh_positions)
