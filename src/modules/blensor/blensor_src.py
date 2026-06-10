@@ -4,11 +4,15 @@ import gc
 import psutil
 import os
 import signal
+import shutil
 from multiprocessing import Process
 import json
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
+from src.modules.blensor.check_blensor import (
+    check_blensor_images,
+    check_blensor_lidar)
 
 def to_jsonable(obj):
     """
@@ -137,63 +141,81 @@ def blensor_simulation(c):
 
     blensor_scenario_path = c.blensor_scenario_path
     blensor_runfile = c.blensor_runfile_path
-
     main_simulator_python_file = []
 
     if "lidar" in c.blensor.outputs:
-        main_simulator_python_file.append("src/modules/blensor/lidar_sim.py")
+        if 'blensor_lidar' in c.clean_previous:
+            scan_folder = Path(
+                os.path.join(
+                    c.result_dir_processed_data,
+                    'scans'))
+            if scan_folder.exists():
+                shutil.rmtree(scan_folder)
+            main_simulator_python_file.append("src/modules/blensor/lidar_sim.py")
+        else:
+            c.check['blensor_lidar_okay'] = check_blensor_lidar(c)
+            if not (c.check.get('blensor_lidar_okay') and c.resume):
+                main_simulator_python_file.append("src/modules/blensor/lidar_sim.py")
 
     if "image" in c.blensor.outputs:
-        if c.sim_BS_img:
-            main_simulator_python_file.append("src/modules/blensor/img_bs_sim.py")
+        if 'blensor_images' in c.clean_previous:
+            images_folder = Path(
+                os.path.join(
+                    c.result_dir_processed_data,
+                    'images'))
+            if images_folder.exists():
+                shutil.rmtree(images_folder)
+            if c.sim_BS_img:
+                main_simulator_python_file.append("src/modules/blensor/img_bs_sim.py")
+            if c.sim_UE_img:
+                main_simulator_python_file.append("src/modules/blensor/img_sim.py")
+        else:
+            c.check['blensor_images_okay'] = check_blensor_images(c)
+            if not (c.check.get('blensor_images_okay') and c.resume):
+                if c.sim_BS_img:
+                    main_simulator_python_file.append("src/modules/blensor/img_bs_sim.py")
+                if c.sim_UE_img:
+                    main_simulator_python_file.append("src/modules/blensor/img_sim.py")
 
-        if c.sim_UE_img:
-            main_simulator_python_file.append("src/modules/blensor/img_sim.py")
+    if not (main_simulator_python_file == []):
+        RED = "\033[91m"
+        RESET = "\033[0m"
+        for i in range(min(c.n_run), max(c.n_run) + 1):
+            print("Running command...")
+            runtime_config_path = export_blensor_runtime_config(c, i)
+            for blend_runpy in main_simulator_python_file:
+                cmd = [
+                    blensor_runfile,
+                    blensor_scenario_path,
+                    "--background",
+                    "-P",
+                    blend_runpy,
+                    "--",
+                    str(i),
+                    runtime_config_path,
+                ]
 
-    if not main_simulator_python_file:
-        raise ValueError(f"Invalid Blensor output type: {c.blensor.outputs}")
+                print(cmd)
+                print(
+                    RED 
+                    + f"Simulation n° {i}" 
+                    + RESET)
+                p = Process(
+                    target=run_blensor_safely,
+                    args=(cmd, str(c.working_directory)))
+                p.start()
+                p.join(timeout=3700)
+                if p.is_alive():
+                    p.terminate()
+                print(
+                    RED
+                    + f"Memory after: {psutil.virtual_memory().used / 1024 / 1024:.2f} MB"
+                    + RESET)
+            gc.collect()
+    c.check['blensor_lidar_okay'] = check_blensor_lidar(c)
+    c.check['blensor_images_okay'] = check_blensor_images(c)
 
-    RED = "\033[91m"
-    RESET = "\033[0m"
-
-    for i in range(min(c.n_run), max(c.n_run) + 1):
-        print("Running command...")
-
-        runtime_config_path = export_blensor_runtime_config(c, i)
-
-        for blend_runpy in main_simulator_python_file:
-            cmd = [
-                blensor_runfile,
-                blensor_scenario_path,
-                "--background",
-                "-P",
-                blend_runpy,
-                "--",
-                str(i),
-                runtime_config_path,
-            ]
-
-            print(cmd)
-            print(RED + f"Simulation n° {i}" + RESET)
-
-            p = Process(
-                target=run_blensor_safely,
-                args=(cmd, str(c.working_directory))
-            )
-
-            p.start()
-            p.join(timeout=3700)
-
-            if p.is_alive():
-                p.terminate()
-
-            print(
-                RED
-                + f"Memory after: {psutil.virtual_memory().used / 1024 / 1024:.2f} MB"
-                + RESET
-            )
-
-        gc.collect()
+    
 
 def run_blensor_safely(cmd, cwd=None):
     """

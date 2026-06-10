@@ -764,14 +764,13 @@ def raymobtime():
                     func(c)
         
     # Saving the blensor simulation from pcd files to matrix type data
-    CoordSystem = c.CoordSystem
     if (c.post_processing.enabled) and ("lidar" in c.post_processing.outputs):
-       if CoordSystem.lower() == 'spherical':
+       if c.CoordSystem == 'spherical':
            sph_lidar_matrix(c)
-       elif CoordSystem.lower() == 'cartesian':
+       elif c.CoordSystem == 'cartesian':
            cart_lidar_matrix(c)
        else:
-           raise ValueError(f'CoordSystem {CoordSystem} not defined or value incorrect, use cartesian or spherical in config.yaml')
+           raise ValueError(f'CoordSystem {c.CoordSystem} not defined or value incorrect, use cartesian or spherical in config.yaml')
     elif (c.post_processing.enabled) and ("image" in c.post_processing.outputs):
        image_refinement(c)
 

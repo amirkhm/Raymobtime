@@ -2,14 +2,14 @@ base_config:
   output_name: sim_a                          # Simulation identifier name
   scenario: rosslyn                           # scenario name
   yaml_output: true
-  logging_level: debug                         # logging level: debug, info, warning, error, critical, NONE
+  logging_level: info                         # logging level: debug, info, warning, error, critical, NONE
   resume: true                               # skip steps already concluded, ir false remember clean previous
   clean_previous:                            # remove result folders before running
     #- mobility 
     #- rt
-    - db
-    - coord
-    - hdf5
+    #- db
+    #- coord
+    #- hdf5
     #- blensor_lidar
     #- blensor_images
     #- post_lidar
@@ -45,12 +45,12 @@ pipeline:
       - image
 
   post_processing:
-    enabled: false
+    enabled: true
     which: selected                               # all | selected
     outputs:                                         # ["beams", "image", "lidar"]
-       #- beams
-       #- image
-       #- lidar
+       - beams
+       - image
+       - lidar
   
   validation:
     run_checkup: false
@@ -118,7 +118,7 @@ post_processing:
       Rx: [0,0,0] #[alpha, beta, gamma]
     
   cartesian_lidar_matrix:
-    coordinate_system: cartesian          # spherical | cartesian
+    coordinate_system: spherical          # spherical | cartesian
     QP: # cartesian
       step: [1.15, 1.25, 1]               # step in x, y, z directions
       min: [744, 429, 0]                  # minimum x, y, z coordinates

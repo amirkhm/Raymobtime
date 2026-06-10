@@ -1,6 +1,6 @@
 import os
-import pandas as pd
 import logging
+from src.scripts.helpers import format_run_name
 from pathlib import Path
 
 def check_blensor_images(c):
@@ -11,10 +11,10 @@ def check_blensor_images(c):
             BS_images_path = Path(
                 os.path.join(
                     c.result_dir_processed_data,
-                    'images'
-                    'BS'
+                    'images',
+                    'BS',
                     f'run{run}'))
-            if os.path.exists(BS_images_path):    
+            if BS_images_path.exists():    
                 checkBS += 1
             else:
                 logging.warning(
@@ -35,10 +35,10 @@ def check_blensor_images(c):
             UE_images_path = Path(
                 os.path.join(
                     c.result_dir_processed_data,
-                    'images'
-                    'UE'
+                    'images',
+                    'UE',
                     f'run{run}'))
-            if os.path.exists(UE_images_path):    
+            if UE_images_path.exists():    
                 checkUE += 1
             else:
                 logging.warning(
@@ -48,24 +48,31 @@ def check_blensor_images(c):
                 break
         logging.info(
             '\033[92m'
-            f"[Blensor images check] UE Status: {checkBS}/{runs} complete."
+            f"[Blensor images check] UE Status: {checkUE}/{runs} complete."
             '\033[0m')
         checkUE = 1 if checkUE == runs else 0
     return True if (checkBS and checkUE) else False
         
 
 def check_blensor_lidar(c):
-    blensor_lidar_path = Path(
-        os.path.join(
-            c.result_dir_processed_data,
-            'scans'))
-    if os.path.exists(blensor_lidar_path):
-        logging.info(
-            '\033[92m'
-            f"[Blensor lidar check] Status: complete."
-            '\033[0m')
-    else:
-        logging.warning(
-        '\033[35m'
-        f"[Blensor lidar check] Satatus: Incomplete, no files found."
+    runs = c.rmt.sampling_parameters[1]
+    check = 0
+    for run in range(runs):
+        scan_run = Path(
+            os.path.join(
+                c.result_dir_processed_data,
+                'scans',
+                f'scans_{format_run_name(run)}.zip'))
+        if scan_run.exists():
+            check += 1
+        else:
+            logging.warning(
+                '\033[35m'
+                f"[blensor lidar check] Satatus: Incomplete, {format_run_name(run)} not completed."
+                '\033[0m')
+            break
+    logging.info(
+        '\033[92m'
+        f"[Blensor lidar check] Status: {check}/{runs} complete."
         '\033[0m')
+    return check == runs

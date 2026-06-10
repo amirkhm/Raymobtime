@@ -4,11 +4,11 @@ import logging
 from pathlib import Path
 
 def check_sql_exists(c):
-    arquivo = Path(
+    file = Path(
         os.path.join(
             c.result_dir_processed_data,
             c.base_config.output_name+'.db'))
-    if arquivo.exists():
+    if file.exists():
         logging.info(
             '\033[92m'
             f"[SQL check] Status: complete."
@@ -22,11 +22,11 @@ def check_sql_exists(c):
         return False
 
 def check_csv_exists(c):
-    arquivo = Path(
+    file = Path(
         os.path.join(
             c.result_dir_processed_data,
             'CoordVehicleTxRx.csv'))
-    if arquivo.exists():
+    if file.exists():
         logging.info(
             '\033[92m'
             f"[CSV check] Status: complete."
