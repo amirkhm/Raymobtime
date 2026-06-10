@@ -2,7 +2,7 @@ base_config:
   output_name: sim_a                          # Simulation identifier name
   scenario: rosslyn                           # scenario name
   yaml_output: true
-  logging_level: info                         # logging level: debug, info, warning, error, critical, NONE
+  logging_level: debug                         # logging level: debug, info, warning, error, critical, NONE
   resume: true                               # skip steps already concluded, ir false remember clean previous
   clean_previous:                            # remove result folders before running
     #- mobility 

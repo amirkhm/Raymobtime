@@ -208,11 +208,11 @@ def cart_lidar_matrix(c):
         obstacles_matrix_array = zeros_array*np.nan
 
         if episodeID > int(last_episode):
-            print('\nLast desired episode ({}) reached'.format(int(last_episode)))
+            #print('\nLast desired episode ({}) reached'.format(int(last_episode)))
             break
 
         for s in range(numScenesPerEpisode):
-            print(f'Processing Episode: {episodeID} and Scene: {s}')
+            #print(f'Processing Episode: {episodeID} and Scene: {s}')
             if not os.path.exists(tmpdir):
                 os.makedirs(tmpdir)
             scans_dir = os.path.join(scans_path,'scans_' + format_run_name(total_num_scenes) + '.zip')

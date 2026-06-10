@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 import sys
-
+import shutil
 import bpy
 
 
@@ -122,7 +122,9 @@ def export_camera_info(config_path):
         "blend_info",
     )
 
-    os.makedirs(data_info_path, exist_ok=True)
+    if data_info_path.exists():
+        shutil.rmtree(data_info_path)
+    os.makedirs(data_info_path)
 
     cameras_info = {}
 
