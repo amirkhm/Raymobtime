@@ -1,3 +1,5 @@
+# Guide for development practices
+
 Constantes: 
     UPPER_CASE
 Classes: 

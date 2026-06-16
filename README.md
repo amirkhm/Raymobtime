@@ -150,30 +150,7 @@ The overall methodology can therefore be summarized as a sequence in which mobil
 
 
 
-## Data Organization
-
-Raymobtime organizes simulation data by scenario, output name, run, episode, and scene.
-
-A typical output structure is:
-
-```text
-data/
-└── <scenario>/
-    └── out/
-        └── <output_name>/
-            ├── raw_data/
-            ├── processed_data/
-            │   ├── images/
-            │   ├── scans/
-            │   ├── blend_info/
-            │   ├── channels/
-            │   └── CoordVehicleTxRx.csv
-            ├── simulation_data/
-            └── logs/
-```
-
-The exact structure may vary according to the enabled modules and configured output options.
-
+##Direcionar para o site e outros markdown
 
 
 ## Citation
