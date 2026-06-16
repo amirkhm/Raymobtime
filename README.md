@@ -161,26 +161,34 @@ Depending on the enabled modules, the resulting dataset may include wireless cha
 
 The overall methodology can therefore be summarized as a sequence in which mobility is generated, dynamic objects are positioned, communication nodes are selected, wireless and sensing simulations are executed, and the resulting outputs are synchronized and converted into a structured multimodal dataset.
 
+## Documentation
 
+Additional information about Raymobtime, available datasets, publications, and project updates can be found on the [official Raymobtime website](https://raymobtime.lasseufpa.org/).
 
+Raymobtime also provides complementary documentation covering environment setup, scenario preparation, dataset generation, and development practices. These guides expand the general methodology presented in this README and provide detailed instructions for specific stages of the workflow.
 
-##Direcionar para o site e outros markdown
-
+| Resource                                                | Description                                                                                                                                                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [Raymobtime Website](https://raymobtime.lasseufpa.org/) | Official project website containing information about Raymobtime datasets, publications, scenarios, and related resources.                                                                                   |
+| [Setup Guide](doc/1-Setup.md)                           | Describes the initial installation and configuration of the Raymobtime environment, including required software, Git, Python dependencies, SUMO, Wireless InSite, Blender, Blensor, and external tool paths. |
+| [Base Scenario Creation](doc/2-BaseCreation.md)         | Explains how to create the base files required for a simulation, including SUMO networks and routes, Wireless InSite projects, Blender scenarios, static geometry, and scenario directory organization.      |
+| [Dataset Generation Guide](doc/3-DatasetCreation.md)    | Describes the dataset-generation workflow, including the YAML configuration structure, available simulation options, execution commands, enabled modules, and the organization of generated outputs.         |
+| [Developer Good Practices](doc/GoodPractices4Devs.md)   | Presents coding conventions, repository organization, module integration guidelines, configuration practices, documentation standards, and recommendations for contributors to the Raymobtime project.       |
 
 ## Citation
 
-Citation information will be added when the corresponding Raymobtime publication and software release are available.
-
+If you use any data or code, please cite: "[5G MIMO Data for Machine Learning: Application to Beam-Selection using Deep Learning](http://ita.ucsd.edu/workshop/18/files/paper/paper_3313.pdf)", Aldebaro Klautau, Pedro Batista, Nuria Gonzalez-Prelcic, Yuyang Wang and Robert W. Heath Jr., ITA'2018.
 ```bibtex
-@software{raymobtime,
-  title  = {Raymobtime},
-  author = {...},
-  year   = {...},
-  url    = {...}
+@inproceedings{Klautau18,
+  author    = {Aldebaro Klautau and Pedro Batista and Nuria Gonzalez-Prelcic and Yuyang Wang and Robert W. Heath Jr.},
+  title     = {{5G} {MIMO} Data for Machine Learning: Application to Beam-Selection using Deep Learning},
+  booktitle = {2018 Information Theory and Applications Workshop, San Diego},
+  pages     = {1--1},
+  year      = {2018},
+  url       = {http://ita.ucsd.edu/workshop/18/files/paper/paper_3313.pdf}
 }
-```
 
----
+```
 
 ## License
 
