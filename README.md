@@ -161,6 +161,12 @@ Depending on the enabled modules, the resulting dataset may include wireless cha
 
 The overall methodology can therefore be summarized as a sequence in which mobility is generated, dynamic objects are positioned, communication nodes are selected, wireless and sensing simulations are executed, and the resulting outputs are synchronized and converted into a structured multimodal dataset.
 
+
+
+
+##Direcionar para o site e outros markdown
+
+
 ## Citation
 
 Citation information will be added when the corresponding Raymobtime publication and software release are available.
