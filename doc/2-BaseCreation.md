@@ -32,8 +32,6 @@ A typical scenario directory is organized as follows:
 
 The exact directory names may vary according to the project configuration, but the base scenario should provide all files required before the simulation starts.
 
----
-
 # Files Required for Simulation
 
 ## 2. OpenStreetMap File
@@ -62,8 +60,6 @@ The file is usually exported from OpenStreetMap or another compatible geographic
 </p>
 
 To export the OSM file, access the [OpenStreetMap website](https://www.openstreetmap.org/), search for the desired geographic region, and adjust the map view so that the complete simulation area is visible. Then, click **Export** in the top menu and select **Manually select a different area** to define the region more precisely. Adjust the selection boundaries to include the roads, intersections, buildings, and surrounding area required by the simulation, and click **Export** to download the file. The downloaded file can then be renamed according to the scenario and stored in the corresponding base directory.
-
----
 
 ## 3. SUMO Files
 
@@ -153,7 +149,6 @@ During this inspection, verify that the required roads are present, the directio
 > **Note:** The SUMO network offset must be adjusted to synchronize its coordinate system with the Wireless InSite scenario. This procedure is introduced in the SUMO section and explained in more detail later in the coordinate-system alignment section.
 
 
----
 ### 3.2 Route File (`.rou.xml`)
 
 The route file defines the dynamic objects that move through the SUMO network. It contains the object types, routes, traffic flows, departure intervals, and mobility parameters used during the simulation.
@@ -290,8 +285,6 @@ generate_generic_route_file(
     flow_duration=5,
 )
 ```
----
-
 ### 3.3 SUMO Configuration File (`.sumocfg`)
 
 The SUMO configuration file connects the network and route files and defines the main simulation settings.
@@ -347,7 +340,6 @@ base/
     └── scenario.sumocfg
 ```
 
----
 ### 3.4 Validating the SUMO Scenario
 
 After creating the network, route, and configuration files, the complete mobility scenario should be validated using the SUMO graphical interface. Open SUMO GUI, select **File → Open Simulation**, and load the corresponding `.sumocfg` file. Once the configuration is loaded, click the **Run** button to start the simulation and observe the movement of the configured vehicles, pedestrians, and drones throughout the road network.
@@ -499,7 +491,6 @@ Before LiDAR generation, verify that:
 
 Raymobtime positions the LiDAR sensor according to the selected transmitter or receiver and generates point clouds for the corresponding scenes. The Blensor parameters may define angular resolution, maximum distance, rotation speed, noise, and scanning range.
 
----
 ## 5. Wireless InSite Base Scenario
 
 The Wireless InSite base scenario contains the static geometry, materials, antennas, waveforms, communication nodes, propagation model, and study-area configuration required for electromagnetic ray-tracing simulations.
@@ -561,28 +552,17 @@ Create the waveform used by the wireless propagation simulation. The waveform sh
 
 ### 5.6 Antenna Configuration
 
-Create the transmitter and receiver antennas used by the scenario. The base project should contain reference transmitter and receiver objects. Use the following naming convention:
-
-```text
-Tx
-Rx
-```
+Create the transmitter and receiver antennas used by the scenario. The base project should contain reference transmitter and receiver objects. The naming convention must following the config.yaml.
 
 Raymobtime expects these names when modifying the communication nodes for each generated scene.
 
 The initial positions of `Tx` and `Rx` should be checked carefully. Even though Raymobtime may update their positions during execution, the base project must contain valid transceiver objects with correctly assigned antennas and waveforms.
 
-> **Important:** Avoid changing the names `Tx` and `Rx` unless the corresponding Raymobtime source code and configuration are also updated. In addition, Wireless InSite may not reuse the identifier of a deleted antenna. For example, if antennas with IDs `1`, `2`, `3`, and `4` exist and antenna `2` is deleted, the next antenna created may receive ID `5`, resulting in the sequence `1`, `3`, `4`, `5`. The current Raymobtime workflow expects antenna identifiers to follow a continuous sequence such as `1`, `2`, `3`, `4`, and gaps in this sequence may cause incorrect antenna associations or parsing errors. Therefore, after deleting antennas, verify the generated IDs and recreate or reorganize the antenna definitions when necessary to preserve a continuous identifier sequence.
+> **Important:** Wireless InSite may not reuse the identifier of a deleted antenna. For example, if antennas with IDs `1`, `2`, `3`, and `4` exist and antenna `2` is deleted, the next antenna created may receive ID `5`, resulting in the sequence `1`, `3`, `4`, `5`. The current Raymobtime workflow expects antenna identifiers to follow a continuous sequence such as `1`, `2`, `3`, `4`, and gaps in this sequence may cause incorrect antenna associations or parsing errors. Therefore, after deleting antennas, verify the generated IDs and recreate or reorganize the antenna definitions when necessary to preserve a continuous identifier sequence.
 
 ### 5.7 Study Area Configuration
 
-Create a study area and name it:
-
-```text
-study
-```
-
-The study-area name is used by the Raymobtime workflow and should remain consistent with the generated project files.
+Create a study area and name following the config.yaml. The study-area name is used by the Raymobtime workflow and should remain consistent with the generated project files.
 
 Configure the study area with the following settings:
 
@@ -612,12 +592,7 @@ After execution, inspect the generated rays and confirm that:
 
 ### 5.10 Saving the Raymobtime Base Files
 
-After validating the simulation, save the Wireless InSite project with the name:
-
-```text
-model
-```
-Wireless InSite will generate the project resources associated with this name.
+After validating the simulation, save the Wireless InSite project with the same name in config.yalm. Wireless InSite will generate the project resources associated with this name.
 
 Copy or rename the required files as follows:
 
@@ -710,10 +685,9 @@ The intended workflow is:
 
 In this approach, the H-matrix is generated before codebook application. This makes it possible to reuse the same simulated channel with different codebooks without rerunning the Wireless InSite propagation simulation.
 
-
 The corresponding scenario documentation should specify the transmitter and receiver array dimensions, antenna-element spacing, carrier frequency, matrix dimensions, channel convention, and codebooks applied during beamforming.
 
-> **Note:** The H-matrix workflow is an experimental feature intended for isolated channel and beamforming studies. It is not part of the standard Raymobtime pipeline based on mobility generation, dynamic placement, and run-specific Wireless InSite simulations.
+> **Note:** The H-matrix workflow is an experimental feature intended for isolated simulation and beamforming studies. It is not part of the standard Raymobtime pipeline based on mobility generation, dynamic placement, and run-specific Wireless InSite simulations.
 
 ---
 
