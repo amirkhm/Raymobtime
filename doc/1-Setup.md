@@ -49,7 +49,7 @@ Verify version:
 sumo --version
 ```
 
-## 🔣 Ray-tracing simulator
+## 📡 Ray-tracing simulator
 Necessary for simulate spatial consistent channels.
 ### Wireless Insite
 
@@ -68,7 +68,7 @@ After installation:
 * Keep the executable path.
 * Verify that the license used is active.
 
-## 🌠 3D computer graphics software
+## 🎥 3D computer graphics software
 Necessary to manipulate 3D models and correct work of lidar and image features.
 ### Blender
 
