@@ -55,6 +55,7 @@ The command should display the installed SUMO version without errors.
 
 ## 📡 Ray-Tracing Simulator
 
+<<<<<<< HEAD
 A ray-tracing simulator is required to generate spatially consistent wireless propagation channels.
 
 ### Wireless InSite
@@ -65,6 +66,9 @@ Wireless InSite is a commercial electromagnetic ray-tracing simulator used by Ra
 * a valid license is required;
 * at the time of writing, the graphical interface is not available for Linux;
 * Raymobtime currently supports Wireless InSite 3.3.
+=======
+Raymobtime supports Wireless InSite version 3.2 and 3.3.
+>>>>>>> 046706ea3171ba4dfde3764413a986b8af9df1ba
 
 Install [Wireless InSite](https://www.remcom.com/wireless-insite-propagation-software) according to the vendor instructions.
 
