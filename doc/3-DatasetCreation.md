@@ -23,7 +23,30 @@ If in your kind of interest, [how create a base](/doc/2-BaseCreation.md) is a do
 # Dataset concept
 
 Since you already have a base where you plan communication happen, you may question yourself: 
-> 🤔 What kind of outputs i am generating with raymobtime?
+
+> 🤔 What kind of outputs am i generating with raymobtime?
+
+Following the [methodology](/README.md) described, time sampples of the communication system are taken. At each sample is known the state of elements of interest, as described below:
+
+* Cartesian coordinates of mobile objects
+* Cartesian coordinates of transmiter and receiver elements
+* Ray-tracing outputs
+    * Propagation paths
+    * Path-loss
+    * Delay spread
+    * 
+* Images
+* lidar point clouds
+* Post processed rt outputs
+* Post processed image outputs
+* Post processed lidar outputs
+
+The use of this data may vary depending on your focus, but it is commonly used for machine learning beam selection or beam tracking problems.
+
+# usage
+
+
+For each oneAt each sampple is known where all mobile objects are placed, where the transmiter and receivers are 
 
 # Start
 
