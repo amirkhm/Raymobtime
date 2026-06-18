@@ -141,11 +141,11 @@ source .venv/bin/activate
 
 # ⚙️ Configuration
 
-For using the installed softwares at raymobtime it is necessary configure paths at config.yaml file. 
+For using the installed softwares at raymobtime it is necessary configure paths at [YAML](/config.yaml) file. 
 
 ## 📂 Path Configuration
 
-The following paths must be configured in the Raymobtime config.yaml file according to your local installation. This file is located at repository root.
+The following paths must be configured in the Raymobtime [YAML](/config.yaml) file according to your local installation. This file is located at repository root.
 
 ```yaml
 sumo:
@@ -159,6 +159,16 @@ ray_tracing:
 blensor_options:
   path_blensor_image: <blensor.AppImage binary path>
 ```
+
+## Testing and using
+
+For test proper work of setup it is necessary use a base and try to generate the desired outputs.
+
+The folder /data/rosslyn/ already contains base files for running raymobtime pipeline correctly, you may use this for testing your setup.
+
+* At [how create datasets](/doc/3-DatasetCreation.md) there is a tutorial on how configure the [YAML](/config.yaml) configuration file and obtain desired outputs of a selected base scenario.
+
+* At [how create a base](/doc/2-BaseCreation.md) there is a tutorial on how creating and configuring your own base scenario for generating datasets.
 
 <!-- 
 ## ⚠️ Troubleshooting
