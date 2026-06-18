@@ -1,14 +1,16 @@
-# Raymobtime Setup Guide
-
+# 💻 Raymobtime Setup Guide
 ## Overview
 
-This document describes how to set up a clean Raymobtime environment from scratch on Linux.
+* This document describes how to set up a clean Raymobtime environment from scratch on Linux.
+* The setup has been tested on Linux and uses `uv` for Python dependency management.
+> 📓  Note: Depending on your intend on raymmobtime usage, not all installations are needed.
 
-The setup has been tested on Linux and uses `uv` for Python dependency management.
+Raymobtime works as orchestrator of some external softwares, use this doc as a guide for installation and find respective software links.
 
-## System Requirements
 
-### Recommended Operating System
+# 📦 Requirements
+
+## ⚓ Recommended SO
 
 * Linux (tested environment)
 * Recommended distributions:
@@ -16,7 +18,9 @@ The setup has been tested on Linux and uses `uv` for Python dependency managemen
   * Ubuntu 22.04 LTS
   * Ubuntu 24.04 LTS
 
-### Hardware Requirements
+<!-- 
+
+ Hardware Requirements
 
 | Component | Recommended                                                      |
 | --------- | ---------------------------------------------------------------- |
@@ -25,36 +29,72 @@ The setup has been tested on Linux and uses `uv` for Python dependency managemen
 | Storage   | 20+ GB free space                                                |
 | GPU       | Optional (recommended for Blender and Wireless InSite workflows) |
 
----
+-->
 
-## Clone the Repository
+## 🚦 Mobility software
+Necessary for implementing positional changes over time in objects.
+### Simulator of Urban Mobility (SUMO)
 
-Clone the latest stable state of the main branch.
+SUMO is a traffic simulation framework.
+  * This is an open source software.
+  * Version recommended: latest.
+  * Tested versions: 1.18, 1.20.
 
-```bash
-git clone <repository-url>
-cd <repository-name>
-```
+The installation steps are described at
+[sumo installing](https://sumo.dlr.de/docs/Installing/index.html).
 
-To identify the exact commit currently used for validation:
-
-```bash
-git checkout main
-git pull
-git rev-parse HEAD
-```
-
-This command prints the commit hash corresponding to the validated project state.
-
-To checkout a specific validated commit:
+Verify version:
 
 ```bash
-git checkout <commit-hash>
+sumo --version
 ```
 
----
+## 🔣 Ray-tracing simulator
+Necessary for simulate spatial consistent channels.
+### Wireless Insite
 
-## Installing UV
+Wireless Insite is a ray-tracing simulator. 
+* This is not a open source software.
+* The software needs license to use.
+* At the moment of this documentation there is no graphical interface available for linux.
+
+Raymobtime supports Wireless InSite version 3.3.
+
+Install [Wireless InSite](https://www.remcom.com/wireless-insite-propagation-software) according to the vendor instructions.
+
+After installation:
+
+* Verify that the software is working properly
+* Keep the executable path.
+* Verify that the license used is active.
+
+## 🌠 3D computer graphics software
+Necessary to manipulate 3D models and correct work of lidar and image features.
+### Blender
+
+Software for modeling, sculpting, and rigging to animation, simulation, rendering, and video editing.
+
+  * This is an open source software.
+  * There are multiple addons available, very useful to acess many funcionalities.
+  * Pay attention at blender version when using. At blender development there was a moment were the .blend binary file format changed, so newer binary are not recognized by this old versions.
+
+Supported versions:
+* [Blender 2.79b](https://www.blender.org/download/releases/2-79/)
+* [Blender 3.6.9](https://www.blender.org/download/releases/3-6/)
+
+Addons for Blender 2.79b:
+* [Blosm](https://github.com/vvoovv/blosm): OpenStreetMap importer for Blender. 
+  * [Version 2.4.21](https://github.com/vvoovv/blosm/releases/tag/v2.4.21) is compatible with blender 2.79.
+* [Blensor](https://www.blensor.org/pages/downloads.html): Binary that implement muitiple sensors at blender. Here Blensor is used to generate images and lidar point clouds. [Nextcloud download](https://nextcloud.lasseufpa.org/apps/files/files/473423?dir=/5GM/Blender)
+
+Addons for Blender 3.6.9:
+* [Blosm](https://github.com/vvoovv/blosm): OpenStreetMap importer for Blender. 
+  * Version __________ is compatible with blender 3.6.9.
+* [Super Batch Export](https://github.com/mrtripie/Blender-Super-Batch-Export): Used to export multiple geometry as collada.
+
+## 🟣 UV
+
+Python packet manager used at raymobtime.
 
 Install uv:
 
@@ -68,11 +108,24 @@ Verify installation:
 uv --version
 ```
 
----
+## 🚗 Raymobtime
 
-## Creating the Environment
+Python orchestrator repository.
 
-Synchronize dependencies:
+Clone the repository
+
+```bash
+git clone <repository-url>
+cd <repository-name>
+```
+
+Checkout to specific tag:
+
+```bash
+git checkout <tag-name>
+```
+
+Synchronize uv dependencies:
 
 ```bash
 uv sync
@@ -84,109 +137,11 @@ Activate the environment:
 source .venv/bin/activate
 ```
 
-Verify installation:
-
-The project currently uses: Python 3.8.20.
-
-Verify:
-
-```bash
-uv run python --version
-```
-
 ---
 
-# External Dependencies
+# ⚙️ Configuration
 
-The following third-party software must be installed.
-
-## SUMO
-
-Traffic simulation framework.
-Tested at versions 1.18 and 1.20.
-
-Follow the steps described at sumo
-[documentation](https://sumo-dlr-de.translate.goog/docs/Installing/index.html?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=pt&_x_tr_pto=tc)
-for installing on linux.
-
-
-Verify installation:
-
-```bash
-sumo --version
-```
-
----
-
-## Wireless InSite (v3.3)
-
-Ray tracing simulator. 
-
-Obs: 
-- This is not a open source software.
-- At the moment of this documentation there is no graphical interface available for linux.
-
-Install Wireless InSite version 3.3 according to the vendor instructions.
-
-After installation, verify:
-
-* Wireless InSite launches correctly.
-* The executable path: wireless-insite/remcom.
-* Required licenses are active.
-
----
-
-## Blender
-
-Supported versions:
-
-[Blender 3.6.9](https://www.blender.org/download/releases/3-6/)
-
-[Blender 2.79b](https://www.blender.org/download/releases/2-79/)
-
-
----
-
-## Blender Super Batch Export
-
-Repository:
-
-https://github.com/mrtripie/Blender-Super-Batch-Export
-
-Install as a Blender add-on.
-
----
-
-## Blosm
-
-OpenStreetMap importer for Blender.
-
-Supported version:
-
-* Blosm 2.4.21
-* Compatible with Blender 2.79
-
-Download:
-
-https://github.com/vvoovv/blosm/releases/tag/v2.4.21
-
-Install as a Blender add-on.
-
----
-
-## Blensor
-
-Synthetic LiDAR simulator.
-
-Download:
-
-https://nextcloud.lasseufpa.org/apps/files/files/473423?dir=/5GM/Blender
-
-Install according to the project instructions.
-
----
-
-# Configuration
+For using the installed softwares at raymobtime it is necessary configure paths at config.yaml file. 
 
 ## YAML Configuration
 
@@ -195,6 +150,8 @@ The following paths must be configured in the Raymobtime YAML file.
 Example:
 
 ```yaml
+sumo:
+  bin: /usr/bin/sumo 
 wireless_insite_path: /path/to/wireless_insite
 
 sumo_path: /path/to/sumo
@@ -206,9 +163,8 @@ blensor_path: /path/to/blensor
 
 Update all paths according to your local installation.
 
----
 
-# Verification
+## Verification
 
 Run a minimal scenario to verify that:
 
@@ -220,7 +176,7 @@ Run a minimal scenario to verify that:
 
 ---
 
-# Troubleshooting
+## Troubleshooting
 
 ## Common Issues
 
