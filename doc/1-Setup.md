@@ -58,7 +58,7 @@ Wireless Insite is a ray-tracing simulator.
 * The software needs license to use.
 * At the moment of this documentation there is no graphical interface available for linux.
 
-Raymobtime supports Wireless InSite version 3.3.
+Raymobtime supports Wireless InSite version 3.2 and 3.3.
 
 Install [Wireless InSite](https://www.remcom.com/wireless-insite-propagation-software) according to the vendor instructions.
 
