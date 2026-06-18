@@ -86,101 +86,76 @@ The files are created in the following order:
 
 The network file contains the road infrastructure used by SUMO. It defines edges, lanes, junctions, connections, traffic directions, speed limits, lane permissions, pedestrian access, and the geometric representation of the roads.
 
-The `.net.xml` file can be generated from the OSM file exported in the previous section. Open a terminal in the directory containing the OSM file and execute:
+The `.net.xml` file is generated from the OpenStreetMap file exported in the previous section using the SUMO `netconvert` tool. Open a terminal in the directory containing the `.osm` file and execute:
+
+```bash
+netconvert --osm-files input_file.osm --numerical-ids.edge-start 0 --numerical-ids.node-start 0 -o output_file.net.xml
+```
+
+The command used in the tutorial assigns numerical identifiers to the generated edges and nodes. The option:
+
+```bash
+--numerical-ids.edge-start 0
+```
+
+configures edge identifiers to start at `0`, while:
+
+```bash
+--numerical-ids.node-start 0
+```
+
+configures junction or node identifiers to start at `0`.
+
+It is also possible to filter the road types imported from OpenStreetMap. The `--keep-edges.by-type` option keeps only the specified road categories. For example:
 
 ```bash
 netconvert \
-    --osm-files scenario.osm \
-    --output-file scenario.net.xml
+    --osm-files input_file.osm \
+    --numerical-ids.edge-start 0 \
+    --numerical-ids.node-start 0 \
+    --keep-edges.by-type highway.primary,highway.secondary,highway.tertiary,highway.residential \
+    -o output_file.net.xml
 ```
 
-The same command can be written in a single line:
+In this example, only primary, secondary, tertiary, and residential roads are preserved in the generated SUMO network.
 
-```bash
-netconvert --osm-files scenario.osm -o scenario.net.xml
-```
-
-After the command finishes, the directory should contain:
-
-```text
-scenario.osm
-scenario.net.xml
-```
-
-When the scenario includes pedestrians, sidewalks and crossings can also be imported from OpenStreetMap:
+Alternatively, the `--remove-edges.by-type` option removes selected road categories:
 
 ```bash
 netconvert \
-    --osm-files scenario.osm \
+    --osm-files input_file.osm \
+    --numerical-ids.edge-start 0 \
+    --numerical-ids.node-start 0 \
+    --remove-edges.by-type highway.footway,highway.path,highway.cycleway \
+    -o output_file.net.xml
+```
+
+The `--keep-edges.by-type` and `--remove-edges.by-type` options should be selected according to the desired scenario. They should not be written together using `/`; the slash shown in the tutorial indicates that either option may be used.
+
+When the scenario includes pedestrians, sidewalks and pedestrian crossings can also be generated:
+
+```bash
+netconvert \
+    --osm-files input_file.osm \
+    --numerical-ids.edge-start 0 \
+    --numerical-ids.node-start 0 \
     --osm.sidewalks true \
     --osm.crossings true \
-    --output-file scenario.net.xml
+    -o output_file.net.xml
 ```
 
-The generated network should be inspected before creating the routes. It can be opened with:
+The generated network should be inspected before creating the route file. It can be opened in NetEdit using the SUMO graphical interface.
 
-```bash
-netedit scenario.net.xml
-```
+During this inspection, verify that the required roads are present, the directions are correct, the network is connected, and the lanes allow the intended object classes .The edge and lane identifiers required by the route file can be inspected directly in `scenario.net.xml` or through the graphical interface of NetEdit.
 
-or:
-
-```bash
-sumo-gui -n scenario.net.xml
-```
-
-During this inspection, verify that the required roads are present, the directions are correct, the network is connected, and the lanes allow the intended object classes.
-
-A network edge may be represented as:
-
-```xml
-<edge id="E0" from="J0" to="J1">
-    <lane
-        id="E0_0"
-        index="0"
-        speed="13.89"
-        length="100.0"/>
-</edge>
-```
-
-In this example, `E0` is the edge identifier, while `J0` and `J1` are junction identifiers. Routes must reference edge identifiers and not junction identifiers.
-
-Therefore, the correct route is:
-
-```xml
-<route edges="E0"/>
-```
-
-The following route is invalid because `J0` and `J1` are junctions:
-
-```xml
-<route edges="J0 J1"/>
-```
-
-For pedestrian-only lanes, the network may contain:
-
-```xml
-<lane
-    id="E0_0"
-    index="0"
-    allow="pedestrian"
-    speed="2.0"
-    length="100.0"/>
-```
-
-The edge and lane identifiers required by the route file can be inspected directly in `scenario.net.xml` or through the graphical interface of NetEdit.
+> **Note:** The initial network filtering can be performed directly during the OSM conversion by using options such as `--keep-edges.by-type` or `--remove-edges.by-type`. These options are useful for automating the removal of unnecessary road categories at the beginning of the scenario-creation process. However, the generated network can also be opened and manually edited in NetEdit, where unwanted edges, lanes, junctions, and connections can be removed and the resulting `.net.xml` file can be saved. Regardless of the method used, the final network file should contain only the elements required by the simulation, reducing scenario complexity and avoiding invalid or irrelevant mobility routes.
 
 ---
-
 ### 3.2 Route File (`.rou.xml`)
 
-The route file defines the dynamic objects that move through the SUMO network. It contains vehicle types, vehicle distributions, pedestrian types, routes, traffic flows, departure times, speeds, and movement probabilities.
+The route file defines the dynamic objects that move through the SUMO network. It contains the object types, routes, traffic flows, departure intervals, and mobility parameters used during the simulation.
 
-Create a file named:
-
-```text
-scenario.rou.xml
-```
+A route file may include conventional vehicles, pedestrians, and drones. Vehicle types describe physical and mobility properties such as length, width, height, acceleration, maximum speed, and behavior parameters. These values are also used by Raymobtime when placing the corresponding objects in Wireless InSite, Blender, and Blensor.
 
 A minimal route file has the following structure:
 
@@ -194,60 +169,11 @@ A minimal route file has the following structure:
 </routes>
 ```
 
-#### Vehicle types
+#### Vehicle flow
 
-Vehicle types describe the physical dimensions and mobility properties of each object class:
+Conventional vehicles may be defined individually or through a type distribution. A distribution allows each generated vehicle to be randomly assigned to one of the configured types.
 
-```xml
-<vTypeDistribution id="typeVehicleDistribution">
-
-    <vType
-        id="Car"
-        accel="3.0"
-        decel="4.5"
-        length="4.645"
-        width="1.775"
-        height="1.59"
-        maxSpeed="17.88"
-        speedDev="0.1"
-        sigma="0.2"
-        minGap="0.3"
-        probability="0.2"/>
-
-    <vType
-        id="Truck"
-        accel="2.0"
-        decel="4.0"
-        length="12.5"
-        width="2.5"
-        height="4.3"
-        maxSpeed="17.88"
-        speedDev="0.1"
-        sigma="0.2"
-        minGap="0.3"
-        probability="0.5"/>
-
-    <vType
-        id="Bus"
-        accel="2.0"
-        decel="4.0"
-        length="9.0"
-        width="2.4"
-        height="3.2"
-        maxSpeed="17.88"
-        speedDev="0.1"
-        sigma="0.2"
-        minGap="0.3"
-        probability="0.3"/>
-
-</vTypeDistribution>
-```
-
-The probabilities inside a distribution should represent the desired proportion of each vehicle type.
-
-#### Vehicle flows
-
-A vehicle flow defines when objects enter the simulation and which edges they follow:
+A vehicle flow specifies the period in which vehicles are generated, the probability of generation, the object type or distribution, and the route followed through the network.
 
 ```xml
 <flow
@@ -262,24 +188,21 @@ A vehicle flow defines when objects enter the simulation and which edges they fo
 </flow>
 ```
 
-The edges must exist in `scenario.net.xml`, appear in a valid travel direction, and form a connected route.
+The edges listed in the route must exist in the `.net.xml` file, follow a valid travel direction, and be connected in the specified order.
 
-#### Pedestrian flows
+#### Pedestrian flow
 
-A pedestrian type must use the `pedestrian` vehicle class:
+Pedestrians are represented using a type with `vClass="pedestrian"` and a `<personFlow>` element containing a walking stage.
 
 ```xml
 <vType
     id="Pedestrian"
     vClass="pedestrian"
     speedFactor="1.0"
-    speedDev="0.1"
     length="0.5"
     width="0.5"
     height="1.72"/>
 ```
-
-Pedestrian mobility is defined with `<personFlow>` and `<walk>`:
 
 ```xml
 <personFlow
@@ -294,27 +217,22 @@ Pedestrian mobility is defined with `<personFlow>` and `<walk>`:
 </personFlow>
 ```
 
-The selected edges must contain lanes that allow pedestrians.
+The selected edges must contain lanes that allow pedestrian movement.
 
-#### Drone flows
+#### Drone flow
 
-A drone can be represented in SUMO as a vehicle type that follows a predefined horizontal route:
+Drones are represented in SUMO as objects following a predefined horizontal route.
 
 ```xml
 <vType
     id="Drone"
-    accel="2.0"
-    decel="2.0"
     length="0.5"
     width="0.5"
     height="0.2"
-    maxSpeed="10.0"
-    speedDev="0.1"
-    sigma="0.1"
-    minGap="0.1"/>
+    accel="2.0"
+    decel="2.0"
+    maxSpeed="10.0"/>
 ```
-
-The drone flow can then be defined as:
 
 ```xml
 <flow
@@ -329,74 +247,46 @@ The drone flow can then be defined as:
 </flow>
 ```
 
-SUMO provides the horizontal movement of the drone. The `height` attribute represents the physical size of the drone and not its flight altitude. Raymobtime applies the configured vertical offset when placing the drone in Wireless InSite, Blender, and Blensor.
+SUMO provides the horizontal trajectory of the drone. The `height` attribute defines its physical size and not its flight altitude. Raymobtime applies the configured altitude offset when the drone is placed in the three-dimensional simulation environments.
 
-A complete route file may therefore contain vehicle, pedestrian, and drone flows:
+> **Note:** The identifiers assigned to the object types, such as `Car`, `Truck`, `Bus`, `Pedestrian`, and `Drone`, are used by Raymobtime to select the corresponding detailed object templates. Therefore, these identifiers should remain consistent with the available models and runtime configuration.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
+#### Automatic route-file generation
 
-<routes>
+Raymobtime currently provides a Python utility that automatically generates a generic `.rou.xml` file. The script writes a predefined vehicle type distribution and creates multiple flows over a configured simulation interval.
 
-    <vTypeDistribution id="typeVehicleDistribution">
-        <vType
-            id="Car"
-            accel="3.0"
-            decel="4.5"
-            length="4.645"
-            width="1.775"
-            height="1.59"
-            maxSpeed="17.88"
-            probability="1.0"/>
-    </vTypeDistribution>
+Its main parameters are:
 
-    <vType
-        id="Pedestrian"
-        vClass="pedestrian"
-        speedFactor="1.0"
-        length="0.5"
-        width="0.5"
-        height="1.72"/>
+| Parameter         | Description                                         |
+| ----------------- | --------------------------------------------------- |
+| `output_file`     | Path or name of the generated `.rou.xml` file       |
+| `initial_time`    | Beginning time of the first generated flow          |
+| `end_time`        | Maximum simulation time                             |
+| `time_step`       | Interval between the beginning of consecutive flows |
+| `flow_duration`   | Intended duration of each flow                      |
+| `initial_flow_id` | Initial offset used to generate flow identifiers    |
 
-    <vType
-        id="Drone"
-        accel="2.0"
-        decel="2.0"
-        length="0.5"
-        width="0.5"
-        height="0.2"
-        maxSpeed="10.0"/>
+During execution, the script performs the following operations:
 
-    <flow
-        id="flow0"
-        begin="10"
-        end="100"
-        probability="0.41"
-        type="typeVehicleDistribution">
-        <route edges="E0 E1 E2"/>
-    </flow>
+1. creates the XML header and the `<routes>` element;
+2. writes the standard vehicle distribution for cars, trucks, and buses;
+3. iterates from `initial_time` to `end_time` using `time_step`;
+4. assigns a unique identifier to each generated flow;
+5. generates a random flow probability;
+6. assigns the configured route to each flow;
+7. writes the resulting content to the output file.
 
-    <personFlow
-        id="pedFlow0"
-        begin="10"
-        end="100"
-        probability="0.20"
-        type="Pedestrian">
-        <walk edges="P0 P1"/>
-    </personFlow>
+A simplified usage example is:
 
-    <flow
-        id="droneFlow0"
-        begin="10"
-        end="100"
-        probability="0.10"
-        type="Drone">
-        <route edges="E0 E1 E2"/>
-    </flow>
-
-</routes>
+```python
+generate_generic_route_file(
+    output_file="scenario.rou.xml",
+    initial_time=5,
+    end_time=9000,
+    time_step=10,
+    flow_duration=5,
+)
 ```
-
 ---
 
 ### 3.3 SUMO Configuration File (`.sumocfg`)
@@ -421,23 +311,6 @@ A minimal configuration is:
         <route-files value="scenario.rou.xml"/>
     </input>
 
-</configuration>
-```
-
-The file paths are interpreted relative to the directory containing the `.sumocfg` file. If the three files are stored in the same directory, only their filenames are required.
-
-Simulation time settings can also be included:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-
-<configuration>
-
-    <input>
-        <net-file value="scenario.net.xml"/>
-        <route-files value="scenario.rou.xml"/>
-    </input>
-
     <time>
         <begin value="0"/>
         <end value="100"/>
@@ -446,6 +319,9 @@ Simulation time settings can also be included:
 
 </configuration>
 ```
+
+The file paths are interpreted relative to the directory containing the `.sumocfg` file. If the three files are stored in the same directory, only their filenames are required.
+
 
 The files should be organized as:
 
@@ -469,30 +345,38 @@ base/
 ```
 
 ---
-
 ### 3.4 Validating the SUMO Scenario
 
-After creating the three files, open the complete simulation with:
+After creating the network, route, and configuration files, the complete mobility scenario should be validated using the SUMO graphical interface. Open SUMO GUI, select **File → Open Simulation**, and load the corresponding `.sumocfg` file. Once the configuration is loaded, click the **Run** button to start the simulation and observe the movement of the configured vehicles, pedestrians, and drones throughout the road network.
 
-```bash
-sumo-gui -c scenario.sumocfg
-```
+<p align="center">
+  <img src="../assets/readme_images/sumo2.png"
+       alt="Opening and running a SUMO simulation"
+       width="100%">
+</p>
 
-The graphical interface should load the road network and display the configured objects when the simulation starts.
+<p align="center">
+  <em>Opening the SUMO configuration file and running the mobility simulation in SUMO GUI.</em>
+</p>
 
-Before using the files in Raymobtime, verify that:
+During validation, confirm that the road network is displayed correctly and that the dynamic objects enter and move through the scenario according to the expected routes and simulation times. The visualization should also be used to identify disconnected edges, invalid routes, incorrect lane permissions, unexpected vehicle behavior, or objects leaving the intended simulation area.
 
-* the network loads without errors;
-* every route references valid edges;
-* consecutive route edges are connected;
+Before using the scenario in Raymobtime, verify that:
+
+* the network and configuration files load without errors;
+* every route references valid edges from the `.net.xml` file;
+* consecutive edges are connected and follow a valid travel direction;
 * vehicle lanes permit the configured vehicle classes;
-* pedestrian routes use pedestrian-accessible lanes;
-* the simulation start and end times are correct;
-* vehicles, pedestrians, and drones enter the scenario as expected;
-* no object becomes teleported because of an invalid route;
-* the selected mobility region corresponds to the Wireless InSite and Blender environments.
+* pedestrian routes use lanes that allow pedestrian movement;
+* the simulation start time, end time, and time step are correct;
+* vehicles, pedestrians, and drones enter the network as expected;
+* objects do not become teleported because of disconnected or congested routes;
+* the traffic density and flow probabilities are appropriate for the scenario;
+* the selected mobility area is spatially consistent with the Wireless InSite and Blender environments.
 
-The resulting SUMO files provide the mobility base used by Raymobtime to generate the sequence of scenes and episodes.
+The final `.net.xml` file should contain only the roads, lanes, junctions, and connections required by the intended mobility simulation. Unnecessary elements may increase scenario complexity and make route validation more difficult.
+
+Once the SUMO scenario runs correctly, the resulting files can be used as the mobility base from which Raymobtime generates the sequence of scenes and episodes.
 
 ---
 
@@ -778,101 +662,6 @@ Before running a complete dataset simulation, verify that:
 * the required post-processing files are available.
 
 A minimal test should be executed before generating a large number of episodes and scenes.
-
-
-
-## Tutorial geração de dataset para machine learning com Raymobtime
-
-Instalar SUMO e Wireless Insite
-
-Clonar repositórios: 
-- [gitlab raymobtime](https://gitlab.lasse.ufpa.br/software/raymobtime-project/raymobtime/-/tree/master?ref_type=heads).
-
-Recomendação de organização de arquivos:
-- Na pasta base files de raymobtime, crie uma pasta com o nome do seu cenário
-- Dentro dessa pasta crie as pastas: sumo, meshes, wi
-- Em sumo serão guardados os arquivos sumo
-- Em meshes serão guardados os arquivos 3d exportados do blender para importação no wireless insite
-- Em wi será guardado o projeto do wireless insite
-
-### 1. Open street map
-
-1. Abrir site [Open street map](https://www.openstreetmap.org).
-1. Ir para a área de interesse, é possivel editar em edit.
-1. Ir em export, selecionar area manualmente, selecionar a área, clicar em Exportar. Será gerado um arquivo .OSM
-- Obs: Guardar .OSM na pasta do cenário.
-
-### 2. Conversão .OSM --> .NET.XML
-Converter o arquivo .OSM para o formato .NET.XML, que descreve os elementos de tráfego.. No terminal utilize o comando a seguir, realizando os ajustes indicados.
-- Ajuste o inputFile para o nome do seu arquivo .osm, e o nome do outputFile.
-- Deixar ou o keep ou o remove. Se der erro em algum highway, remover o highway problemático. (é possivel retirar o os keeps e highways, ficam todas as ruas)
-```bash
-netconvert --osm-files inputFile.osm --numerical-ids.edge-start 0 --numerical-ids.node-start 0 --keep-edges.by-type/--remove-edges.by-type highway.secondary, highway.residente -o outputFile.net.xml
-```
-- Guardar na pasta sumo
-- Abrir .NET.XML e ajustar netOffset="X,Y" e projParameter="!". As coordenadas para o netOffset serão obtidas ao fazer placement no raymobtime, não alterar por enquanto.
-
-### 3. Sumo
-Instalar sumo normalmente.
-1. Abrir o NET.XML no SUMO e ver se está ok as edges, criar caso nescessário
-1. Pegar o Id das ruas da rota e ajustar no rustic.py
-1. Rodar o rustic.py, irá gerar o .rou.xml
-1. Ajustar o .sumo.cfg manualmente (a parte dos arquivos)
-1. Conferir o .sumo.cfg como network, analizar o flow
-1. Guardar na pasta sumo
-
-### 4. Blender
-[blender versão 2.79](https://www.blender.org/download/releases/2-79/)
-
-[Blosm extension](https://github.com/vvoovv/blosm)
-
-[Bash export](https://github.com/mrtripie/Blender-Super-Batch-Export)
-
-1. Importar o .OSM via blosm
-    - Option: file, marcar buildings e roads and paths.
-1. Excluir elementos desnecessários, ajustar como meshes, criar plano ground, salvar como .blend
-1. Exportar meshes como .dae via bash export, guardar na pasta meshes
-
-### 5. Wireless insite
-Instalar versão 3.3
-1. Colocar o random-line.object e base.object na pasta meshes
-1. Para passar de um sistema operacional para outro usar no terminal na pasta meshes
-    ```bash
-    find . -type f -print0 | xargs -0 -n 1 -P 4 unix2dos
-    ```
-1. Copiar os arquivos para o windows para a pasta de wi
-1. Abrir o WI em geometry: open random.line como object (ele deve aparecer, é um bolco de metal) e import meshes no WI como city.
-1. Ajustar materiais, onda (sinusoid), criar antenas, transmissores (nome: Tx)(atrentar para suas posições) e receptores (nome: Rx) em  transceivers (atribuir atenas), área de estudo (nomear como study)(X3D). 
-
-    #### configurações da study area
-    - Short description como study.
-    - Modelo de propagação X3D.
-    - Setar número de raios por par Tx Rx.
-    - outputs: (1) propagation paths, (2) received power, (3) complex E-fields, (4) complex impulse response, (5) delay spread.
-
-1. Clicar no botão de run para averiguar os raios
-1. Conferir os raios gerados
-1. Salvar projeto com o nome model
-1. Copiar os arquivos model.txrx como base.txrx e o model.study.xml como base.study.xml
-1. Analise onde é o 0, 0 x e y no wireless, abra seu .net.xml e verifique a coordenada do mesmo ponto, ajuste no seu .net.xml na parte netoffset (x,y). Para verificar se está ok precisa rodar o placement no raymobtime.
-
-### 6. Raymobtime
-1. Ajustar config.json
-1. Rodar placement
-    ```bash
-    python3 simulation -po
-    ```
-
-1. Abrir algumas run gerada, verificar se as posições dos veiculos batem com ajuste de coordenadas.
-
-1. Se tudo estiver ok, rodar traçado de raios 
-    ```bash
-    python3 simulation -rj
-    ```
-
-1. Verificar o traçado de algumas das runs
-
-1. Rodar db, coord, rays, beams, images...
 
 ---
 
