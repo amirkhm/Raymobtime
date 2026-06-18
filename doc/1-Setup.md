@@ -89,7 +89,7 @@ Addons for Blender 2.79b:
 
 Addons for Blender 3.6.9:
 * [Blosm](https://github.com/vvoovv/blosm): OpenStreetMap importer for Blender. 
-  * Version __________ is compatible with blender 3.6.9.
+  * Version 2.7.9 is compatible with blender 3.6.9.
 * [Super Batch Export](https://github.com/mrtripie/Blender-Super-Batch-Export): Used to export multiple geometry as collada.
 
 ## 🟣 UV
@@ -143,68 +143,27 @@ source .venv/bin/activate
 
 For using the installed softwares at raymobtime it is necessary configure paths at config.yaml file. 
 
-## YAML Configuration
+## 📂 Path Configuration
 
-The following paths must be configured in the Raymobtime YAML file.
-
-Example:
+The following paths must be configured in the Raymobtime config.yaml file according to your local installation. This file is located at repository root.
 
 ```yaml
 sumo:
-  bin: /usr/bin/sumo 
-wireless_insite_path: /path/to/wireless_insite
+  bin: <sumo binary path>
 
-sumo_path: /path/to/sumo
+ray_tracing:
+  wireless_insite:
+    software_path: <remcom binary path>
+    LICENSE_FILE: REMCOMINC_LICENSE_FILE=<your license>
 
-blender_path: /path/to/blender
-
-blensor_path: /path/to/blensor
+blensor_options:
+  path_blensor_image: <blensor.AppImage binary path>
 ```
 
-Update all paths according to your local installation.
-
-
-## Verification
-
-Run a minimal scenario to verify that:
-
-* SUMO executes correctly.
-* Wireless InSite executes correctly.
-* Blender launches correctly.
-* Blensor generates point clouds.
-* Raymobtime pipeline completes successfully.
-
----
-
-## Troubleshooting
-
+<!-- 
+## ⚠️ Troubleshooting
 ## Common Issues
-
-### Missing executable
-
-Check configured paths in the YAML file.
-
-### Python dependencies not found
-
-Re-run:
-
-```bash
-uv sync
-```
-
-### Wireless InSite execution failure
-
-Verify installation and licensing.
-
-### Blender add-ons unavailable
-
-Confirm that:
-
-* Blosm is installed.
-* Blender Super Batch Export is installed.
-* Blensor is installed.
-
----
+-->
 
 # Version Summary
 
@@ -215,9 +174,6 @@ Confirm that:
 | SUMO            | 1.20                   |
 | Wireless InSite | 3.3                    |
 | Blender         | 3.6.9 or 2.79b         |
-| Blosm           | 2.4.21                 |
+| Blosm           | 2.7.9 or 2.4.21        |
 | Blensor         | project version        |
 | Raymobtime      | commit `<commit-hash>` |
-
-```
-```
