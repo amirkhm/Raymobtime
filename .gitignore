@@ -1,10 +1,17 @@
-/simulations
-/sim_data
+# --- Pastas locais e resultados temporários da animação ---
+animation/bases_files/
+animation/blensor_frames/
+animation/temp_processing/
+
+# --- Ambiente Virtual do Python ---
+venv/
+../venv/
+
+# --- Arquivos internos do Python e do sistema ---
+**/__pycache__/
 *.pyc
-/base_files
-/augmented
-augmentation.ipynb
-/base_files
-/rwisimulation.egg-info
-*.egg
-*.db
+.DS_Store
+
+# --- Bloquear dados pesados ou logs que não devem ir ao Git ---
+*.mp4
+*.pcd
