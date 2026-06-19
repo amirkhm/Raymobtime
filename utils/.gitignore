@@ -14,4 +14,3 @@ venv/
 
 # --- Bloquear dados pesados ou logs que não devem ir ao Git ---
 *.mp4
-*.pcd
