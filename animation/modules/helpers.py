@@ -84,7 +84,7 @@ def add_overlay_to_frame(frame_path, texto):
 
 #add JK
 def add_rx_label(image_path, text, x, y):
-    # Desenha uma bolinha amarela (raio 4) e o texto
+    # Desenha uma bolinha amarela e o texto
     r = 4
     command = [
         'convert', image_path,

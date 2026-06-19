@@ -3,9 +3,9 @@ from modules.helpers import add_overlay_to_frame, add_rx_label
 from bpy_extras.object_utils import world_to_camera_view
 
 """
-Módulo de Telemetria Visual com Oclusão Dinâmica Selecionável.
+Módulo de legenda com Oclusão Dinâmica Selecionável.
 
-Permite a sobreposição de metadados telemétricos sobre frames renderizados,
+Permite a sobreposição de dados sobre frames renderizados,
 com suporte a verificação de linha de visada (Line of Sight) via Raycasting
 configurável via arquivo JSON.
 """

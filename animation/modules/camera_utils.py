@@ -1,8 +1,8 @@
 import bpy
 from mathutils import Vector
-# add camera_utils.py  JK
+# add JK - camera_utils.py
 """
-Módulo de Gerenciamento de Câmeras para Simulação 5G em Rosslyn.
+Módulo de Gerenciamento de Câmeras para Simulação.
 Este módulo permite controlar o enquadramento, tipo de lente e 
 comportamento de rastreamento (tracking) dos receptores.
 """
@@ -27,7 +27,8 @@ def setup_camera_view(config, scene, coords_insite=None):
         mode (str): 'static' (câmera no lugar do Blender) ou 'follow' (câmera segue o RX).
         relative_position sugestão: Perspectiva de rua [0, -60, 40], Visão Aérea [0, 0, 100] ou visão lateral [-60, 0, 20]
 
-        Nome da camera em Rosslyn 10 fixed: CamPerspRx1265 , CamOrthoTopDown , CamPerspRx43910 , CamPerspStreetTx , CamPerspTx, CamPerspRx78
+        Nome da camera em Rosslyn 10 fixed: camera, CamPerspRx1265 , CamOrthoTopDown , CamPerspRx43910 , CamPerspRx78, CamPerspStreetTx , CamPerspTx,
+         CamPerspTx0, CamPerspTx1, CamPerspTx2, CamPerspTx3
     """
     
     cfg_cam = config.get('camera_settings', {})

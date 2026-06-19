@@ -4,22 +4,22 @@
         "caminho_dataset": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/t003_Rosslyn_05MobileRx_60GHz",
         "caminho_saida_video": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/videos/Scenario_14/TESTE_t003_Rosslyn_05MobileRx_60GHz.mp4",
         "start_run": 0,
-        "end_run": 60,
-        "batch_size": 10,
+        "end_run": 5800,
+        "batch_size": 200,
         "config_especifica": {
-            "use_rays": true,
+            "use_rays": false,
             "use_pedestrians": false,
             "scenes_per_episode": 40,
             "use_fixed_receivers": false,
-            "scenario_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/t003_Rosslyn_05MobileRx_60GHz/teste4rosslyn.blend",
+            "scenario_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/t003_Rosslyn_05MobileRx_60GHz/teste5rosslyn.blend",
             "pedestrian_file_name": "sumoOutputInfoFileName_PedPed.txt"
         },
         "video": {
-            "genarete_video": "true"
+            "genarete_video": "false"
         },
         "imagem": {
-            "save_image": "false",
-            "save_img_pathFile": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/imagens/t003_Rosslyn_05MobileRx_60GHz"
+            "save_image": "true",
+            "save_img_pathFile": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/imagens/CamPerspTx0_t003_Rosslyn_05MobileRx_60GHz"
         },
         "visualization": {
             "show_overlay": true,
@@ -30,8 +30,138 @@
             "use_occlusion_check": true
         },
         "camera": {
-            "active_camera_name": "CamPerspStreetTx",
-            "use_blender_default": true,
+            "active_camera_name": "CamPerspTx0",
+            "use_blender_default": false,
+            "type": "PERSP",
+            "ortho_scale": 260,
+            "focal_length": 12,
+            "rx_id_to_focus": 4,
+            "mode": "static",
+            "look_at_rx": false,
+            "relative_position": [-60, 0, 20]
+        }
+    },
+
+
+    {
+        "nome_projeto": "t003_Rosslyn_05MobileRx_60GHz",
+        "caminho_dataset": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/t003_Rosslyn_05MobileRx_60GHz",
+        "caminho_saida_video": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/videos/Scenario_14/TESTE_t003_Rosslyn_05MobileRx_60GHz.mp4",
+        "start_run": 0,
+        "end_run": 5800,
+        "batch_size": 200,
+        "config_especifica": {
+            "use_rays": false,
+            "use_pedestrians": false,
+            "scenes_per_episode": 40,
+            "use_fixed_receivers": false,
+            "scenario_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/t003_Rosslyn_05MobileRx_60GHz/teste5rosslyn.blend",
+            "pedestrian_file_name": "sumoOutputInfoFileName_PedPed.txt"
+        },
+        "video": {
+            "genarete_video": "false"
+        },
+        "imagem": {
+            "save_image": "true",
+            "save_img_pathFile": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/imagens/CamPerspTx1_t003_Rosslyn_05MobileRx_60GHz"
+        },
+        "visualization": {
+            "show_overlay": true,
+            "show_rx_coordinates": true,
+            "show_only_rx_label": true,
+            "show_tx_coordinates": true,
+            "show_only_tx_label": false,
+            "use_occlusion_check": true
+        },
+        "camera": {
+            "active_camera_name": "CamPerspTx1",
+            "use_blender_default": false,
+            "type": "PERSP",
+            "ortho_scale": 260,
+            "focal_length": 12,
+            "rx_id_to_focus": 4,
+            "mode": "static",
+            "look_at_rx": false,
+            "relative_position": [-60, 0, 20]
+        }
+    },
+
+    {
+        "nome_projeto": "t003_Rosslyn_05MobileRx_60GHz",
+        "caminho_dataset": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/t003_Rosslyn_05MobileRx_60GHz",
+        "caminho_saida_video": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/videos/Scenario_14/TESTE_t003_Rosslyn_05MobileRx_60GHz.mp4",
+        "start_run": 0,
+        "end_run": 5800,
+        "batch_size": 200,
+        "config_especifica": {
+            "use_rays": false,
+            "use_pedestrians": false,
+            "scenes_per_episode": 40,
+            "use_fixed_receivers": false,
+            "scenario_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/t003_Rosslyn_05MobileRx_60GHz/teste5rosslyn.blend",
+            "pedestrian_file_name": "sumoOutputInfoFileName_PedPed.txt"
+        },
+        "video": {
+            "genarete_video": "false"
+        },
+        "imagem": {
+            "save_image": "true",
+            "save_img_pathFile": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/imagens/CamPerspTx2_t003_Rosslyn_05MobileRx_60GHz"
+        },
+        "visualization": {
+            "show_overlay": true,
+            "show_rx_coordinates": true,
+            "show_only_rx_label": true,
+            "show_tx_coordinates": true,
+            "show_only_tx_label": false,
+            "use_occlusion_check": true
+        },
+        "camera": {
+            "active_camera_name": "CamPerspTx2",
+            "use_blender_default": false,
+            "type": "PERSP",
+            "ortho_scale": 260,
+            "focal_length": 12,
+            "rx_id_to_focus": 4,
+            "mode": "static",
+            "look_at_rx": false,
+            "relative_position": [-60, 0, 20]
+        }
+    },
+
+    {
+        "nome_projeto": "t003_Rosslyn_05MobileRx_60GHz",
+        "caminho_dataset": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/t003_Rosslyn_05MobileRx_60GHz",
+        "caminho_saida_video": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/videos/Scenario_14/TESTE_t003_Rosslyn_05MobileRx_60GHz.mp4",
+        "start_run": 0,
+        "end_run": 5800,
+        "batch_size": 200,
+        "config_especifica": {
+            "use_rays": false,
+            "use_pedestrians": false,
+            "scenes_per_episode": 40,
+            "use_fixed_receivers": false,
+            "scenario_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/t003_Rosslyn_05MobileRx_60GHz/teste5rosslyn.blend",
+            "pedestrian_file_name": "sumoOutputInfoFileName_PedPed.txt"
+        },
+        "video": {
+            "genarete_video": "false"
+        },
+        "imagem": {
+            "save_image": "true",
+            "save_img_pathFile": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/imagens/CamPerspTx3_t003_Rosslyn_05MobileRx_60GHz"
+        },
+        "visualization": {
+            "show_overlay": true,
+            "show_rx_coordinates": true,
+            "show_only_rx_label": true,
+            "show_tx_coordinates": true,
+            "show_only_tx_label": false,
+            "use_occlusion_check": true
+        },
+        "camera": {
+            "active_camera_name": "CamPerspTx3",
+            "use_blender_default": false,
             "type": "PERSP",
             "ortho_scale": 260,
             "focal_length": 12,

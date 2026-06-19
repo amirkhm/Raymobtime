@@ -1,7 +1,7 @@
 import bpy
 import os
 from math import radians, degrees
-from .helpers import chooseAngleToRotate # Import relativo
+from .helpers import chooseAngleToRotate
 
 
 """
@@ -31,7 +31,7 @@ def create_line_blender(objname, cList, frame_num, frame_step):
     polyline = curvedata.splines.new('POLY')
     polyline.points.add(len(cList)-1)
     
-    # Lógica de Material "Shadeless" (correta)
+    # Lógica de Material "Shadeless"
     def create_simple_material(name, color_tuple):
         """Cria um material "shadeless" para o Blender Internal."""
         mat = bpy.data.materials.new(name)
@@ -71,7 +71,7 @@ def create_line_blender(objname, cList, frame_num, frame_step):
         polyline.points[num].co = (x, y, z, 100) # w=100
     
     
-    # Valores de teste para torná-los GIGANTES.
+    # Valores de tamanho e espessura dos raios.
     curvedata.extrude = 0.5         # Aumentado de 0.005
     curvedata.bevel_depth = 0.16     # Espessura add JK - alteração do valor de 0.5 para 0.2
     
@@ -114,7 +114,7 @@ def end_ray_animation(frame_num, frame_step):
             obj.keyframe_insert(data_path="hide")
 
 def _get_template_object(template_name, config):    # Modificação JK - add do parametro config
-    """Função helper para carregar e cachear objetos do vehicles.blend."""
+    """Função helper para carregar e adicionar objetos do vehicles.blend."""
     global TEMPLATE_CACHE
     
     if template_name in TEMPLATE_CACHE:
@@ -383,7 +383,7 @@ def posicionar_rx(coords_insite, is_fixed, vPosition, config):
         if is_fixed:
             marcador.location = ponto
         else:
-            # Lógica Móvel Corrigida:
+            # Lógica em Mobile:
             for veh_id, info in vPosition.items():
                 # Verificamos se o índice do veículo no SUMO bate com o ID do receptor atual
                 if info.get('isRx', False) and info.get('rx_index') == str(id_num):
