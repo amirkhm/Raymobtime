@@ -1,0 +1,32 @@
+<edges>
+
+    <!-- PATH 1 -->
+	<edge id="edge_p1_1" from="path1_n1" to="path1_n2" priority="-1">
+		<lane index="0" allow="pedestrian" speed="1.34" length="1.055792" width="0.50" shape="-0.967266,7.12525 0.088526,7.12525"/>
+	</edge>
+	<edge id="edge_p1_2" from="path1_n2" to="path1_n3" priority="-1">
+		<lane index="0" allow="pedestrian" speed="1.34" length="9.23913" width="0.50" shape="0.088526,7.12525 0.088526,-2.11388"/>
+	</edge>
+	<edge id="edge_p1_3" from="path1_n3" to="path1_n4" priority="-1">
+		<lane index="0" allow="pedestrian" speed="1.34" length="7.18173 + 0.967266" width="0.50" shape="0.088526,-2.11388 -7.18173,-2.11388"/>
+	</edge>
+	<edge id="edge_p1_4" from="path1_n4" to="path1_n5" priority="-1">
+		<lane index="0" allow="pedestrian" speed="1.34" length="7.18173 + 0.967266" width="0.50" shape="-7.18173,-2.11388 -7.4155,-2.11388"/>
+	</edge>    
+
+	<!-- PATH 2 -->
+	<edge id="edge_p2_1" from="path2_n1" to="path2_n2" priority="-1">
+		<lane index="0" allow="pedestrian" speed="1.34" length="1.35855" width="0.50" shape="-4.19141,-4.36909 -4.19141,-2.81054"/>
+	</edge>
+	<edge id="edge_p2_2" from="path2_n2" to="path2_n3" priority="-1">
+		<lane index="0" allow="pedestrian" speed="1.34" length="5.33354" width="0.50" shape="-4.19141,-2.81054 1.14213,-2.81054"/>
+	</edge>
+	<edge id="edge_p2_3" from="path2_n3" to="path2_n4" priority="-1">
+		<lane index="0" allow="pedestrian" speed="1.34" length="9.9358" width="0.50" shape="1.14213,-2.81054 1.14213,7.12525"/>
+	</edge>
+
+	<edge id="edge_p2_4" from="path2_n4" to="path2_n5" priority="-1">
+		<lane index="0" allow="pedestrian" speed="1.34" length="0.23377" width="0.50" shape="1.14213,7.12525 1.14213,7.30981"/>
+	</edge>
+
+</edges>

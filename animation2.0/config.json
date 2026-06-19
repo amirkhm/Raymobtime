@@ -1,0 +1,60 @@
+{
+    "simulation": {
+        "use_rays": true,
+        "use_pedestrians": false,
+        "start_run": 0,
+        "end_run": 70,
+        "frame_step": 1,
+        "zip_scan_results": false
+    },
+    "dataset_config": {
+        "name": "s006_Rosslyn_10FixedRx_28GHz",
+        "scenes_per_episode": 10,
+        "use_fixed_receivers": true
+
+    },
+    "paths": {
+        "output_dir": "saida",
+        "scenario_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/s006_Rosslyn_10FixedRx_28GHz/teste4rosslyn.blend",        
+        "temp_frames_dir": "blensor_frames",
+        "video_output_name": "bases_files/saida/CamPerspRx1265_Rays_s006_Rosslyn_10FixedRx_28GHz.mp4",
+        "pedestrian_file_name": "sumoOutputInfoFileName_PedPed.txt",
+        "vehicle_file_name": "sumoOutputInfoFileName.txt",
+        "wireless_path_file": "study/model.paths.t001_01.r002.p2m",
+        "vehicles_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/vehicles.blend",
+        "rx_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/Rx.blend",
+        "tx_blend_file": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/Tx.blend"
+    },
+    "video": {
+        "genarete_video": "true",
+        "framerate": 10,
+        "codec": "libx264",
+        "pixel_format": "yuv420p"
+    },
+    "image": {
+        "save_image": "true",
+        "save_img_pathFile": "/home/jessica/Documentos/Raymobtime/raymobtimeV2/raymobtime/animation/bases_files/imagens/t003_Rosslyn_05MobileRx_60GHz"
+    },
+    "visualization_settings": {
+        "show_overlay": true,
+        "show_rx_coordinates": false,
+        "show_only_rx_label": true,
+        "show_tx_coordinates": true,
+        "show_only_tx_label": false,
+        "use_occlusion_check": true
+    },
+    "camera_settings": {
+        "active_camera_name": "CamPerspRx1265",
+        "use_blender_default": true,
+        "type": "PERSP",
+        "ortho_scale": 260,
+        "focal_length": 12,
+        "rx_id_to_focus": 4,
+        "mode": "static",
+        "look_at_rx": false,
+        "relative_position": [-60, 0, 20]
+    },
+    "debug": {
+        "animation_logs": false
+    }
+}

@@ -1,0 +1,17 @@
+*.pyc
+*.egg
+*.db
+.venv
+/utils/animation/Blensor-x64.AppImage
+/rmt.egg-info
+/data/rosslyn/out/
+
+# --- Local folder and temp results of animation modul ---
+animation2.0/bases_files/
+animation2.0/blensor_frames/
+animation2.0/temp_processing/
+
+
+.DS_Store
+*.mp4
+*.pcd
