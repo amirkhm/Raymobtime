@@ -1,0 +1,814 @@
+import os
+import numpy as np
+import yaml
+from pathlib import Path
+from types import SimpleNamespace
+import logging
+import shutil
+
+# simulators
+from src.modules.mobility.sumo.check_sumo import check_sumo_simulation_status
+from src.modules.blensor.blensor_src import blensor_simulation
+from src.modules.rt.wi.simulation.simulation import main as simulation_main
+from src.modules.rt.wi import check_wi_run_status
+from src.modules.data_processing import (
+    gen_database,
+    gen_csv_file, 
+    gen_rays_dataset,
+    check_sql_exists,
+    check_csv_exists,
+    check_hdf5_exists,
+    sanity_check_up)
+from src.modules.postprocessing.check_postprocessing import (
+    check_beams,
+    check_refined_images,
+    check_lidar_matrix)
+from src.modules.postprocessing import ( 
+    gen_beam_output_file,
+    cart_lidar_matrix,
+    sph_lidar_matrix,
+    image_refinement)
+
+def copy_yaml_to_output(c):
+    """
+    Copy the user YAML configuration file to the Raymobtime output folder.
+
+    This function is used to preserve the exact configuration file used in a
+    simulation run, making the generated results reproducible.
+
+    Args:
+        c: Runtime configuration object containing the project root, scenario,
+            output name, and YAML output flag.
+
+    Returns:
+        None.
+
+    Raises:
+        FileNotFoundError: If neither config.yaml nor config.yml is found in the
+            project root.
+    """
+    project_root = find_project_root()
+
+    user_yaml_path = project_root / "config.yaml"
+    if not user_yaml_path.exists():
+        user_yaml_path = project_root / "config.yml"
+
+    if not user_yaml_path.exists():
+        raise FileNotFoundError(
+            f"File config.yaml or config.yml not found at: {project_root}"
+        )
+
+    output_folder = os.path.join(
+        c.working_directory,
+        "data",
+        c.base_config.scenario,
+        "out",
+        c.base_config.output_name,
+    )
+
+    os.makedirs(output_folder, exist_ok=True)
+
+    output_yaml_path = os.path.join(
+        output_folder,
+        user_yaml_path.name
+    )
+
+    shutil.copy2(user_yaml_path, output_yaml_path)
+
+    logging.debug(
+        '\033[36m'
+        f'YAML configuration\n'
+        '\033[90m'
+        f'   copied to path: {output_yaml_path}'
+        '\033[0m')
+
+def dict_to_namespace(obj):
+    """
+    Recursively convert dictionaries into SimpleNamespace objects.
+
+    This function allows configuration values loaded from dictionaries to be
+    accessed using attribute notation. Lists are also processed recursively.
+
+    Args:
+        obj: Object to be converted. It can be a dictionary, list, or any other
+            value.
+
+    Returns:
+        A SimpleNamespace object if ``obj`` is a dictionary, a recursively
+        converted list if ``obj`` is a list, or the original value otherwise.
+    """
+    if isinstance(obj, dict):
+        return SimpleNamespace(**{
+            key: dict_to_namespace(value)
+            for key, value in obj.items()
+        })
+
+    if isinstance(obj, list):
+        return [dict_to_namespace(item) for item in obj]
+
+    return obj
+
+
+def load_yaml(path):
+    """
+    Load a YAML file and return its contents as a dictionary.
+
+    If the file does not exist or is empty, an empty dictionary is returned.
+
+    Args:
+        path: Path to the YAML file.
+
+    Returns:
+        Dictionary containing the YAML data, or an empty dictionary when the file
+        does not exist or contains no data.
+    """
+    path = Path(path)
+
+    if not path.exists():
+        return {}
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    return data or {}
+
+
+def deep_merge(default_dict, user_dict):
+    """
+    Recursively merge a user configuration dictionary into a default dictionary.
+
+    Values provided by the user override the corresponding default values. When
+    both values are dictionaries, the merge is performed recursively so that
+    nested default values are preserved unless explicitly overwritten.
+
+    Args:
+        default_dict: Dictionary containing default configuration values.
+        user_dict: Dictionary containing user-defined configuration values.
+
+    Returns:
+        A merged dictionary containing default values overwritten by user values.
+    """
+    result = default_dict.copy()
+
+    for key, user_value in user_dict.items():
+        default_value = result.get(key)
+
+        if isinstance(default_value, dict) and isinstance(user_value, dict):
+            result[key] = deep_merge(default_value, user_value)
+        else:
+            result[key] = user_value
+
+    return result
+
+
+def find_project_root():
+    """
+    Find the project root directory.
+
+    This function searches upward from the current file location until it finds
+    a directory containing ``pyproject.toml``. That directory is considered the
+    project root.
+
+    Returns:
+        Path object pointing to the project root directory.
+
+    Raises:
+        FileNotFoundError: If no ``pyproject.toml`` file is found in the parent
+            directories.
+    """
+    current = Path(__file__).resolve()
+
+    for parent in current.parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+
+    raise FileNotFoundError("Project root not found. pyproject.toml is missing.")
+
+
+def load_config():
+    """
+    Load and merge the default and user configuration files.
+
+    This function locates the project root, loads ``src/configs/default.yaml``
+    and the user configuration file from the project root, then merges both
+    configurations. The resulting dictionary is converted to a SimpleNamespace
+    object for attribute-style access.
+
+    Returns:
+        A SimpleNamespace object containing the merged configuration.
+
+    Raises:
+        FileNotFoundError: If ``default.yaml`` or the user ``config.yaml`` /
+            ``config.yml`` file cannot be found.
+    """
+
+    project_root = find_project_root()
+
+    default_path = project_root / "src" / "configs" / "default.yaml"
+
+    user_path = project_root / "config.yaml"
+    if not user_path.exists():
+        user_path = project_root / "config.yml"
+
+    if not default_path.exists():
+        raise FileNotFoundError(
+            f"File default.yaml not found at: {default_path}"
+        )
+
+    if not user_path.exists():
+        raise FileNotFoundError(
+            f"File config.yaml or config.yml not found at: {project_root}"
+        )
+
+    default_cfg = load_yaml(default_path)
+    user_cfg = load_yaml(user_path)
+
+    merged_cfg = deep_merge(default_cfg, user_cfg)
+
+    return dict_to_namespace(merged_cfg)
+
+def get_lat_long(base_insite_project_path):
+    """
+    Extract latitude and longitude from a Wireless InSite TX/RX file.
+
+    This function reads ``base.txrx`` from a base Wireless InSite project folder
+    and searches for latitude and longitude entries.
+
+    Args:
+        base_insite_project_path: Path to the base Wireless InSite project
+            directory.
+
+    Returns:
+        A tuple containing ``(latitude, longitude)`` as strings.
+
+    Raises:
+        FileNotFoundError: If the ``base.txrx`` file does not exist.
+    """
+    txrx_file = open(os.path.join(base_insite_project_path, 'base.txrx'), 'r')
+    latitude = False
+    longitude = False
+
+    for line in txrx_file:
+        if 'latitude' in line:
+            latitude = line.split(' ')[1].replace('\n', '')
+        if 'longitude' in line:
+            longitude = line.split(' ')[1].replace('\n', '')
+        if latitude and longitude:
+            return latitude, longitude
+
+def get_insite_version(base_insite_project_path):
+    """
+    Extract the Wireless InSite version from the model study XML file.
+
+    This function reads ``model.study.xml`` from a base Wireless InSite project
+    folder and extracts the version declared in the ``<InSite version=...>``
+    field.
+
+    Args:
+        base_insite_project_path: Path to the base Wireless InSite project
+            directory.
+
+    Returns:
+        Wireless InSite version string, such as ``"3.2"`` or ``"3.3"``.
+
+    Raises:
+        FileNotFoundError: If the ``model.study.xml`` file does not exist.
+    """
+    model_file = open(os.path.join(base_insite_project_path, 'model.study.xml'), 'r')
+    insite_version = False
+    for line in model_file:
+        if '<InSite version="' in line:
+            insite_version = line.split('version=')[1].split(' ')[0][1:4]
+            model_file.close()
+            return insite_version
+
+class parameters:
+    """
+    Runtime configuration container for the Raymobtime pipeline.
+
+    This class loads the merged YAML configuration, exposes the main
+    configuration sections as attributes, and derives all paths, flags, command
+    arguments, Wireless InSite settings, SUMO settings, Blensor settings, and
+    post-processing parameters needed by the Raymobtime workflow.
+
+    Attributes:
+        cfg: Complete merged configuration object.
+        base_config: General project configuration section.
+        pipeline: Pipeline execution flags and options.
+        rmt: Raymobtime mobility/sampling configuration section.
+        sumo: SUMO configuration section.
+        ray_tracing: Ray-tracing configuration section.
+        blensor_options: Blensor configuration section.
+        post_processing: Post-processing configuration section.
+    """
+    def __init__(self):
+        self.cfg = load_config()
+
+        self.base_config = self.cfg.base_config
+        self.pipeline = self.cfg.pipeline
+        self.rmt = self.cfg.rmt
+        self.sumo = self.cfg.sumo
+        self.ray_tracing = self.cfg.ray_tracing
+        self.blensor_options = self.cfg.blensor_options
+        self.post_processing = self.cfg.post_processing
+
+        self.check = {}
+
+        self.setparameters()
+
+    def setparameters(self):
+        """
+        Derive all runtime parameters from the loaded configuration.
+
+        This method configures logging, resolves the project root, builds input and
+        output paths, reads Wireless InSite metadata, prepares SUMO commands,
+        configures mobility/ray-tracing/Blensor/post-processing options, and sets
+        auxiliary parameters used throughout the Raymobtime pipeline.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: If an invalid logging level or unsupported coordinate system
+                option is provided.
+            FileNotFoundError: If required Wireless InSite base files are missing.
+        """
+        if self.base_config.logging_level:
+            level = self.base_config.logging_level.upper()
+            if level == "DEBUG":
+                logging.basicConfig(level=logging.DEBUG)
+            elif level == "INFO":
+                logging.basicConfig(level=logging.INFO)
+            elif level == "WARNING":
+                logging.basicConfig(level=logging.WARNING)
+            elif level == "ERROR":
+                logging.basicConfig(level=logging.ERROR)
+            elif level == "CRITICAL":
+                logging.basicConfig(level=logging.CRITICAL)
+            elif level == "NONE":
+                logging.disable(logging.CRITICAL)
+            else:
+                raise ValueError(f"Invalid logging level: {self.base_config.logging_level}")
+            
+        self.working_directory = find_project_root()
+
+        self.yaml_output = self.base_config.yaml_output
+        self.fixed_receivers = self.rmt.features.fixed_receivers
+        self.vehicles_template = self.rmt.features.vehicles_template
+        self.isolated_sim = not self.rmt.enabled
+        
+        self.use_pedestrians = self.ray_tracing.use_pedestrians
+        self.drone_simulation = self.ray_tracing.use_drone.enabled
+        self.drone_altitude = self.ray_tracing.use_drone.altitude
+        self.V2V = self.ray_tracing.v2v.enabled
+        
+        self.base_insite_project_path = os.path.join(
+            self.working_directory,
+            "data",                                
+            self.base_config.scenario,
+            "base",
+            "wi" #It's possible differents base InSite projects, add in yaml
+        ) 
+
+        # Folder to store each InSite project and its results
+        # Will create subfolders for each "run", run0000, run0001, etc.
+        self.results_dir = os.path.join(
+            self.working_directory,
+            'data',
+            self.base_config.scenario,
+            'out',
+            self.base_config.output_name,
+            'rt_simulations')
+        
+        self.results_dir_postprocessed = os.path.join(
+            self.working_directory,
+            'data',
+            self.base_config.scenario,
+            'out',
+            self.base_config.output_name,
+            'postprocessed')
+        
+        self.result_dir_processed_data = os.path.join(
+            self.working_directory,
+            'data',
+            self.base_config.scenario,
+            'out',
+            self.base_config.output_name,
+            'processed_data')
+
+        self.resume = self.base_config.resume
+        self.clean_previous = self.base_config.clean_previous
+        if self.clean_previous == None:
+            self.clean_previous = []
+        
+        self.isolated_results_dir = os.path.join(
+            self.results_dir,
+            self.base_config.scenario)
+
+        # Folders and files for InSite and its license.
+        # For Windows you may simply inform the path to the executable files,
+        # not minding about the license file location.
+        # Folders for SUMO and InSite.
+        # Use executable sumo-gui if want to see the GUI or sumo otherwise.
+        self.insite_version = get_insite_version(self.base_insite_project_path)
+
+        # InSite env variable
+        self.locale = 'LC_CTYPE=en_US.UTF-8 LC_NUMERIC=en_US.UTF-8 LC_TIME=en_US.UTF-8 '
+
+        if self.insite_version == '3.3':
+            self.wibatch_bin = (
+                self.locale
+                + '{} '.format(self.ray_tracing.wireless_insite.LICENSE_FILE)
+                + 'LD_LIBRARY_PATH={}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ '.format(
+                    self.ray_tracing.wireless_insite.software_path)
+                + '{}/WirelessInSite/3.3.0.4/Linux-x86_64RHEL6/bin/wibatch'.format(
+                    self.ray_tracing.wireless_insite.software_path))
+
+        elif self.insite_version == '3.2':
+            self.wibatch_bin = (
+                self.locale
+                + f"{self.ray_tracing.wireless_insite.LICENSE_FILE} "
+                + f"LD_LIBRARY_PATH={self.ray_tracing.wireless_insite.software_path}/OpenMPI/1.4.4/Linux-x86_64RHEL6/lib/ "
+                + f"{self.ray_tracing.wireless_insite.software_path}/WirelessInSite/3.2.0.3/Linux-x86_64RHEL6/bin/wibatch")
+
+        if not self.isolated_sim:
+            self.sumo_bin = self.sumo.bin
+            self.sumo_cfg = os.path.join(
+                self.working_directory,
+                'data',
+                self.base_config.scenario,
+                'base',
+                'sumo',
+                f'{self.sumo.cfg}.sumocfg')
+
+            # Iterator that determines maximum number of RT simulations
+            self.n_run = range(
+                self.rmt.sampling_parameters[0],
+                self.rmt.sampling_parameters[1])
+
+            # Time interval between scenes, in seconds
+            self.sampling_interval = float(self.rmt.sampling_parameters[2])
+
+            # Number of scenes of each episode
+            self.scenes_per_episode = int(self.rmt.scenes_per_episode)
+
+            # Time among episodes, in steps
+            # If you specify x/Ts, then x is in seconds
+            self.time_between_episodes = int(
+                float(self.rmt.time_between_episodes) / self.sampling_interval)
+
+        if self.fixed_receivers:
+            # Number of receivers per episode
+            self.receivers_per_episode = 0
+        else:
+            # Number of receivers per episode
+            self.receivers_per_episode = self.ray_tracing.receivers_per_episode
+
+        self.analysis_area_enabled = self.post_processing.area_of_analyses.enabled
+        self.analysis_area = self.post_processing.area_of_analyses.limits
+        self.analysis_area_resolution = 0.5
+
+        self.antenna_number = 10 #VERIFY
+
+        # Frequency in Hz for the RT simulation
+        self.frequency = 60e9
+
+        self.set_area_limit = self.pipeline.mobility.placement_limits.enabled
+        self.max_lim = self.pipeline.mobility.placement_limits.max_lim
+        self.min_lim = self.pipeline.mobility.placement_limits.min_lim
+
+        # Blender Options
+        self.sim_BS_img = self.blensor_options.image_options.BS_camera
+        self.sim_UE_img = self.blensor_options.image_options.UE_camera
+        self.n_cameras_blensor_scenario = self.blensor_options.image_options.n_camera_BS
+
+        self.blensor_scenario_path = self.blensor_options.path_to_scenario_blend
+        self.blensor_runfile_path = self.blensor_options.path_blensor_image
+        self.path_to_vehicles_blend = self.blensor_options.path_to_vehicles_blend  
+
+        self.CoordSystem = self.post_processing.cartesian_lidar_matrix.coordinate_system
+        self.QP = self.post_processing.cartesian_lidar_matrix.QP
+        self.QPsph = self.post_processing.cartesian_lidar_matrix.QPsph
+        self.Tx_position = self.post_processing.cartesian_lidar_matrix.Tx_position
+        self.max_dist_LIDAR = self.post_processing.cartesian_lidar_matrix.max_dist_LIDAR
+        self.type_data = self.post_processing.cartesian_lidar_matrix.type_data
+
+        self.n_Tx_per_episode = self.ray_tracing.transmitters_per_episode
+        self.receivers_per_episode = self.ray_tracing.receivers_per_episode
+        self.close_vehicles = self.ray_tracing.v2v.closest_vehicles.enabled
+        self.n_of_vehicles = self.ray_tracing.v2v.closest_vehicles.n_of_vehicles
+        #if self.ray_tracing.v2v.chose_vehicle:
+        #    self.chosen_vehicle = self.ray_tracing.v2v.chosen_vehicle
+
+        self.import_precoding = self.post_processing.mimo.import_precoding
+        self.import_hmatrix = self.post_processing.mimo.import_channels
+        self.import_combining = self.post_processing.mimo.import_combining
+        self.expansion = self.post_processing.mimo.antenna_array_expansion
+        self.rotation = self.post_processing.mimo.array_rotation
+        self.normalized_antenna_distance = self.post_processing.mimo.antenna_array_expansion.normalized_antenna_distance
+
+
+        # Fullfill this parameters with InSite's information
+        self.insite_study_area_name = self.ray_tracing.wireless_insite.base_files_names.study_area_name
+        self.insite_tx_name = self.ray_tracing.wireless_insite.base_files_names.tx_name
+        self.insite_rx_name = self.ray_tracing.wireless_insite.base_files_names.rx_name
+        self.insite_setup_name = self.ray_tracing.wireless_insite.base_files_names.setup_name
+        self.insite_vehicles_name = self.ray_tracing.wireless_insite.base_files_names.vehicles_name
+
+        if self.vehicles_template:
+            self.latitude, self.longitude = get_lat_long(self.base_insite_project_path)
+            self.insite_vehicles_name_model = self.insite_vehicles_name
+            self.insite_vehicles_name = self.insite_vehicles_name + '_'
+
+
+        if self.isolated_sim:
+            self.results_base_model_dir = self.isolated_results_dir
+        else:
+            self.results_base_model_dir = os.path.join(self.results_dir, 'base')
+
+        self.results_base_model_dir.replace('\\', '/')
+        # Input files, which are read by the Python scripts
+
+        # File that has the base InSite project
+        self.setup_path = os.path.join(self.base_insite_project_path, self.insite_setup_name + '.setup')
+        self.base_setup_path = os.path.join(self.base_insite_project_path, 'base.setup')
+
+        # setup_path = setup_path.replace(' ', '\ ') # deal with paths with blank spaces
+
+        # XML that has information about the simulations
+        self.base_x3d_xml_path = os.path.join(
+            self.base_insite_project_path,
+            'base.' + self.insite_study_area_name + '.xml')
+
+        # Name, basename, of the paths file generated in the simulation
+        self.paths_file_name = self.insite_setup_name + '.paths.t001_01.r002.p2m'
+
+        # Base object file to generate the object_dst_file_name
+        self.base_object_file_name = os.path.join(
+            self.base_insite_project_path, 
+            "base.object")
+
+        # Base txrx file to generate the txrx_dst_file_name
+        self.base_txrx_file_name = os.path.join(
+            self.base_insite_project_path, 
+            "base.txrx")
+
+
+        # Output files, which are written by the Python scripts.
+        # Provide here only the names.
+        # The full paths will be created by simulation.py, using the run folder.
+
+        # Name, basename, of the JSON output simulation info file
+        self.simulation_info_file_name = 'wri-simulation.info'
+
+        self.dst_object_file_name = self.insite_vehicles_name + '.object'
+        self.dst_txrx_file_name = self.insite_setup_name + '.txrx'
+
+        # XML project that will be executed by InSite command line tools
+        # Its path will be the run folder.
+        self.dst_x3d_xml_file_name = (
+            self.insite_setup_name
+            + '.'
+            + self.insite_study_area_name
+            + '.xml')
+
+        # The information below is added in simulation.py into an XML file
+        if self.insite_version == '3.3':
+            self.dst_x3d_txrx_xpath = (
+                "./remcom__rxapi__Job/Scene/remcom__rxapi__Scene/TxRxSetList/"
+                "remcom__rxapi__TxRxSetList/TxRxSet/remcom__rxapi__PointSet/"
+                "OutputID/remcom__rxapi__Integer[@Value='2']"
+                + "/../../ControlPoints/remcom__rxapi__ProjectedPointList")
+            self.dst_x3d_txrx_xpath_to_tx = (
+                "./remcom__rxapi__Job/Scene/remcom__rxapi__Scene/TxRxSetList/"
+                "remcom__rxapi__TxRxSetList/TxRxSet/remcom__rxapi__PointSet/"
+                "OutputID/remcom__rxapi__Integer[@Value='1']"
+                + "/../../ControlPoints/remcom__rxapi__ProjectedPointList")
+        else:
+            self.dst_x3d_txrx_xpath = (
+                "./Job/Scene/Scene/TxRxSetList/TxRxSetList/TxRxSet/"
+                "PointSet/OutputID/Integer[@Value='2']"
+                + "/../../ControlPoints/ProjectedPointList")
+            self.dst_x3d_txrx_xpath_to_tx = (
+                "./Job/Scene/Scene/TxRxSetList/TxRxSetList/TxRxSet/"
+                "PointSet/OutputID/Integer[@Value='1']"
+                + "/../../ControlPoints/ProjectedPointList")
+
+        self.tool = self.pipeline.mobility.tool
+        if self.isolated_sim:
+            self.use_sumo = None
+        else:
+            self.use_sumo = self.tool
+
+        # Dimensions of the Mobile Objects, MOBJS, which will be placed on dst_object_file_name
+        self.car_dimensions = (2, 6, 1.47)
+
+        # Antenna to be placed above the cars
+        self.antenna_origin = (
+            self.car_dimensions[0] / 2,
+            self.car_dimensions[1] / 2,
+            self.car_dimensions[2])
+
+        # ID of the car material.
+        # Must be defined on base_object_file_name and it is processed by simulation.py.
+        self.car_material_id = 0
+        self.car_structure_name = 'car'
+
+        # Name of the antenna points in base_txrx_file_name
+        self.insite_rx_name = self.insite_rx_name
+
+
+        if self.use_sumo == 'sumo':
+            seed = self.sumo.seed
+            np.random.seed(seed)
+
+            self.sumo_cmd = [
+                self.sumo.bin,
+                '-c',
+                self.sumo_cfg,
+                '--step-length',
+                str(self.sampling_interval),
+                '--seed',
+                f'{seed}']
+
+            # Mapping from SUMO to InSite coordinates.
+            # Take only min and max for x and y and put there.
+            self.lane_boundary_dict = {
+                "laneA_0": [[758.5, 460], [744.5, 660]],
+                "laneB_0": [[658.82, 460], [747.5, 358.76]],
+                "laneC_0": [[658.82, 460], [752.5, 675.90]],
+                "laneD_0": [[840.08, 460], [755.5, 660]]}
+        else:
+            raise NameError(f"mobility module nonexistent: {self.pipeline.mobility.tool}")
+        
+        self.mobility = self.pipeline.mobility
+        self.ray_tracing = self.pipeline.ray_tracing
+        self.jump = self.ray_tracing.jump
+        self.data_processing = self.pipeline.data_processing
+        self.post_processing = self.pipeline.post_processing
+        self.blensor = self.pipeline.blensor
+        self.validation = self.pipeline.validation
+        
+
+def raymobtime():
+    """
+    Raymobtime simulation and post-processing entry point.
+
+    This function run the main Raymobtime workflow stages, including Wireless InSite ray-tracing simulation,
+    Blensor-based LiDAR/image generation, and post-processing routines for database, coordinate,
+    ray, beam, LiDAR, and image outputs.
+
+    Depending on the selected inputs in, it can generate simulation input files,
+    execute ray tracing, convert raw results into structured datasets, run sanity
+    checks, or process auxiliary sensor data.
+    """
+
+    c = parameters()
+
+    if c.yaml_output:
+        copy_yaml_to_output(c)
+
+    # Usual Raymobtime Simulation using WI
+    if c.mobility.enabled or c.ray_tracing.enabled:
+        simulation_main(c)
+
+    if c.data_processing.enabled:       
+        if c.data_processing.outputs == None:
+            c.data_processing.outputs = []
+
+        if c.data_processing.which == "all":
+            c.data_processing.outputs = ['db', 'csv', 'hdf5']
+        
+        if 'db' in c.data_processing.outputs:
+            if 'db' in c.clean_previous:
+                arquivo = Path(
+                    os.path.join(
+                        c.result_dir_processed_data,
+                        c.base_config.output_name+'.db'))
+                if os.path.exists(arquivo):
+                    os.remove(arquivo)
+                gen_database(c)
+                c.check['sql_okay'] = check_sql_exists(c)
+            else:
+                c.check['sql_okay'] = check_sql_exists(c)
+                if not (c.check.get('sql_okay') and c.resume):
+                    gen_database(c)
+                    c.check['sql_okay'] = check_sql_exists(c)
+        
+        if 'coord' in c.data_processing.outputs:
+            if 'coord' in c.clean_previous:
+                arquivo = Path(
+                    os.path.join(
+                        c.result_dir_processed_data,
+                        'CoordVehicleTxRx.csv'))
+                if os.path.exists(arquivo):
+                    os.remove(arquivo)
+                gen_csv_file(c)
+                c.check['csv_okay'] = check_csv_exists(c)
+            else:
+                c.check['csv_okay'] = check_csv_exists(c)
+                if not (c.check.get('csv_okay') and c.resume):
+                    gen_csv_file(c)
+                    c.check['csv_okay'] = check_csv_exists(c)
+
+        if 'hdf5' in c.data_processing.outputs:
+            if 'hdf5' in c.clean_previous:
+                hdf5_path = Path(
+                    os.path.join(
+                        c.result_dir_processed_data,
+                        'rays',))
+                if os.path.exists(hdf5_path):
+                    shutil.rmtree(hdf5_path)
+                gen_rays_dataset(c)
+                c.check['hdf5_okay'] = check_hdf5_exists(c)
+            else:
+                c.check['hdf5_okay'] = check_hdf5_exists(c)
+                if not (c.check.get('hdf5_okay') and c.resume):
+                    gen_rays_dataset(c)
+                    c.check['hdf5_okay'] = check_hdf5_exists(c)
+
+
+    # Simulation using blensor for image/lidar database
+    if (c.blensor.enabled):
+        blensor_simulation(c)
+
+
+    if c.post_processing.enabled:
+        if c.post_processing.outputs == None:
+            c.post_processing.outputs = []
+        elif c.post_processing.which == "all":
+            c.post_processing.outputs = ['beams', 'lidar', 'image']
+        elif c.post_processing.which == "selected":
+            pass
+        else:
+            raise ValueError(f'Which post processing will you choose {c.post_processing.which} is not defined')
+
+        if 'lidar' in c.post_processing.outputs:
+            if 'post_lidar' in c.clean_previous:
+                # remove folder
+                lidar_matrix_folder = Path(
+                os.path.join(
+                    c.results_dir_postprocessed,
+                    f'lidar_{c.CoordSystem [:3]}_matrix_{c.type_data}'))
+                if lidar_matrix_folder.exists():
+                    shutil.rmtree(lidar_matrix_folder)
+                # execute
+                if c.CoordSystem == 'spherical':
+                    sph_lidar_matrix(c)
+                elif c.CoordSystem == 'cartesian':
+                    cart_lidar_matrix(c)
+                else:
+                    raise ValueError(f'CoordSystem {c.CoordSystem} not defined or value incorrect, use cartesian or spherical in config.yaml')
+                # check
+                c.check['lidar_matrix_okay'] = check_lidar_matrix(c)
+            else:
+                #check
+                c.check['lidar_matrix_okay'] = check_lidar_matrix(c)
+                if not (c.check.get('lidar_matrix_okay') and c.resume):
+                    # execute
+                    if c.CoordSystem == 'spherical':
+                        sph_lidar_matrix(c)
+                    elif c.CoordSystem == 'cartesian':
+                        cart_lidar_matrix(c)
+                    else:
+                        raise ValueError(f'CoordSystem {c.CoordSystem} not defined or value incorrect, use cartesian or spherical in config.yaml')
+                    # check
+                    c.check['lidar_matrix_okay'] = check_lidar_matrix(c)
+
+        if 'image' in c.post_processing.outputs:
+            if 'post_images' in c.clean_previous:
+                post_images_folder = Path(
+                os.path.join(
+                    c.results_dir_postprocessed,
+                    f'refined_images'))
+                if post_images_folder.exists():
+                    shutil.rmtree(post_images_folder)
+                image_refinement(c)
+                c.check['refined_images_okay'] = check_refined_images(c)
+            else:
+                c.check['refined_images_okay'] = check_refined_images(c)
+                if not (c.check.get('refined_images_okay') and c.resume):
+                    image_refinement(c)
+                    c.check['refined_images_okay'] = check_refined_images(c)
+
+        if 'beams' in c.post_processing.outputs:
+            if 'beams' in c.clean_previous:
+                beams_folder = Path(
+                    os.path.join(
+                        c.results_dir_postprocessed,
+                        'beams'))
+                if beams_folder.exists():
+                    shutil.rmtree(beams_folder)
+                gen_beam_output_file(c)
+                c.check['beams_okay'] = check_beams(c)
+            else:
+                c.check['beams_okay'] = check_beams(c)
+                if not (c.check.get('beams_okay') and c.resume):
+                    gen_beam_output_file(c)
+                    c.check['beams_okay'] = check_beams(c)
+
+    if c.validation.run_checkup:
+       sanity_check_up(c)
+    
+if __name__ == "__main__":    
+    raymobtime()
