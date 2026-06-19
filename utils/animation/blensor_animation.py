@@ -13,15 +13,11 @@ from mathutils import *
 from math import *
 from datetime import datetime
 from zipfile import ZipFile
-<<<<<<< HEAD:utils/animation/blensor_animation.py
 
 def base_run_dir_fn(i): #the folders will be run00001, run00002, etc.
     """returns the `run_dir` for run `i`"""
     return "run{:05d}".format(i)
 
-=======
-from src.scripts.helpers import format_run_name
->>>>>>> master:animation/blensor_animation.py
 
 def main():
     startTime = datetime.now()
@@ -54,7 +50,7 @@ def main():
         
         print('Processing run' + str(run) + ' ...') 
         time_elapsed = datetime.now() - startTime
-        scene_path = os.path.join(folder_scanned_name,format_run_name(run)) 
+        scene_path = os.path.join(folder_scanned_name,base_run_dir_fn(run)) 
         if not os.path.exists(scene_path):
             print('\nWarning: could not find file ', scene_path , ' Stopping...')
             break
@@ -103,7 +99,8 @@ def main():
 def classifyRays(pathInfoList,  numCl=2):
     raysCl = {}
     cleanPathInfo = {}
-    
+
+    # Get Info part
     for rays in pathInfoList.items():
         RxLocation = copy.deepcopy( rays[1][len(rays[1])-1] )
         dbRx = RxLocation[3]
@@ -122,6 +119,17 @@ def classifyRays(pathInfoList,  numCl=2):
             
     return cleanPathInfo
     
+    # Classify/Clean part
+    # For each Rx only a certain number of Rays.
+    #for rays in pathInfoList.items():
+    #    if (typeCl == 'Best'):
+    #        
+    #    elif (typeCl == 'Worst')
+
+
+    #print(raysCl)
+    #exit(1)
+    #return raysCl
 
 def getInfoPath(path_info_file):
     with open(path_info_file) as pathfile:
@@ -168,10 +176,7 @@ def getInfoVehicles(sumo_info_file):
             thisAngleInRad = np.radians(float(row['angle'])) #*np.pi/180
             deltaX = (float(row['length'])/2.0) * np.sin(thisAngleInRad)
             deltaY = (float(row['length'])/2.0) * np.cos(thisAngleInRad)
-            vPosition[row['object_id']] = {'xinsite':str(float(row['xinsite']) - deltaX),
-                                     'yinsite':str(float(row['yinsite']) - deltaY),
-                                     'height':row['height'],'angle':row['angle'],
-                                     'isRx':row['isRx'], 'z3':row['z3']}
+            vPosition[row['veh']] = {'xinsite':str(float(row['xinsite']) - deltaX),'yinsite':str(float(row['yinsite']) - deltaY),'height':row[' height'],'angle':row['angle'],'isRx':row['isRx'], 'z3':row['z3']}
         
     return vPosition
 
@@ -300,7 +305,7 @@ def animateVehiclesBlender(vPosition,frame_num,frame_step,step):
     for x in range(0, len(bpy.context.scene.objects)):
         
         obj_name = bpy.context.scene.objects[x].name
-        if obj_name.startswith('flow') or obj_name.startswith('droneFlow') or obj_name.startswith('ped'): # Add to list
+        if obj_name.startswith('flow') or obj_name.startswith('dflow') or obj_name.startswith('ped'): # Add to list
             #objects_in_scene.append(obj_name)
             #if not obj_name in vPosition:
             i = i + 1
@@ -380,7 +385,26 @@ def animateVehiclesBlender(vPosition,frame_num,frame_step,step):
         veh.keyframe_insert(data_path="hide", index=-1)
         veh.keyframe_insert(data_path="location", index=-1)
         veh.keyframe_insert(data_path="rotation_euler", index=-1)
+
+
+# Escolhe o angulo para rotacionar que tem a menor diferença de angulo com o angulo anterior
+def chooseAngleToRotate(previousAngle, nextAngle):
+    cw = nextAngle - previousAngle 
+    ccw = - cw 
+    cw360 = convert360(cw)
+    ccw360 = convert360(ccw)
+    if ( cw360 < ccw360 ) :
+        return previousAngle + cw360
+    else:
+        return previousAngle - ccw360
     
+
+def convert360(x):
+    if ( x < 0 ) :
+        n = ceil(-x / 360)
+        x = x + n*360
+
+    return x % 360
 
 def buildVehiclesBlender(vPosition):
     # global veh
@@ -460,6 +484,7 @@ def doScan(vPosition,pathdir):
             '''doClean(myfile)'''
     doZip(pathdir)
         
+# Perform Scan
 def doZipPython(filepath):
     with ZipFile(filepath+'Zipped.zip', 'w') as zipped:
         for folderName, subfolders, filenames in os.walk(filepath):
@@ -468,6 +493,13 @@ def doZipPython(filepath):
                 zipped.write(filePath)
                 print('Write '+filePath)
     shutil.rmtree(filepath)
+
+def doClean(myfile):
+## If file exists, delete it ##
+    if os.path.isfile(myfile):
+        os.remove(myfile)
+    else:    ## Show an error ##
+        print("Error: %s file not found" % myfile)
 
 if __name__ == '__main__':
     main()
