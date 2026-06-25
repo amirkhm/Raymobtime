@@ -3,6 +3,11 @@ import shutil
 import zipfile
 import time
 from math import ceil
+import subprocess
+
+def base_run_dir_fn(i):
+    """Retorna o nome do diretório para a run 'i' (ex: 'run00001')"""
+    return "run{:05d}".format(i)
 
 def setup_directories(frame_dir, output_dir):
     """Limpa e (re)cria diretórios temporários e de saída."""
@@ -51,3 +56,61 @@ def do_zip(pathdir):
         shutil.rmtree(pathdir)
     except Exception as e:
         print(f"Erro ao compactar ou remover {pathdir}: {e}")
+
+#add JK
+def add_overlay_to_frame(frame_path, texto):
+    if not os.path.exists(frame_path):
+        return
+    
+    # Comando - criar a tarja preta com texto no topo
+    comando = [
+        "convert",
+        frame_path,
+        "-background", "black",
+        "-fill", "white",
+        "-font", "DejaVu-Sans",
+        "-pointsize", "20",
+        "-gravity", "center",
+        "label:{}".format(texto),
+        "+swap",
+        "-append",
+        frame_path
+    ]
+    
+    try:
+        subprocess.run(comando, check=True)
+    except Exception as e:
+        print("Erro ao aplicar legenda: {}".format(e))
+
+#add JK
+def add_rx_label(image_path, text, x, y):
+    # Desenha uma bolinha amarela e o texto
+    r = 4
+    command = [
+        'convert', image_path,
+        '-fill', '#FFFF00',           # Amarelo
+        '-stroke', 'black', 
+        '-strokewidth', '1',
+        '-draw', "circle {},{} {},{}".format(x, y, x + r, y), # BOLINHA
+        '-font', 'DejaVu-Sans-Bold',
+        '-pointsize', '13',
+        '-draw', "text {},{} '  {}'".format(x + 2, y + 2, text), # TEXTO com recuo
+        image_path
+    ]
+    subprocess.run(command)
+
+def add_tx_label(image_path, text, x, y):
+    """Desenha uma bolinha verde (raio 5) e o texto do TX."""
+    r = 5
+    command = [
+        'convert', image_path,
+        '-fill', '#00FF00',           # Verde
+        '-stroke', 'black',
+        '-strokewidth', '0.6',
+        '-draw', "circle {},{} {},{}".format(x, y, x + r, y), # BOLINHA
+        '-font', 'DejaVu-Sans-Bold',
+        '-pointsize', '13',
+        '-draw', "text {},{} '  {}'".format(x + 2, y + 2, text), # TEXTO com recuo
+        image_path
+    ]
+    subprocess.run(command)

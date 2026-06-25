@@ -239,6 +239,7 @@ def calc_omega(elevationAngles, azimuthAngles, normalizedAntDistance=0.5):
     sinElevations = np.sin(elevationAngles)
     omegax = 2 * np.pi * normalizedAntDistance * sinElevations * np.cos(azimuthAngles)  #x
     omegay = 2 * np.pi * normalizedAntDistance * sinElevations * np.sin(azimuthAngles)  #y
+    # TODO implement z expansion
     #omegay = 2 * np.pi * normalizedAntDistance * np.cos(elevationAngles)  #new          #z
     return np.matrix((omegax, omegay))
 
@@ -347,6 +348,7 @@ def getNarrowBandUPAMIMOChannel(
         #arrival
         vecx = np.exp(-1j * arrival_omega[0,ray_i] * rangeRx_x)
         vecy = np.exp(-1j * arrival_omega[1,ray_i] * rangeRx_y)
+        # TODO implement axis expansion order change
         arrival_vec = norm_Rx * np.matrix(np.kron(vecx, vecy)) #1xn
 
         antenna_pattern_gain_Tx = 1
@@ -528,7 +530,7 @@ def calc_rx_power(departure_angle, arrival_angle, p_gain, antenna_number, freque
     wr = dft_codebook(nr)
     H = np.matrix(np.zeros((nt, nr)))
 
-    # TO DO: need to generate random phase and convert gains in complex-values
+    # TODO: need to generate random phase and convert gains in complex-values
     gain_dB = p_gain
     path_gain = np.power(10, gain_dB / 10)
     antenna_range = np.arange(antenna_number)

@@ -85,11 +85,12 @@ blensor_options:
     UE_camera: null
     n_camera_BS: null
 
-post_processing:
+data_processing:
   area_of_analyses:
     enabled: null
     limits: null
 
+post_processing:
   cartesian_lidar_matrix:
     coordinate_system: null
     QP: null
