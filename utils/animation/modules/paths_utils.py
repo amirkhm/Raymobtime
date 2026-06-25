@@ -20,21 +20,36 @@ def classify_rays(pathInfoList, numCl=2):
     cleanPathInfo = {}
 
     # Agrupa raios por localização do receptor
-    for ray_id, points in pathInfoList.items():
-        RxLocation = copy.deepcopy(points[-1]) # Pega o último ponto (receptor)
-        dbRx = RxLocation[3]
-        RxLocation.pop() # Remove o valor de dB
+    #for ray_id, points in pathInfoList.items():
+    #    RxLocation = copy.deepcopy(points[-1]) # Pega o último ponto (receptor)
+    #    dbRx = RxLocation[3]
+    #    RxLocation.pop() # Remove o valor de dB
         
         # Cria uma chave única para a localização
-        key = ' '.join([str(coord) for coord in RxLocation])
+    #    key = ' '.join([str(coord) for coord in RxLocation])
         
-        if key not in raysCl:
-            raysCl[key] = []
-        raysCl[key].append(dbRx)
+    #    if key not in raysCl:
+    #        raysCl[key] = []
+    #    raysCl[key].append(dbRx)
 
         # Adiciona o raio à lista limpa se ainda estiver abaixo do limite
-        if raysCl[key].count(dbRx) < numCl:
-             cleanPathInfo[ray_id] = points
+    #    if raysCl[key].count(dbRx) < numCl:
+    #         cleanPathInfo[ray_id] = points
+
+    for ray_id, points in pathInfoList.items(): # add JK - modificação do conteudo do for
+        if not points: continue     # Se o Raio estiver vazio passa p/ prox
+        
+        # Pega as coordenadas do receptor (último ponto)
+        # tuple para a chave ser única e fixa
+        rx_coord = tuple(points[-1][:3])    #Pega os primeiros 3 valores (X, Y, Z) e transforma em uma tupla
+        
+        if rx_coord not in raysCl:
+            raysCl[rx_coord] = 0        # Se o receptor for novo, o contador de raios inicia nessa posição.
+        
+        # Se ainda não atingimos a quantidade de raios desejada para este RX
+        if raysCl[rx_coord] < numCl:
+            cleanPathInfo[ray_id] = points      # Guarda o raio para enviar ao Blender
+            raysCl[rx_coord] += 1
             
     return cleanPathInfo
 
