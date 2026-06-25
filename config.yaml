@@ -100,11 +100,12 @@ blensor_options:
     UE_camera: true
     n_camera_BS: 3
 
-post_processing:
+data_processing:
   area_of_analyses: # only fill csv with objects within this area
     enabled: false
     limits: [660, 334, 843, 523]              #[x1,y1, x2, y2]
 
+post_processing:
   mimo:
     import_precoding: assets/codebooks/default_mikrotik_cb.npy
     import_channels: false

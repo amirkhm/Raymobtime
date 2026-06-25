@@ -310,6 +310,7 @@ class parameters:
         self.sumo = self.cfg.sumo
         self.ray_tracing = self.cfg.ray_tracing
         self.blensor_options = self.cfg.blensor_options
+        self.data_processing = self.cfg.data_processing
         self.post_processing = self.cfg.post_processing
 
         self.check = {}
@@ -464,8 +465,8 @@ class parameters:
             # Number of receivers per episode
             self.receivers_per_episode = self.ray_tracing.receivers_per_episode
 
-        self.analysis_area_enabled = self.post_processing.area_of_analyses.enabled
-        self.analysis_area = self.post_processing.area_of_analyses.limits
+        self.analysis_area_enabled = self.data_processing.area_of_analyses.enabled
+        self.analysis_area = self.data_processing.area_of_analyses.limits
         self.analysis_area_resolution = 0.5
 
         self.antenna_number = 10 #VERIFY
