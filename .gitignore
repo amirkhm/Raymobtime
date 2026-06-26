@@ -2,12 +2,10 @@
 *.egg
 *.db
 .venv
-/utils/animation/Blensor-x64.AppImage
 /rmt.egg-info
 /data/rosslyn/out/
 
-# --- Local folder and temp results of animation modul ---
-
+# --- Local folder and temp results of animation module ---
 utils/animation/bases_files
 utils/animation/blensor_frames
 utils/animation/temp_processing
