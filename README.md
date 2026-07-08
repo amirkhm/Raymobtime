@@ -207,7 +207,6 @@ The framework integrates and interoperates with several third-party tools that a
 | Blensor | LiDAR sensor simulation for Blender | GNU GPL |
 | Wireless InSite | Electromagnetic ray-tracing simulation | Proprietary (Remcom) |
 | OpenStreetMap | Geographic and map data | Open Database License (ODbL) 1.0 |
-| Cadmapper | Conversion of geographic data to CAD/3D models | Commercial license and service-specific terms |
 
 ### Important Notes
 
