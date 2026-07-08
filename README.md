@@ -190,8 +190,30 @@ If you use any data or code, please cite: "[5G MIMO Data for Machine Learning: A
 
 ```
 
-## License
+## License and Third-Party Dependencies
 
-License information must be defined according to the distribution conditions of the Raymobtime source code and its external dependencies.
+Raymobtime is released under the **GNU General Public License v3.0 (GPLv3)**.
+The software itself is fully open source; however, the generation of new ray-tracing datasets may require access to external proprietary software. Example datasets and open-source workflows are provided to enable independent evaluation and reproduction of the published results whenever possible.
 
-The licenses of SUMO, Wireless InSite, Blender, Blensor, and other integrated tools must be considered separately.
+The framework integrates and interoperates with several third-party tools that are distributed under their own licenses. Users are responsible for complying with the licensing terms of each external dependency.
+
+### Third-Party Software
+
+| Software | Purpose | License |
+|-----------|----------|----------|
+| Raymobtime | Main framework for dataset generation and management | GNU GPL v3.0 |
+| SUMO | Vehicular mobility simulation | Eclipse Public License 2.0 (EPL-2.0) |
+| Blender | 3D scene modeling and rendering | GNU GPL v2 or later |
+| Blensor | LiDAR sensor simulation for Blender | GNU GPL |
+| Wireless InSite | Electromagnetic ray-tracing simulation | Proprietary (Remcom) |
+| OpenStreetMap | Geographic and map data | Open Database License (ODbL) 1.0 |
+
+### Important Notes
+
+Raymobtime provides an integrated workflow for generating and processing wireless communication datasets. Some stages of the pipeline depend on external software that must be obtained separately by users.
+
+In particular, **Wireless InSite is proprietary software distributed by Remcom and requires a valid commercial license** for ray-tracing simulation and channel generation. Raymobtime does not distribute Wireless InSite or any proprietary components.
+
+To improve accessibility and reproducibility, Raymobtime provides a **Quick Setup** workflow that allows users to execute dataset loading, preprocessing, visualization, analysis, and machine learning experiments without requiring access to Wireless InSite. Users can therefore reproduce and evaluate most stages of the framework using pre-generated datasets and open-source components only.
+
+Users interested in generating new ray-tracing datasets from scratch should ensure that all required third-party software is properly installed and licensed according to the respective vendors' terms and conditions.
