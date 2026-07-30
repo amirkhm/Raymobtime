@@ -1,4 +1,4 @@
-# Guide for Development Practices
+# Adopted Coding Style
 
 This document defines the recommended development practices for contributing to Raymobtime. The objective is to preserve code organization, configuration consistency, reproducibility, and compatibility across the simulation pipeline.
 
@@ -358,16 +358,17 @@ Functions should have a single clear responsibility. Long functions should be di
 
 Before submitting a contribution:
 
+1. create an issue at repository for discuss new ideas;
 1. synchronize the environment with `uv sync`;
-2. verify that the modified module runs independently;
-3. execute the relevant Raymobtime pipeline stages;
-4. confirm that existing features still work;
-5. validate generated file paths and formats;
-6. review logging messages;
-7. update the documentation;
-8. verify that generated outputs are not staged;
-9. run formatting, linting, or tests when available;
-10. inspect the final diff.
+1. verify that the modified module runs independently;
+1. execute the relevant Raymobtime pipeline stages;
+1. confirm that existing features still work;
+1. validate generated file paths and formats;
+1. review logging messages;
+1. update the documentation;
+1. verify that generated outputs are not staged;
+1. run formatting, linting, or tests when available;
+1. inspect the final diff.
 
 Useful commands include:
 
@@ -377,3 +378,4 @@ git diff
 ```
 A contribution should not be considered complete until the code, configuration, and documentation are consistent.
 
+You may contact [our team](https://raymobtime.lasseufpa.org/team/) for additional information.

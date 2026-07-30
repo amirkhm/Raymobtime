@@ -1,10 +1,10 @@
 # Raymobtime
 
-Raymobtime is a simulation framework and dataset-generation methodology developed for wireless communication systems with mobility and multimodal sensing. It was originally created to support the generation of realistic ray-tracing datasets for vehicular communication scenarios, especially those involving millimeter-wave and MIMO systems. Its methodology considers mobility and temporal evolution in order to preserve consistency across time, frequency, and space. The current Raymobtime pipeline integrates traffic simulation, electromagnetic ray tracing, image rendering, and LiDAR simulation into a unified simulation and processing workflow. This integration allows the generation of synchronized datasets containing wireless channel information, mobility data, RGB images and LiDAR point clouds.
+Raymobtime is a simulation framework and dataset-generation methodology developed for wireless communication systems with mobility and multimodal sensing. It was originally created to support the generation of realistic ray-tracing datasets for vehicular communication scenarios, especially those involving millimeter-wave and MIMO systems. Its methodology considers mobility and temporal evolution in order to preserve consistency across time, frequency, and space. The current Raymobtime pipeline integrates traffic simulation, electromagnetic ray tracing, image rendering, and LiDAR simulation into a unified simulation and processing workflow. This integration allows the generation of time-aligned datasets composed of electromagnetic propagation, mobility data, RGB images and LiDAR point clouds.
 
-The framework is capable of representing dynamic communication environments composed of vehicles, buses, trucks, pedestrians, drones, transmitters, receivers, buildings, roads, and other environmental elements. Its main objective is to support the creation of reproducible datasets for research in vehicular communications, wireless channel modeling, millimeter-wave and MIMO systems, positioning, integrated sensing and communication, computer vision, sensor fusion, and machine learning.
+The framework is capable of simulating dynamic communication environments composed of vehicles, buses, trucks, pedestrians, drones, transmitters, receivers, buildings, roads, and other environmental elements. Its main objective is to support the creation of reproducible datasets for research in vehicular communications, wireless channel modeling, millimeter-wave and MIMO systems, positioning, integrated sensing and communication, computer vision, sensor fusion, and machine learning.
 
-The main simulation parameters, enabled modules, scenario paths, input files, and output directories are defined through the Raymobtime configuration system. The orchestration layer uses this configuration to determine the execution order and activate only the modules required for the selected dataset.
+The main simulation parameters, enabled modules, scenario paths, input files, and output directories are defined through the Raymobtime configuration system. The orchestration stage uses this configuration to determine the execution order and activate only the modules required for the selected dataset.
 
 ---
 
@@ -24,13 +24,25 @@ Raymobtime coordinates the execution of several simulation and data-processing s
 
 ---
 
-## Raymobtime Architecture
+## Folder organization
+
+A simplified representation of the Raymobtime project structure is shown below:
+
+<p align="center">
+  <img src="assets/readme_images/RMT_Structure.png"
+       alt="Raymobtime project structure"
+       width="75%">
+</p>
+
+<p align="center">
+  <em>Simplified organization of the main Raymobtime directories and files.</em>
+</p>
 
 Raymobtime follows a modular architecture in which the main simulation, processing, and dataset-generation responsibilities are separated into dedicated directories and modules. The repository is organized to distinguish configuration files, reusable assets, scenario data, documentation, executable scripts, simulation modules, post-processing routines, and auxiliary visualization tools. This organization makes the project easier to maintain and allows new functionalities to be incorporated without affecting unrelated parts of the workflow.
 
 The `src` directory contains the main Raymobtime source code. It is divided into configuration files, functional modules, and execution scripts. The `src/configs` directory stores the default configuration used by the framework, while `src/scripts` contains the main command-line entry point and the utilities responsible for loading, validating, and organizing the runtime configuration.
 
-The core simulation logic is located in `src/modules`. Each subdirectory represents a major stage of the Raymobtime pipeline. The `mobility` module manages interaction with SUMO and the retrieval of dynamic object positions. The `rt` module contains the Wireless InSite modeling, simulation, and ray-tracing processing logic. The `blensor` module is responsible for Blender and Blensor integration, including RGB image generation, LiDAR scans, camera information extraction, and temporary runtime configuration files. The `data_processing` module converts raw simulator outputs into structured dataset representations, while the `postprocessing` module performs refinement, synchronization, coordinate transformations, and the generation of derived outputs.
+The core simulation logic is located in `src/modules`. Each subdirectory represents a major stage of the Raymobtime pipeline. The `mobility` module manages interaction with SUMO and the retrieval of dynamic object positions. The `rt` module contains the Wireless InSite modeling, simulation, and ray-tracing processing logic. The `blensor` module is responsible for Blender and Blensor integration, including RGB image generation, LiDAR scans, camera information extraction, and temporary runtime configuration files. The `data_processing` module converts raw simulator outputs into structured dataset representations, while the `postprocessing` module performs refinement, time alignment, coordinate transformations, and the generation of derived outputs.
 
 The `assets` directory stores reusable resources that are independent of a specific simulation scenario. The `codebooks` subdirectory contains antenna and beamforming codebooks used during wireless channel processing. The `wi_objects` subdirectory contains detailed object templates that can be imported into Wireless InSite, including models for cars, buses, trucks, pedestrians, and drones. The `readme_images` subdirectory stores figures and diagrams used in the project documentation.
 
@@ -45,18 +57,6 @@ The `doc` directory contains supporting documentation that complements the main 
 The `utils` directory contains auxiliary tools that are not part of the main simulation pipeline. The `animation` subdirectory contains utilities for generating visual representations of mobility or simulation results, while the `plots` subdirectory contains scripts used to analyze and visualize generated data. These tools operate on Raymobtime outputs but are kept separate from the main execution modules.
 
 The repository root contains the files required to configure, install, and distribute Raymobtime. The user-defined `config.yaml` file specifies the selected scenario and overrides the default configuration values. The `pyproject.toml` file defines the Python project metadata, dependencies, and command-line entry point. The `uv.lock` and `requirements.txt` files define reproducible dependency environments, while `LICENSE` specifies the software distribution terms. The `.gitignore` file prevents temporary, generated, and local environment files from being included in version control.
-
-A simplified representation of the Raymobtime project structure is shown below:
-
-<p align="center">
-  <img src="assets/readme_images/RMT_Structure.png"
-       alt="Raymobtime project structure"
-       width="75%">
-</p>
-
-<p align="center">
-  <em>Simplified organization of the main Raymobtime directories and files.</em>
-</p>
 
 ---
 
@@ -101,15 +101,15 @@ Thus the combination of multiple episodes and periodically sampled scenes allows
 
 ### Configuration and Orchestration
 
-At the highest level, the configuration layer defines the selected scenario, simulation parameters, enabled features, input files, external tool paths, and output directories. The default configuration is combined with the user-defined configuration and transformed into a structured runtime object shared among the Raymobtime modules.
+At the highest level, the configuration stage defines the selected scenario, simulation parameters, enabled features, input files, external tool paths, and output directories. The default configuration is combined with the user-defined configuration and transformed into a structured runtime object shared among the Raymobtime modules.
 
 This configuration object provides a consistent interface for accessing simulation parameters throughout the execution pipeline. It also allows features such as ray tracing, RGB image generation, LiDAR simulation, pedestrian modeling, drone simulation, and dataset conversion to be activated or disabled without changing the source code.
 
-The orchestration layer controls the overall simulation workflow. It evaluates the enabled features, determines the execution order, initializes the required modules, and coordinates the exchange of data between SUMO, Wireless InSite, Blender, Blensor, and the post-processing modules. Only the components required by the selected configuration are executed.
+The orchestration stage controls the overall simulation workflow. It evaluates the enabled features, determines the execution order, initializes the required modules, and coordinates the exchange of data between SUMO, Wireless InSite, Blender, Blensor, and the post-processing modules. Only the components required by the selected configuration are executed.
 
 ### Mobility Generation
 
-The mobility layer is responsible for generating and retrieving the positions of dynamic objects. [SUMO](https://sumo.dlr.de/) defines the road network, routes, traffic flows, object types, vehicle behavior, pedestrian movement, and drone trajectories.
+The mobility stage is responsible for generating and retrieving the positions of dynamic objects. [SUMO](https://sumo.dlr.de/) defines the road network, routes, traffic flows, object types, vehicle behavior, pedestrian movement, and drone trajectories.
 
 During execution, Raymobtime communicates with SUMO through TraCI to retrieve information about each active object, including its identifier, type, position, orientation, dimensions, lane, and current state. This information is collected at each simulation step and used to update the corresponding three-dimensional scene.
 
@@ -117,7 +117,7 @@ SUMO primarily provides the horizontal mobility of the objects. Additional verti
 
 ### Scenario Modeling
 
-The modeling layer converts the mobility information into representations that can be used by Wireless InSite, Blender, and Blensor. This stage performs coordinate conversion, orientation correction, object-center adjustment, altitude placement, antenna positioning, and the insertion of dynamic objects into the three-dimensional scenario. SUMO reports vehicle positions using the center of the front bumper and Raymobtime corrects this position according to the vehicle length and orientation so that the object is placed using its geometric center. The resulting position is used consistently by the wireless, image, and LiDAR simulation modules.
+The modeling stage converts the mobility information into representations that can be used by Wireless InSite, Blender, and Blensor. This stage performs coordinate conversion, orientation correction, object-center adjustment, altitude placement, antenna positioning, and the insertion of dynamic objects into the three-dimensional scenario. SUMO reports vehicle positions using the center of the front bumper and Raymobtime corrects this position according to the vehicle length and orientation so that the object is placed using its geometric center. The resulting position is used consistently by the wireless, image, and LiDAR simulation modules.
 
 Depending on the configuration, vehicles, pedestrians, and drones may be represented using simplified geometric shapes or detailed object templates. Simplified objects are generated using the dimensions provided by SUMO, while detailed models are selected according to the object type and transformed to the corresponding position and orientation. Drone objects receive an additional altitude offset because SUMO does not natively represent their complete three-dimensional flight trajectory. Antennas mounted on conventional vehicles are positioned above the object, while antennas associated with drones may be positioned below the drone body.
 
@@ -131,7 +131,7 @@ The selected node positions are stored together with the corresponding object id
 
 ### Wireless Propagation Simulation
 
-The wireless simulation layer generates the propagation information associated with the selected transmitters and receivers. Raymobtime updates the [Wireless InSite](https://www.remcom.com/wireless-insite-propagation-software) scenario using the positions obtained from the mobility and modeling layers, places the communication nodes, and generates the required simulation files.
+The wireless simulation stage generates the propagation information associated with the selected transmitters and receivers. Raymobtime updates the [Wireless InSite](https://www.remcom.com/wireless-insite-propagation-software) scenario using the positions obtained from the mobility and modeling stages, places the communication nodes, and generates the required simulation files.
 
 Wireless InSite then performs the electromagnetic ray-tracing simulation and produces information such as propagation paths, path loss, received power, delays, angles of departure, and angles of arrival.
 
@@ -139,27 +139,27 @@ The generated propagation results are stored for each run, episode, scene, trans
 
 ### RGB Image and LiDAR Generation
 
-The sensing layer is responsible for generating RGB images and LiDAR point clouds associated with the simulated scenes.
+The sensing stage is responsible for generating RGB images and LiDAR point clouds associated with the simulated scenes.
 
 [Blender](https://www.blender.org/) is used to load the three-dimensional environment, position the dynamic objects, configure the cameras, and render images from base-station or user-equipment viewpoints. Camera information, including position, orientation, focal length, sensor dimensions, and image resolution, is exported for use during post-processing. [Blensor](https://www.blensor.org/) is used to simulate LiDAR sensors and generate three-dimensional point clouds. The sensor is positioned according to the selected communication node and configured using parameters such as angular resolution, maximum sensing distance, rotation speed, and noise level.
 
 RGB images and LiDAR point clouds are generated using the same object positions and scene state employed by the wireless simulation. This ensures spatial and temporal consistency between the sensing data and the corresponding wireless channel information.
 
-### Data Processing and Synchronization
+### Data Processing
 
-The data-processing layer converts the outputs generated by the external simulators into standardized dataset representations. This stage includes Wireless InSite output parsing, image refinement, camera calibration extraction, LiDAR processing, coordinate transformation, channel generation, and metadata organization.
+The data-processing stage converts the outputs generated by the external simulators into standardized dataset representations. This stage includes Wireless InSite output parsing, image refinement, camera calibration extraction, LiDAR processing, coordinate transformation, channel generation, and metadata organization.
 
 LiDAR point clouds may be translated to the local coordinate system of the corresponding vehicle or sensor and converted from Cartesian coordinates to spherical representations. RGB images are associated with their cameras, scenes, episodes, and communication nodes.
 
-The synchronization stage ensures that wireless, mobility, RGB, LiDAR, and metadata outputs refer to the same simulation state. Each generated element is associated with its corresponding run, episode, scene, transmitter, and receiver.
+The time alignment ensures that wireless, mobility, RGB, LiDAR, and metadata outputs refer to the same simulation state. Each generated element is associated with its corresponding run, episode, scene, transmitter, and receiver.
 
-### Final Dataset Generation
+### Dataset Generation
 
-The dataset-generation layer combines the processed wireless, mobility, image, LiDAR, and metadata outputs into the final dataset structure. This stage preserves the correspondence among the different modalities and organizes the generated information for analysis, experimentation, and machine-learning applications.
+The dataset-generation stage combines the processed wireless, mobility, image, LiDAR, and metadata outputs into the final dataset structure. This stage preserves the correspondence among the different modalities and organizes the generated information for analysis, experimentation, and machine-learning applications.
 
 Depending on the enabled modules, the resulting dataset may include wireless channel matrices, propagation paths, transmitter and receiver positions, dynamic object information, RGB images, LiDAR point clouds, spherical LiDAR matrices, camera parameters, and scene metadata.
 
-The overall methodology can therefore be summarized as a sequence in which mobility is generated, dynamic objects are positioned, communication nodes are selected, wireless and sensing simulations are executed, and the resulting outputs are synchronized and converted into a structured multimodal dataset.
+The overall methodology can therefore be summarized as a sequence in which mobility is generated, dynamic objects are positioned, communication nodes are selected, wireless and sensing simulations are executed, and the resulting outputs are time aligned and converted into a structured multimodal dataset.
 
 ## Documentation
 
@@ -169,7 +169,6 @@ Raymobtime also provides complementary documentation covering environment setup,
 
 | Resource                                                | Description                                                                                                                                                                                                  |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [Raymobtime Website](https://raymobtime.lasseufpa.org/) | Official project website containing information about Raymobtime datasets, publications, scenarios, and related resources.                                                                                   |
 | [Setup Guide](doc/1-Setup.md)                           | Describes the initial installation and configuration of the Raymobtime environment, including required software, Git, Python dependencies, SUMO, Wireless InSite, Blender, Blensor, and external tool paths. |
 | [Base Scenario Creation](doc/2-BaseCreation.md)         | Explains how to create the base files required for a simulation, including SUMO networks and routes, Wireless InSite projects, Blender scenarios, static geometry, and scenario directory organization.      |
 | [Dataset Generation Guide](doc/3-DatasetCreation.md)    | Describes the dataset-generation workflow, including the YAML configuration structure, available simulation options, execution commands, enabled modules, and the organization of generated outputs.         |
@@ -201,7 +200,6 @@ The framework integrates and interoperates with several third-party tools that a
 
 | Software | Purpose | License |
 |-----------|----------|----------|
-| Raymobtime | Main framework for dataset generation and management | GNU GPL v3.0 |
 | SUMO | Vehicular mobility simulation | Eclipse Public License 2.0 (EPL-2.0) |
 | Blender | 3D scene modeling and rendering | GNU GPL v2 or later |
 | Blensor | LiDAR sensor simulation for Blender | GNU GPL |
