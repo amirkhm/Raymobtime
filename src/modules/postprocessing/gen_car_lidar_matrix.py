@@ -3,7 +3,7 @@ import csv
 import shutil
 import numpy as np
 import scipy.spatial.distance as dist
-from src.modules.postprocessing.pypcd import pypcd
+import pypcd4
 from datetime import datetime
 import zipfile
 from src.scripts.helpers import format_run_name
@@ -47,10 +47,10 @@ def find_vehicle(flow, tmp_dir):
     """
 
     flow_list = os.listdir(tmp_dir)
-    for tmp_cars in  flow_list:
-        if tmp_cars.startswith(flow) and "noisy" not in tmp_cars:
-            vehicle = tmp_cars
-            
+    vehicle = flow_list[1] 
+    #for tmp_cars in flow_list:
+    #    if tmp_cars.startswith(flow) and "noisy" not in tmp_cars:
+    #        vehicle = tmp_cars
     return os.path.join(tmp_dir,vehicle)
 
 def episodes_dict(csv_path, tmp_dir):
@@ -234,7 +234,7 @@ def cart_lidar_matrix(c):
             for vehicle in RxFlow:
                 pcd_path = find_vehicle(vehicle[0],tmpdir)
                 # pcd_path = tmpdir + '/' + vehicle[0] + '.pcd'
-                pc = pypcd.PointCloud.from_path(pcd_path)
+                pc = pypcd4.PointCloud.from_path(pcd_path)
 
                 vehicle_position = [[vehicle[1],vehicle[2],vehicle[3]]]
 

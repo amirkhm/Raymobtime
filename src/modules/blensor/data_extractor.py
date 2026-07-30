@@ -122,7 +122,7 @@ def export_camera_info(config_path):
         "blend_info",
     )
 
-    if data_info_path.exists():
+    if os.path.exists(data_info_path):
         shutil.rmtree(data_info_path)
     os.makedirs(data_info_path)
 

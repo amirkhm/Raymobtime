@@ -5,7 +5,7 @@ import numpy as np
 import zipfile
 import scipy.spatial.distance as dist
 from datetime import datetime
-from src.modules.postprocessing.pypcd import pypcd
+import pypcd4
 from src.scripts.helpers import format_run_name
 
 def base_vehicle_pcd(flow):  # the folders will be run00001, run00002, etc.
@@ -268,7 +268,7 @@ def sph_lidar_matrix(c):
                 zip_ref.extractall(tmpdir)
             for vehicle in RxFlow:
                 pcd_path = find_vehicle(vehicle[0],tmpdir)
-                pc = pypcd.PointCloud.from_path(pcd_path)
+                pc = pypcd4.PointCloud.from_path(pcd_path)
 
                 vehicle_position = [[vehicle[1],vehicle[2],vehicle[3]]]
 

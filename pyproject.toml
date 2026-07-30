@@ -24,7 +24,8 @@ dependencies = [
     "typing-extensions>=4.13.2",
     "pyyaml>=6.0.2",
     "psutil>=5.9.8",
-    "lzf>=0.1"
+    "lzf>=0.1",
+    "pypcd4>=1.4.3",
 ]
 
 [project.scripts]

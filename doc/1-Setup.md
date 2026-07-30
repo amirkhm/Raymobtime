@@ -159,14 +159,6 @@ Activate the virtual environment:
 source .venv/bin/activate
 ```
 
-Verify that the Raymobtime command is available:
-
-```bash
-raymobtime --help
-```
-
-If the project is executed directly through Python instead of the command-line entry point, use the corresponding project execution command.
-
 ---
 
 # ⚙️ Configuration

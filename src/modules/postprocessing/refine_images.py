@@ -278,9 +278,9 @@ def image_refinement(c):
                     for vertc in obj.vertice_array:
                         pixels, _ = global2pixels(vertc, 
                                                 cam_position,
-                                                cam_info[cam_name]["rotation_radians"]["z"],
-                                                cam_info[cam_name]["rotation_radians"]["x"],
-                                                cam_info[cam_name]["rotation_radians"]["y"],
+                                                cam_info[cam_name]["rotation_euler"]["z"],
+                                                cam_info[cam_name]["rotation_euler"]["x"],
+                                                cam_info[cam_name]["rotation_euler"]["y"],
                                                 cam_info[cam_name]["K"])
                         if obj_in_cam_view(pixels, img_window_size):
                             vertices.append(pixels)

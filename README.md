@@ -24,6 +24,20 @@ Raymobtime coordinates the execution of several simulation and data-processing s
 
 ---
 
+## Quick Setup
+
+- Clone repo
+- run quick_setup.py
+  - uv download
+  - Download blensor via webget
+  - Download and place simulated mobility e rt
+  - apaga o config.yaml
+  - copia o yaml de configuração
+  - uv sync
+- uv run raymobtime
+
+---
+
 ## Folder organization
 
 A simplified representation of the Raymobtime project structure is shown below:
