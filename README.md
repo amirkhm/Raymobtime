@@ -24,18 +24,18 @@ Raymobtime coordinates the execution of several simulation and data-processing s
 
 ---
 
-## Quick Setup
+## Quick Start
 
-- Clone repo
-- run quick_setup.py
-  - uv download
-  - Download blensor via webget
-  - Download and place simulated mobility e rt
-  - apaga o config.yaml
-  - copia o yaml de configuração
-  - uv sync
-- uv run raymobtime
+place image fragment here
+```bash
+git clone https://github.com/lasseufpa/Raymobtime.git
+cd raymobtime
+source ./src/scripts/quick_start_setup.sh
+```
 
+```bash
+uv run raymobtime
+```
 ---
 
 ## Folder organization
