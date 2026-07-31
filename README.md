@@ -50,7 +50,7 @@ Run this script for
 ```bash
 source ./src/scripts/quick_start_setup.sh
 ```
-Execute pipeline from image above. Generates data structures, generates images from BS and UEs POV, lidar data from UEs, post-processes lidar for generating lidar voxels and images to produce bounding boxes and marked points at receivers, also post-process rays data for produce beams data.
+Execute pipeline from image above. Generates data structures, images from BS and UEs POV, lidar data from UEs, post-processes lidar for generating lidar voxels and images to produce bounding boxes and marked points at receivers, also post-process rays data for produce beams data.
 ```bash
 uv run raymobtime
 ```
