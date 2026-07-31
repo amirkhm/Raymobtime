@@ -4,7 +4,7 @@ set -euo pipefail
 PROJECT_DIR="$(pwd)"
 CONFIG_SRC="$PROJECT_DIR/data/rosslyn_QS/out/sim_default/config.yaml"  
 BLENSOR_URL="https://www.blensor.org/dload/Blensor-x64.AppImage"
-ROSSLYN_URL="https://nextcloud.lasseufpa.org/s/jaBqbjxco8CrpHa/download/rosslyn_QS.zip"
+ROSSLYN_URL="https://nextcloud.lasseufpa.org/s/kC3pkb2AmjWDNpo/download/rosslyn_QS.zip"
 # -----------
 
 # installing UV
