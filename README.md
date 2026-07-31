@@ -26,16 +26,36 @@ Raymobtime coordinates the execution of several simulation and data-processing s
 
 ## Quick Start
 
-place image fragment here
+<p align="center">
+  <img src="assets/readme_images/RMT_pipeline_QS.png"
+       alt="Part of Raymobtime pipeline"
+       width="100%">
+</p>
+
+<p align="center">
+  <em>Part of Raymobtime pipeline, for quick start.</em>
+</p>
+
+Clone Raymobtime repository.
 ```bash
 git clone https://github.com/lasseufpa/Raymobtime.git
 cd raymobtime
+```
+Run this script for
+- installing uv 
+- download blensor 
+- download tiny scenario with ray-tracing stage already done. 
+- configure config.yaml for setting desired outputs and workflow.
+
+```bash
 source ./src/scripts/quick_start_setup.sh
 ```
-
+Execute pipeline from image above. Generates data structures, generates images from BS and UEs POV, lidar data from UEs, post-processes lidar for generating lidar voxels and images to produce bounding boxes and marked points at receivers, also post-process rays data for produce beams data.
 ```bash
 uv run raymobtime
 ```
+The outputs are organized at ```/data/rosslyn_QS/out/sim_default``` folder.
+
 ---
 
 ## Folder organization
