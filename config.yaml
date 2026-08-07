@@ -83,7 +83,7 @@ ray_tracing:
       n_of_vehicles: 5 # Overrites receivers_per_episode
   wireless_insite:
     software_path: /home/gabriel/softwares/wireless-insite/remcom
-    LICENSE_FILE: REMCOMINC_LICENSE_FILE=2501@10.10.80.6
+    LICENSE_FILE: <Remcom-license>
     base_files_names:
       study_area_name: study
       tx_name: Tx
