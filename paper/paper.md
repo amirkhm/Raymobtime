@@ -5,10 +5,11 @@ tags:
   - Raymobtime
   - Python
   - wireless communications
+  - ray tracing
+  - simulation
   - mmWave
   - 5G
   - 6G
-  - ray tracing
   - mobility
   - multimodal datasets
 
@@ -20,27 +21,25 @@ authors:
     # email: amir.khatibi@land.ufrj.br
 
   - name: Genivaldo Charchar da Silva
-    # orcid: 0000-0000-0000-0000 # TODO: uncomment and replace with ORCID
+  # orcid: 0009-0006-1033-9026
     affiliation: 2
     # email: genivaldo.silva@itec.ufpa.br
 
   - name: Gabriel Ferreira Vieira
-    # orcid: 0000-0000-0000-0000 # TODO: uncomment and replace with ORCID
     affiliation: 2
     # email: gabriel.vieira@itec.ufpa.br
 
   - name: Jessica de Keeflen Silva da Silva
-    # orcid: 0000-0000-0000-0000 # TODO: uncomment and replace with ORCID
     affiliation: 2
     # email: jessica.keeflen@itec.ufpa.br
 
   - name: Sávio Bastos
-    # orcid: 0000-0000-0000-0000 # TODO: uncomment and replace with ORCID
+    # orcid: 0009-0005-2955-2815
     affiliation: 2
     # email: savio.bastos@itec.ufpa.br
 
   - name: Ilan Correa
-    # orcid: 0000-0000-0000-0000 # TODO: uncomment and replace with ORCID
+    # orcid: 0000-0002-7219-8226
     affiliation: 2
     # email: ilan@ufpa.br
 
@@ -61,13 +60,13 @@ affiliations:
   - index: 2
     name: Universidade Federal do Pará, Brazil
 
-date: 27 August 2026
+date: 28 August 2026
 bibliography: paper.bib
 ---
 
 # Summary
 
-Raymobtime is an open-source framework for generating realistic, mobility-aware wireless datasets for millimeter-wave (mmWave) and related wireless communication research. It provides a unified and reproducible workflow for combining mobility, three-dimensional environments, electromagnetic propagation, and multimodal sensing information.
+`Raymobtime` is an open-source framework for generating realistic, mobility-aware wireless datasets for millimeter-wave (mmWave) and related wireless communication research. It provides a unified and reproducible workflow for combining mobility, three-dimensional environments, electromagnetic propagation, and multimodal sensing information.
 
 Raymobtime combines traffic mobility, three-dimensional environments, radio-propagation simulations, and multimodal sensing within a common dataset-generation workflow. The resulting datasets may include mobility traces, beamforming and channel information, RGB images, and LiDAR point clouds, with spatial and temporal consistency across the generated modalities, supporting research in 5G, 6G, and beyond.
 
@@ -87,13 +86,15 @@ The primary target audience comprises researchers and engineers working on data-
 
 Several platforms provide complementary capabilities for mobility-aware wireless research. Experimental initiatives such as DeepSense 6G [@Alkhateeb2023DeepSense] provide synchronized multimodal sensing and communication measurements for studying beam prediction, blockage, positioning, and related learning tasks. However, the number of effectively distinct scenarios remains relatively small, and dataset diversity is constrained by factors such as the prevalence of line-of-sight (LoS) conditions.
 
-Ray-tracing platforms such as Wireless InSite and Sionna RT increasingly support mobile transceivers and dynamic scenes, enabling the analysis of time-varying propagation. However, their support for moving scatterers remains limited or unavailable, restricting their ability to accurately model highly dynamic propagation environments.
+Ray-tracing platforms such as Wireless InSite and Sionna RT [@Hoydis2023SionnaRT] increasingly support mobile transceivers and dynamic scenes, enabling the analysis of time-varying propagation. However, their support for moving scatterers remains limited or unavailable, restricting their ability to accurately model highly dynamic propagation environments.
 
-Raymobtime addresses this complementary problem by coupling specialized traffic simulation with three-dimensional modeling, electromagnetic ray tracing, sensing simulation, and dataset post-processing. Rather than replacing modern ray-tracing tools, it uses them as propagation engines while delegating detailed mobility generation to SUMO. This design enables reproducible, temporally consistent multimodal datasets with realistic traffic behavior and reusable simulation outputs. Although the current framework does not yet explicitly model Doppler effects, its integration of traffic-level mobility with synchronized wireless and sensing modalities provides capabilities that are complementary to both standalone ray tracers and real-world dataset platforms.
+Raymobtime addresses this complementary problem by coupling specialized traffic simulation with three-dimensional modeling, electromagnetic ray tracing, sensing simulation, and dataset post-processing. Rather than replacing modern ray-tracing tools, it uses them as propagation engines while delegating detailed mobility generation to SUMO [@Krajzewicz2012SUMO]. This design enables reproducible, temporally consistent multimodal datasets with realistic traffic behavior and reusable simulation outputs. Although the current framework does not yet explicitly model Doppler effects, its integration of traffic-level mobility with synchronized wireless and sensing modalities provides capabilities that are complementary to both standalone ray tracers and real-world dataset platforms.
 
 # Software Design
 
-Raymobtime combines mobility information, three-dimensional scenario representations, ray-tracing-based electromagnetic propagation, and sensing data to preserve the spatial and temporal evolution of simulated communication environments. Geographic information may be obtained from [OpenStreetMap](https://www.openstreetmap.org) and imported into Blender through Blosm for scenario preparation and three-dimensional modeling, while SUMO provides the trajectories and kinematic evolution of vehicles and other mobile entities [@Krajzewicz2012SUMO].
+Raymobtime combines mobility information, three-dimensional scenario representations, ray-tracing-based electromagnetic propagation, and sensing data to preserve the spatial and temporal evolution of simulated communication environments. Geographic information may be obtained from OpenStreetMap [@Haklay2008OpenStreetMap] and imported into Blender [@Blender] through the Blosm add-on [@Blosm] for scenario preparation and
+three-dimensional modeling, while SUMO provides the trajectories and kinematic evolution of vehicles and other mobile entities
+[@Krajzewicz2012SUMO].
 
 The framework follows a modular orchestration architecture rather than reimplementing mobility, rendering, sensing, and propagation capabilities internally. This design allows specialized simulators to be integrated within a common configuration and dataset-generation workflow. When ray tracing is enabled, the scenario geometry and communication-node positions are provided to Wireless InSite to compute propagation paths and channel-related quantities [@WirelessInSite]. Compatible outputs from previously simulated runs can also be processed directly, avoiding unnecessary repetition of the computationally expensive ray-tracing stage. The architecture introduces a dependency on external software and, for complete ray-tracing execution, a proprietary Wireless InSite license. In return, individual stages can be independently enabled, replaced, or reused, improving extensibility and reducing recomputation.
 
