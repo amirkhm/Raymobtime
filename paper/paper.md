@@ -26,6 +26,7 @@ authors:
     # email: genivaldo.silva@itec.ufpa.br
 
   - name: Gabriel Ferreira Vieira
+    # orcid: 0009-0006-1033-9026
     affiliation: 2
     # email: gabriel.vieira@itec.ufpa.br
 
